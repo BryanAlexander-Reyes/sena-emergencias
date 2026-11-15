@@ -1,0 +1,37 @@
+ion-tab-bar {
+  --border: 1px solid var(--app-border);
+  height: 60px;
+  box-shadow: 0 -10px 30px rgba(2, 8, 20, 0.45);
+}
+
+ion-tab-button {
+  position: relative;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  font-weight: 600;
+}
+
+ion-tab-button.tab-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 20px;
+  height: 2px;
+  border-radius: 0 0 var(--app-radius-pill) var(--app-radius-pill);
+  background: var(--app-cyan);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.65);
+  transform: translateX(-50%);
+}
+
+ion-tab-button:focus-visible,
+ion-tab-button.ion-focused {
+  outline: 2px solid var(--app-cyan);
+  outline-offset: -3px;
+}
+
+ion-tab-button ion-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}

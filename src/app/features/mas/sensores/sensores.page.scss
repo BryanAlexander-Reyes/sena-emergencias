@@ -1,0 +1,227 @@
+/* ==========================================================================
+   Fase 2.7 · Sensores IoT
+   ========================================================================== */
+
+.sensor-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+  margin-bottom: var(--app-space-4);
+  padding: var(--app-space-4);
+  border-color: rgba(250, 204, 21, 0.28);
+  background: linear-gradient(160deg, rgba(250, 204, 21, 0.08) 0%, rgba(17, 30, 50, 0) 60%), var(--app-surface);
+}
+
+.sensor-status__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(250, 204, 21, 0.32);
+  border-radius: var(--app-radius-md);
+  background: var(--app-yellow-soft);
+  color: var(--app-yellow);
+  font-size: 1.15rem;
+}
+
+.sensor-status__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sensor-status__title {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sensor-status__text {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.sensor-status__badge {
+  margin-top: var(--app-space-1);
+  color: var(--app-yellow);
+  font-size: 0.72rem;
+}
+
+.esp32-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  margin-bottom: var(--app-space-5);
+  padding: var(--app-space-4);
+}
+
+.esp32-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-3);
+}
+
+.esp32-card__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(36, 123, 255, 0.32);
+  border-radius: var(--app-radius-md);
+  background: var(--app-blue-soft);
+  color: var(--app-blue);
+  font-size: 1.2rem;
+}
+
+.esp32-card__identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.esp32-card__identity .app-overline {
+  margin-bottom: 1px;
+}
+
+.esp32-card__title {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.esp32-card__text {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.sensor-types {
+  margin-bottom: var(--app-space-4);
+}
+
+.sensor-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sensor-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-3);
+  min-width: 0;
+  padding: var(--app-space-3);
+}
+
+.sensor-list__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(36, 123, 255, 0.28);
+  border-radius: var(--app-radius-md);
+  background: var(--app-blue-soft);
+  color: var(--app-cyan);
+  font-size: 1.05rem;
+}
+
+.sensor-list__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sensor-list__name {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sensor-list__description {
+  margin: 1px 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.sensor-list__state {
+  flex: 0 0 auto;
+  padding: 0.22rem 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--app-text-muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sensor-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.sensor-note ion-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--app-blue);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 359px) {
+  .sensor-status,
+  .esp32-card {
+    padding: var(--app-space-3);
+  }
+
+  .sensor-list__item {
+    gap: var(--app-space-2);
+    padding: var(--app-space-2) var(--app-space-3);
+  }
+
+  .sensor-list__icon {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+
+  .sensor-list__name {
+    font-size: 0.82rem;
+  }
+
+  .sensor-list__description {
+    font-size: 0.68rem;
+  }
+
+  .sensor-list__state {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.52rem;
+  }
+}

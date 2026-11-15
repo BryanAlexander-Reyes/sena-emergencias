@@ -1,0 +1,48 @@
+<app-secondary-page
+  icon="stats-chart-outline"
+  eyebrow="Monitoreo"
+  title="Estadísticas"
+  description="Análisis de ocupación"
+  badge="DATOS DE DEMOSTRACIÓN"
+  footerLabel="Fase 2.7 · Estadísticas"
+>
+  <section class="stats-grid" aria-label="Indicadores actuales de ocupación">
+    @for (metric of metrics(); track metric.title) {
+    <app-metric-card
+      [title]="metric.title"
+      [value]="metric.value"
+      [icon]="metric.icon"
+      [accent]="metric.accent"
+      [description]="metric.description"
+    />
+    }
+  </section>
+
+  <section class="app-card stats-future" aria-labelledby="stats-future-title">
+    <span class="stats-future__icon">
+      <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <p class="app-overline">Sección preparada</p>
+    <h2 id="stats-future-title" class="stats-future__title">Gráficos de ocupación</h2>
+    <p class="stats-future__text">Este espacio mostrará tendencias cuando exista un historial de datos disponible.</p>
+
+    <ul class="stats-future__list">
+      <li>
+        <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+        Sin historial en la demostración
+      </li>
+      <li>
+        <ion-icon name="bar-chart-outline" aria-hidden="true"></ion-icon>
+        Gráficos aún no implementados
+      </li>
+    </ul>
+  </section>
+
+  <p class="stats-note">
+    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    <span>
+      Los indicadores se calculan con los datos simulados actuales. No representan mediciones reales ni series
+      históricas.
+    </span>
+  </p>
+</app-secondary-page>

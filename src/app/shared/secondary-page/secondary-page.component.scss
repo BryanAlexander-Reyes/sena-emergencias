@@ -1,0 +1,75 @@
+.secondary-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  min-height: 44px;
+  margin-bottom: var(--app-space-3);
+  padding: var(--app-space-2) var(--app-space-4);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: rgba(17, 30, 50, 0.7);
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.secondary-page__back:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+  background: var(--app-cyan-soft);
+  color: var(--app-cyan);
+}
+
+.secondary-page__back:active {
+  background: rgba(0, 212, 255, 0.16);
+}
+
+.secondary-page__back:focus-visible {
+  outline: 2px solid var(--app-cyan);
+  outline-offset: 2px;
+}
+
+.secondary-page__back ion-icon {
+  font-size: 1rem;
+}
+
+.secondary-page__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-6);
+  color: var(--app-text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.secondary-page__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--app-border);
+}
+
+@media (max-width: 359px) {
+  .secondary-page__back {
+    padding: var(--app-space-2) var(--app-space-3);
+    font-size: 0.74rem;
+  }
+
+  .secondary-page__footer {
+    font-size: 0.62rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secondary-page__back {
+    transition: none;
+  }
+}

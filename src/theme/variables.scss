@@ -1,2 +1,160 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/* ==========================================================================
+   SENA CROWD INTELLIGENCE — Design tokens
+   Fase 2.1: identidad visual y estilos globales
+   ========================================================================== */
+
+:root {
+  /* --- Brand palette ---------------------------------------------------- */
+  --app-bg: #08111f;
+  --app-bg-secondary: #0d1728;
+  --app-surface: #111e32;
+  --app-blue: #247bff;
+  --app-cyan: #00d4ff;
+  --app-green: #22c55e;
+  --app-yellow: #facc15;
+  --app-red: #ef4444;
+  --app-violet: #a855f7;
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-border: #24344d;
+
+  /* --- Tinted helpers --------------------------------------------------- */
+  --app-blue-soft: rgba(36, 123, 255, 0.12);
+  --app-cyan-soft: rgba(0, 212, 255, 0.1);
+  --app-green-soft: rgba(34, 197, 94, 0.12);
+  --app-yellow-soft: rgba(250, 204, 21, 0.12);
+  --app-red-soft: rgba(239, 68, 68, 0.12);
+  --app-violet-soft: rgba(168, 85, 247, 0.12);
+  --app-border-soft: rgba(36, 52, 77, 0.65);
+
+  /* --- Spacing scale ---------------------------------------------------- */
+  --app-space-1: 0.25rem;
+  --app-space-2: 0.5rem;
+  --app-space-3: 0.75rem;
+  --app-space-4: 1rem;
+  --app-space-5: 1.25rem;
+  --app-space-6: 1.5rem;
+  --app-space-8: 2rem;
+  --app-space-10: 2.5rem;
+
+  /* --- Border radii ----------------------------------------------------- */
+  --app-radius-sm: 0.5rem;
+  --app-radius-md: 0.875rem;
+  --app-radius-lg: 1.25rem;
+  --app-radius-xl: 1.75rem;
+  --app-radius-pill: 999px;
+
+  /* --- Soft shadows ----------------------------------------------------- */
+  --app-shadow-sm: 0 2px 8px rgba(2, 8, 20, 0.35);
+  --app-shadow-md: 0 12px 32px rgba(2, 8, 20, 0.45);
+  --app-shadow-glow: 0 0 24px rgba(36, 123, 255, 0.18);
+
+  /* --- Typography ------------------------------------------------------- */
+  --ion-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Ionic dark theme.
+ * Ionic's dark palette targets :root.ios / :root.md, so the overrides must
+ * use the same specificity to win the cascade. */
+:root.ios,
+:root.md {
+  /* --- Ionic dark theme ------------------------------------------------- */
+  --ion-background-color: var(--app-bg);
+  --ion-background-color-rgb: 8, 17, 31;
+  --ion-text-color: var(--app-text);
+  --ion-text-color-rgb: 248, 250, 252;
+
+  --ion-card-background: var(--app-surface);
+  --ion-item-background: var(--app-surface);
+  --ion-toolbar-background: var(--app-bg-secondary);
+  --ion-toolbar-color: var(--app-text);
+  --ion-toolbar-border-color: var(--app-border);
+  --ion-border-color: var(--app-border);
+  --ion-overlay-background-color: var(--app-surface);
+  --ion-tab-bar-background: var(--app-surface);
+  --ion-tab-bar-background-focused: var(--app-blue-soft);
+  --ion-tab-bar-border-color: var(--app-border);
+  --ion-tab-bar-color: var(--app-text-muted);
+  --ion-tab-bar-color-selected: var(--app-cyan);
+
+  /* Ionic surface steps tuned to the navy palette */
+  --ion-background-color-step-50: #0a1422;
+  --ion-background-color-step-100: #0d1728;
+  --ion-background-color-step-150: #0f1b2d;
+  --ion-background-color-step-200: #111e32;
+  --ion-background-color-step-250: #15243a;
+  --ion-background-color-step-300: #1a2b43;
+  --ion-background-color-step-350: #1f314b;
+  --ion-background-color-step-400: #24344d;
+  --ion-background-color-step-450: #2b3d58;
+  --ion-background-color-step-500: #334764;
+  --ion-background-color-step-600: #45597a;
+  --ion-background-color-step-700: #5a6e8e;
+  --ion-background-color-step-800: #7d8ea9;
+  --ion-background-color-step-900: #b3bfd1;
+  --ion-background-color-step-950: #dbe2ec;
+
+  /* Ionic colors */
+  --ion-color-primary: #247bff;
+  --ion-color-primary-rgb: 36, 123, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #206de3;
+  --ion-color-primary-tint: #3a88ff;
+
+  --ion-color-secondary: #00d4ff;
+  --ion-color-secondary-rgb: 0, 212, 255;
+  --ion-color-secondary-contrast: #001018;
+  --ion-color-secondary-contrast-rgb: 0, 16, 24;
+  --ion-color-secondary-shade: #00bbe0;
+  --ion-color-secondary-tint: #1ad8ff;
+
+  --ion-color-tertiary: #94a3b8;
+  --ion-color-tertiary-rgb: 148, 163, 184;
+  --ion-color-tertiary-contrast: #08111f;
+  --ion-color-tertiary-contrast-rgb: 8, 17, 31;
+  --ion-color-tertiary-shade: #8290a2;
+  --ion-color-tertiary-tint: #9facbf;
+
+  --ion-color-success: #22c55e;
+  --ion-color-success-rgb: 34, 197, 94;
+  --ion-color-success-contrast: #04210f;
+  --ion-color-success-contrast-rgb: 4, 33, 15;
+  --ion-color-success-shade: #1ead52;
+  --ion-color-success-tint: #38cb6e;
+
+  --ion-color-warning: #facc15;
+  --ion-color-warning-rgb: 250, 204, 21;
+  --ion-color-warning-contrast: #1f1a00;
+  --ion-color-warning-contrast-rgb: 31, 26, 0;
+  --ion-color-warning-shade: #dcb412;
+  --ion-color-warning-tint: #fbce2c;
+
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #d23c3c;
+  --ion-color-danger-tint: #f15757;
+
+  --ion-color-light: #f8fafc;
+  --ion-color-light-rgb: 248, 250, 252;
+  --ion-color-light-contrast: #08111f;
+  --ion-color-light-contrast-rgb: 8, 17, 31;
+  --ion-color-light-shade: #dadce0;
+  --ion-color-light-tint: #f9fbfc;
+
+  --ion-color-medium: #94a3b8;
+  --ion-color-medium-rgb: 148, 163, 184;
+  --ion-color-medium-contrast: #08111f;
+  --ion-color-medium-contrast-rgb: 8, 17, 31;
+  --ion-color-medium-shade: #8290a2;
+  --ion-color-medium-tint: #9facbf;
+
+  --ion-color-dark: #111e32;
+  --ion-color-dark-rgb: 17, 30, 50;
+  --ion-color-dark-contrast: #f8fafc;
+  --ion-color-dark-contrast-rgb: 248, 250, 252;
+  --ion-color-dark-shade: #0f1a2c;
+  --ion-color-dark-tint: #29354c;
+}

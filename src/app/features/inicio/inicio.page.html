@@ -1,0 +1,112 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <header class="dash-header">
+        <div class="dash-header__top">
+          <div class="dash-brand">
+            <span class="app-icon-tile dash-brand__mark">
+              <ion-icon name="scan-outline" aria-hidden="true"></ion-icon>
+            </span>
+            <div class="dash-brand__text">
+              <h1 class="dash-brand__name">
+                <span class="dash-brand__line">SENA CROWD</span>
+                <span class="dash-brand__line dash-brand__line--accent">INTELLIGENCE</span>
+              </h1>
+              <p class="dash-brand__sub">Sistema inteligente de monitoreo.</p>
+            </div>
+          </div>
+
+          <a class="dash-notify" routerLink="/tabs/alertas" aria-label="Ver centro de alertas">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+            <span class="dash-notify__dot" aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <div class="dash-header__meta">
+          <span class="app-badge app-badge--demo">MODO DEMOSTRACIÓN</span>
+          <span class="dash-header__panel">Panel de monitoreo</span>
+        </div>
+      </header>
+
+      <section class="app-card app-card--accent dash-status" aria-labelledby="dash-status-title">
+        <div class="dash-status__head">
+          <p class="app-overline">Estado actual</p>
+          <h2 id="dash-status-title" class="app-card-title">Estado general del sistema</h2>
+        </div>
+
+        <div class="dash-status__state">
+          <span class="dash-status__indicator" aria-hidden="true">
+            <span class="dash-status__dot"></span>
+          </span>
+          <div class="dash-status__copy">
+            <p class="dash-status__label">Operativo</p>
+            <p class="dash-status__text">Monitoreo de demostración activo</p>
+          </div>
+        </div>
+
+        <hr class="app-divider" />
+
+        <div class="dash-status__footer">
+          <span class="dash-status__updated">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            Última actualización: {{ lastUpdate }}
+          </span>
+          <span class="app-badge">DATOS SIMULADOS</span>
+        </div>
+      </section>
+
+      <section class="dash-metrics" aria-label="Indicadores principales">
+        @for (metric of metrics(); track metric.title) {
+        <app-metric-card
+          [title]="metric.title"
+          [value]="metric.value"
+          [icon]="metric.icon"
+          [accent]="metric.accent"
+          [description]="metric.description"
+        />
+        }
+      </section>
+
+      <section class="app-card dash-summary" aria-labelledby="dash-summary-title">
+        <div class="app-section-head">
+          <h2 id="dash-summary-title" class="app-card-title">Resumen de monitoreo</h2>
+          <span class="app-badge">DEMO</span>
+        </div>
+
+        <dl class="dash-summary__stats">
+          <div class="dash-summary__stat">
+            <dt>Zonas monitoreadas</dt>
+            <dd>{{ monitoredZones() }}</dd>
+          </div>
+          <div class="dash-summary__stat">
+            <dt>Estado general</dt>
+            <dd class="dash-summary__ok">Operativo</dd>
+          </div>
+        </dl>
+
+        @if (activeAlert(); as alert) {
+        <div class="dash-summary__alert" role="status">
+          <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+          <div class="dash-summary__alert-copy">
+            <p class="dash-summary__alert-title">{{ alert.title }}</p>
+            <p class="dash-summary__alert-text">{{ alert.zoneName }} · {{ alert.description }}</p>
+          </div>
+        </div>
+        }
+
+        <p class="dash-summary__note">Información de demostración</p>
+
+        <ion-button expand="block" class="app-button dash-summary__cta" routerLink="/tabs/zonas">
+          Ver zonas
+          <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </section>
+
+      <footer class="dash-footer">
+        <span>Fase 2.3 · Dashboard</span>
+        <span class="dash-footer__dot" aria-hidden="true"></span>
+        <span>v0.3</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

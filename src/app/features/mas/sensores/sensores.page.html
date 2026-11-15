@@ -1,0 +1,68 @@
+<app-secondary-page
+  icon="hardware-chip-outline"
+  eyebrow="Dispositivos"
+  title="Sensores IoT"
+  description="Monitoreo de dispositivos"
+  footerLabel="Fase 2.7 · Sensores IoT"
+>
+  <section class="app-card sensor-status" aria-labelledby="sensor-status-title">
+    <span class="sensor-status__icon">
+      <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <div class="sensor-status__body">
+      <h2 id="sensor-status-title" class="sensor-status__title">Dispositivos no conectados</h2>
+      <p class="sensor-status__text">No hay comunicación con hardware real en esta demostración.</p>
+      <span class="app-status app-status--warning sensor-status__badge">
+        <span class="app-status__dot" aria-hidden="true"></span>
+        Sin conexión
+      </span>
+    </div>
+  </section>
+
+  <section class="app-card esp32-card" aria-labelledby="esp32-title">
+    <header class="esp32-card__head">
+      <span class="esp32-card__icon">
+        <ion-icon name="hardware-chip-outline" aria-hidden="true"></ion-icon>
+      </span>
+      <div class="esp32-card__identity">
+        <p class="app-overline">Controlador previsto</p>
+        <h2 id="esp32-title" class="esp32-card__title">ESP32</h2>
+      </div>
+      <span class="app-badge">No conectado</span>
+    </header>
+    <p class="esp32-card__text">
+      Placa de control prevista para integrar los sensores de la maqueta. En esta demostración no hay dispositivos ni
+      lecturas reales.
+    </p>
+  </section>
+
+  <section class="sensor-types" aria-labelledby="sensor-types-title">
+    <div class="app-section-head">
+      <p id="sensor-types-title" class="app-overline">Tipos de sensores previstos</p>
+      <span class="app-badge">{{ sensors.length }} tipos</span>
+    </div>
+
+    <ul class="sensor-list">
+      @for (sensor of sensors; track sensor.id) {
+      <li class="app-card sensor-list__item">
+        <span class="sensor-list__icon">
+          <ion-icon [name]="sensor.icon" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="sensor-list__body">
+          <h3 class="sensor-list__name">{{ sensor.name }}</h3>
+          <p class="sensor-list__description">{{ sensor.description }}</p>
+        </div>
+        <span class="sensor-list__state">Previsto</span>
+      </li>
+      }
+    </ul>
+  </section>
+
+  <p class="sensor-note">
+    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    <span>
+      No se muestran lecturas ni se establece comunicación con dispositivos. La integración con hardware se implementará
+      en una fase posterior.
+    </span>
+  </p>
+</app-secondary-page>

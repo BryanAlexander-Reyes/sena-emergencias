@@ -1,0 +1,48 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <app-feature-intro
+        icon="apps-outline"
+        eyebrow="SENA CROWD INTELLIGENCE"
+        title="Más opciones"
+        description="Herramientas y configuración del sistema"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="app-card mas-info" aria-labelledby="mas-info-title">
+        <span class="mas-info__icon">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="mas-info__body">
+          <h2 id="mas-info-title" class="mas-info__title">Sistema de demostración</h2>
+          <p class="mas-info__text">Los datos mostrados son simulados. No hay conexión con dispositivos IoT.</p>
+        </div>
+      </section>
+
+      <section class="mas-menu" aria-labelledby="mas-menu-title">
+        <div class="app-section-head">
+          <p id="mas-menu-title" class="app-overline">Herramientas</p>
+          <span class="app-badge">{{ menu.length }} opciones</span>
+        </div>
+
+        <nav class="mas-menu__list" aria-label="Opciones del menú Más">
+          @for (item of menu; track item.id) {
+          <app-nav-card
+            [icon]="item.icon"
+            [title]="item.title"
+            [description]="item.description"
+            [accent]="item.accent"
+            [link]="item.link"
+          />
+          }
+        </nav>
+      </section>
+
+      <footer class="mas-footer">
+        <span>Fase 2.7 · Menú Más</span>
+        <span class="mas-footer__dot" aria-hidden="true"></span>
+        <span>v0.7</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

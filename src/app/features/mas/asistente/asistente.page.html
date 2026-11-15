@@ -1,0 +1,88 @@
+<app-secondary-page
+  icon="chatbubbles-outline"
+  eyebrow="Asistente IA"
+  title="SENA AI Assistant"
+  description="Consultas sobre el monitoreo"
+  badge="ASISTENTE DE DEMOSTRACIÓN"
+  footerLabel="Fase 2.7 · Asistente IA"
+>
+  <section class="app-card assistant" aria-labelledby="assistant-chat-title">
+    <header class="assistant__head">
+      <span class="assistant__avatar" aria-hidden="true">
+        <ion-icon name="sparkles-outline"></ion-icon>
+      </span>
+
+      <div class="assistant__identity">
+        <p class="app-overline">Asistente virtual</p>
+        <h2 id="assistant-chat-title" class="assistant__title">SENA AI Assistant</h2>
+        <span class="app-status app-status--violet assistant__status">
+          <span class="app-status__dot" aria-hidden="true"></span>
+          Modo demostración
+        </span>
+      </div>
+    </header>
+
+    <div class="assistant__chat" role="log" aria-label="Conversación de ejemplo">
+      <p class="assistant__label">Ejemplo de conversación</p>
+
+      <div class="assistant__row">
+        <span class="assistant__bubble-avatar" aria-hidden="true">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </span>
+        <div class="assistant__bubble assistant__bubble--bot">
+          <p>
+            Hola, soy el asistente de demostración de SENA CROWD INTELLIGENCE. Puedo orientarte sobre las zonas y
+            alertas simuladas.
+          </p>
+        </div>
+      </div>
+
+      <div class="assistant__row assistant__row--user">
+        <div class="assistant__bubble assistant__bubble--user">
+          <p>¿Cuál es la zona más ocupada?</p>
+        </div>
+      </div>
+
+      <div class="assistant__row">
+        <span class="assistant__bubble-avatar" aria-hidden="true">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </span>
+        <div class="assistant__bubble assistant__bubble--bot">
+          <p>En los datos simulados, el Pasillo principal registra la mayor ocupación estimada.</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="assistant__suggestions" aria-labelledby="assistant-suggestions-title">
+      <h2 id="assistant-suggestions-title" class="app-overline">Preguntas sugeridas</h2>
+      <ul class="assistant__suggestion-list">
+        @for (question of suggestions; track question) {
+        <li>
+          <button type="button" class="assistant__suggestion" disabled>
+            <ion-icon name="help-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ question }}</span>
+          </button>
+        </li>
+        }
+      </ul>
+    </section>
+
+    <div class="assistant__composer" aria-disabled="true">
+      <input
+        class="assistant__input"
+        type="text"
+        placeholder="Escribe tu consulta..."
+        aria-label="Consulta para el asistente"
+        disabled
+      />
+      <button type="button" class="assistant__send" aria-label="Enviar consulta" disabled>
+        <ion-icon name="send-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
+
+    <p class="assistant__future">
+      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+      <span>El chat con IA se habilitará en una fase posterior.</span>
+    </p>
+  </section>
+</app-secondary-page>

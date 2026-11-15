@@ -1,0 +1,95 @@
+<article [class]="'app-card alert-card alert-card--' + alert().severity">
+  <button
+    type="button"
+    class="alert-card__toggle"
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="detailsId()"
+    (click)="toggle()"
+  >
+    <span class="alert-card__icon">
+      <ion-icon [name]="severityIcon()" aria-hidden="true"></ion-icon>
+    </span>
+
+    <span class="alert-card__body">
+      <span class="alert-card__topline">
+        <span class="alert-card__severity">{{ severityLabel() }}</span>
+        <span class="alert-card__time">
+          <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+          {{ alert().occurredAt }}
+        </span>
+      </span>
+
+      <span class="alert-card__title">{{ alert().title }}</span>
+
+      <span class="alert-card__zone">
+        <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+        {{ alert().zoneName }}
+      </span>
+
+      <span class="alert-card__description">{{ alert().description }}</span>
+
+      <span class="alert-card__chips">
+        <span [class]="'alert-card__chip alert-card__chip--' + alert().status">
+          <ion-icon
+            [name]="alert().status === 'active' ? 'radio-button-on-outline' : 'checkmark-circle-outline'"
+            aria-hidden="true"
+          ></ion-icon>
+          Estado · {{ statusLabel() }}
+        </span>
+        <span [class]="'alert-card__chip alert-card__chip--review-' + alert().review">
+          <ion-icon
+            [name]="alert().review === 'pending' ? 'time-outline' : 'checkmark-done-outline'"
+            aria-hidden="true"
+          ></ion-icon>
+          Revisión · {{ reviewLabel() }}
+        </span>
+      </span>
+
+      <span class="alert-card__hint">
+        {{ expanded() ? 'Ocultar detalle' : 'Ver detalle' }}
+        <ion-icon [name]="expanded() ? 'chevron-up-outline' : 'chevron-down-outline'" aria-hidden="true"></ion-icon>
+      </span>
+    </span>
+  </button>
+
+  @if (expanded()) {
+    <section class="alert-card__details" [id]="detailsId()" aria-label="Detalle de la alerta">
+      <p class="alert-card__detail">{{ alert().detail }}</p>
+
+      <dl class="alert-card__data">
+        <div class="alert-card__data-item">
+          <dt>Identificador</dt>
+          <dd>{{ alert().id }}</dd>
+        </div>
+        <div class="alert-card__data-item">
+          <dt>Zona</dt>
+          <dd>{{ alert().zoneName }}</dd>
+        </div>
+        <div class="alert-card__data-item">
+          <dt>Fecha y hora</dt>
+          <dd>{{ alert().occurredAt }}</dd>
+        </div>
+        <div class="alert-card__data-item">
+          <dt>Estado de la alerta</dt>
+          <dd>{{ statusLabel() }}</dd>
+        </div>
+        <div class="alert-card__data-item">
+          <dt>Estado de revisión</dt>
+          <dd>{{ reviewLabel() }}</dd>
+        </div>
+      </dl>
+
+      @if (isPending()) {
+        <button type="button" class="alert-card__review" (click)="requestReview()">
+          <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+          Marcar como revisada
+        </button>
+      } @else {
+        <p class="alert-card__reviewed" role="status">
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          Revisión completada. El estado de la alerta no cambia.
+        </p>
+      }
+    </section>
+  }
+</article>

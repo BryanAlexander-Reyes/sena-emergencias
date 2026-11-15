@@ -1,0 +1,28 @@
+import type { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./mas.page').then((m) => m.MasPage),
+  },
+  {
+    path: 'zona-segura',
+    loadComponent: () => import('./zona-segura/zona-segura.page').then((m) => m.ZonaSeguraPage),
+  },
+  {
+    path: 'estadisticas',
+    loadComponent: () => import('./estadisticas/estadisticas.page').then((m) => m.EstadisticasPage),
+  },
+  {
+    path: 'sensores',
+    loadComponent: () => import('./sensores/sensores.page').then((m) => m.SensoresPage),
+  },
+  {
+    path: 'asistente',
+    loadComponent: () => import('./asistente/asistente.page').then((m) => m.AsistentePage),
+  },
+  {
+    path: 'configuracion',
+    loadComponent: () => import('./configuracion/configuracion.page').then((m) => m.ConfiguracionPage),
+  },
+];

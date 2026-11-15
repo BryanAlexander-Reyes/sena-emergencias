@@ -1,0 +1,79 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <app-feature-intro
+        icon="business-outline"
+        eyebrow="Zonas"
+        title="Monitoreo de zonas"
+        description="Supervisa la ocupación estimada de cada área"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="app-card zonas-simulation" aria-labelledby="zonas-simulation-title">
+        <div class="zonas-simulation__head">
+          <div class="zonas-simulation__heading">
+            <p class="app-overline">Simulación manual</p>
+            <h2 id="zonas-simulation-title" class="app-card-title">Ajuste de ocupación</h2>
+          </div>
+          <span class="app-badge app-badge--warning zonas-simulation__badge">MODO SIMULACIÓN — DATOS NO REALES</span>
+        </div>
+
+        <p class="zonas-simulation__text">
+          Usa los controles de cada tarjeta para aumentar o disminuir una persona. Los cambios son temporales y no
+          generan alertas.
+        </p>
+
+        <div class="zonas-simulation__actions">
+          <button
+            type="button"
+            class="zonas-simulation__reset"
+            [disabled]="!hasChanges()"
+            (click)="confirmResetAll()"
+          >
+            <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+            <span>Restablecer todas</span>
+          </button>
+        </div>
+
+        @if (simulationMessage(); as message) {
+          <p class="zonas-simulation__feedback" role="status" aria-live="polite">{{ message }}</p>
+        }
+      </section>
+
+      <section class="app-card zonas-summary" aria-label="Resumen de zonas monitoreadas">
+        <div class="zonas-summary__stat">
+          <span class="zonas-summary__value">{{ totalPeople() }}</span>
+          <span class="zonas-summary__label">Personas estimadas</span>
+        </div>
+        <span class="zonas-summary__divider" aria-hidden="true"></span>
+        <div class="zonas-summary__stat">
+          <span class="zonas-summary__value">{{ totalZones() }}</span>
+          <span class="zonas-summary__label">Zonas monitoreadas</span>
+        </div>
+      </section>
+
+      <section class="zonas-list" aria-label="Tarjetas de zonas">
+        @for (zone of zones(); track zone.id) {
+          <app-zone-card
+            [zone]="zone"
+            [resetDisabled]="isAtInitial(zone.id)"
+            (increment)="increment(zone.id)"
+            (decrement)="decrement(zone.id)"
+            (reset)="resetZone(zone.id)"
+          />
+        }
+      </section>
+
+      <p class="zonas-disclaimer">
+        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        <span>Los umbrales de ocupación son ilustrativos y no representan criterios oficiales de seguridad.</span>
+      </p>
+
+      <footer class="zonas-footer">
+        <span>Fase 2.4 · Zonas</span>
+        <span class="zonas-footer__dot" aria-hidden="true"></span>
+        <span>v0.4</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

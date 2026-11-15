@@ -1,37 +1,367 @@
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
+ * SENA CROWD INTELLIGENCE — global styles and reusable UI primitives.
+ * Design tokens live in src/theme/variables.scss.
  */
 
 /* Core CSS required for Ionic components to work properly */
-@import "@ionic/angular/css/core.css";
+@import '@ionic/angular/css/core.css';
 
 /* Basic CSS for apps built with Ionic */
-@import "@ionic/angular/css/normalize.css";
-@import "@ionic/angular/css/structure.css";
-@import "@ionic/angular/css/typography.css";
-@import "@ionic/angular/css/display.css";
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
 
 /* Optional CSS utils that can be commented out */
-@import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
-@import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
-@import "@ionic/angular/css/flex-utils.css";
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
 
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
- * For more info, please see:
+ * The app uses a single dark identity, so the always-on palette is used.
  * https://ionicframework.com/docs/theming/dark-mode
  */
+@import '@ionic/angular/css/palettes/dark.always.css';
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html,
+body {
+  background: var(--app-bg);
+}
+
+body {
+  margin: 0;
+  color: var(--app-text);
+  font-family: var(--ion-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+ion-content {
+  --background: var(--app-bg);
+}
+
+ion-toolbar {
+  --background: var(--app-bg-secondary);
+  --color: var(--app-text);
+  --border-color: var(--app-border);
+}
+
+ion-button {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+ion-button.app-button:focus-visible,
+ion-button.app-button.ion-focused {
+  outline: 2px solid var(--app-cyan);
+  outline-offset: 2px;
+}
+
+ion-toast {
+  --background: var(--app-surface);
+  --color: var(--app-text);
+  --border: 1px solid var(--app-border);
+  --box-shadow: var(--app-shadow-md);
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.app-page {
+  min-height: 100%;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(36, 123, 255, 0.16) 0%, rgba(8, 17, 31, 0) 60%),
+    radial-gradient(90% 60% at 100% 100%, rgba(0, 212, 255, 0.08) 0%, rgba(8, 17, 31, 0) 55%), var(--app-bg);
+}
+
+.app-container {
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: calc(var(--app-space-6) + env(safe-area-inset-top, 0px)) var(--app-space-5)
+    calc(var(--app-space-8) + env(safe-area-inset-bottom, 0px));
+}
+
+.app-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+}
+
+.app-stack--sm {
+  gap: var(--app-space-2);
+}
+
+.app-stack--lg {
+  gap: var(--app-space-6);
+}
+
+/* ==========================================================================
+   Surfaces
+   ========================================================================== */
+
+.app-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+  padding: var(--app-space-5);
+}
+
+.app-card--accent {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(36, 123, 255, 0.12) 0%, rgba(17, 30, 50, 0) 45%), var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+}
+
+.app-card--accent::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--app-blue), var(--app-cyan));
+}
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+
+.app-title {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.app-card-title {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.app-subtitle {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.app-overline {
+  margin: 0 0 var(--app-space-1);
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.app-button {
+  --background: linear-gradient(135deg, var(--app-blue) 0%, #1a63d8 100%);
+  --background-hover: #1f6fe8;
+  --background-activated: #1a63d8;
+  --color: #ffffff;
+  --border-radius: var(--app-radius-md);
+  --box-shadow: 0 8px 20px rgba(36, 123, 255, 0.28);
+  --padding-top: 0.9rem;
+  --padding-bottom: 0.9rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.app-button--ghost {
+  --background: transparent;
+  --background-hover: var(--app-blue-soft);
+  --background-activated: var(--app-blue-soft);
+  --color: var(--app-text);
+  --border: 1px solid var(--app-border);
+  --box-shadow: none;
+}
+
+/* ==========================================================================
+   Badges & status
+   ========================================================================== */
+
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--app-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.app-badge--demo {
+  border-color: rgba(0, 212, 255, 0.35);
+  background: var(--app-cyan-soft);
+  color: var(--app-cyan);
+}
+
+.app-badge--success {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: var(--app-green-soft);
+  color: var(--app-green);
+}
+
+.app-badge--warning {
+  border-color: rgba(250, 204, 21, 0.35);
+  background: var(--app-yellow-soft);
+  color: var(--app-yellow);
+}
+
+.app-badge--danger {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: var(--app-red-soft);
+  color: var(--app-red);
+}
+
+.app-badge--violet {
+  border-color: rgba(168, 85, 247, 0.35);
+  background: var(--app-violet-soft);
+  color: var(--app-violet);
+}
+
+.app-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  color: var(--app-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.app-status__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--app-green);
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.15),
+    0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.app-status--warning .app-status__dot {
+  background: var(--app-yellow);
+  box-shadow:
+    0 0 0 4px rgba(250, 204, 21, 0.15),
+    0 0 10px rgba(250, 204, 21, 0.6);
+}
+
+.app-status--danger .app-status__dot {
+  background: var(--app-red);
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.15),
+    0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.app-status--violet .app-status__dot {
+  background: var(--app-violet);
+  box-shadow:
+    0 0 0 4px rgba(168, 85, 247, 0.15),
+    0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+/* ==========================================================================
+   Icons & separators
+   ========================================================================== */
+
+.app-icon-tile {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(36, 123, 255, 0.3);
+  border-radius: var(--app-radius-md);
+  background: var(--app-blue-soft);
+  color: var(--app-cyan);
+  font-size: 1.35rem;
+}
+
+.app-icon-tile--lg {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--app-radius-lg);
+  background: linear-gradient(160deg, rgba(36, 123, 255, 0.22), rgba(0, 212, 255, 0.08));
+  box-shadow: var(--app-shadow-glow);
+  font-size: 2.1rem;
+}
+
+.app-divider {
+  height: 1px;
+  margin: var(--app-space-4) 0;
+  border: 0;
+  background: var(--app-border);
+}
+
+/* ==========================================================================
+   Section headings
+   ========================================================================== */
+
+.app-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-3);
+  width: 100%;
+  margin-bottom: var(--app-space-3);
+}
+
+.app-section-head .app-overline {
+  margin: 0;
+}
+
+.feature-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+}
+
+/* ==========================================================================
+   Motion preferences
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
