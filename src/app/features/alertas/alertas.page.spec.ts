@@ -203,8 +203,9 @@ describe('AlertasPage', () => {
   it('should render the demo disclaimer and the footer', () => {
     const content = pageText();
 
-    expect(content).toContain('Las alertas, fechas y horas son ficticias y no se actualizan en tiempo real');
-    expect(content).toContain('no cambia su estado ni elimina el riesgo');
+    expect(content).toContain('Las alertas son simuladas');
+    expect(content).toContain('no provienen de sensores conectados');
+    expect(content).toContain('no cambia el estado ni elimina el riesgo simulado');
     expect(content).toContain('Fase 2.6 · Alertas');
     expect(content).toContain('v0.6');
   });

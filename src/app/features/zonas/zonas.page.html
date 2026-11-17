@@ -19,8 +19,8 @@
         </div>
 
         <p class="zonas-simulation__text">
-          Usa los controles de cada tarjeta para aumentar o disminuir una persona. Los cambios son temporales y no
-          generan alertas.
+          Usa los controles de cada tarjeta para aumentar o disminuir una persona. Los cambios son temporales y
+          actualizan automáticamente las alertas de ocupación.
         </p>
 
         <div class="zonas-simulation__actions">
@@ -59,7 +59,7 @@
             [resetDisabled]="isAtInitial(zone.id)"
             (increment)="increment(zone.id)"
             (decrement)="decrement(zone.id)"
-            (reset)="resetZone(zone.id)"
+            (resetRequested)="resetZone(zone.id)"
           />
         }
       </section>

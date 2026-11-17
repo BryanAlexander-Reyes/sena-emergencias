@@ -26,7 +26,7 @@ export class ZoneCardComponent {
 
   readonly increment = output<void>();
   readonly decrement = output<void>();
-  readonly reset = output<void>();
+  readonly resetRequested = output<void>();
 
   readonly occupancy = computed(() => getZoneOccupancy(this.zone()));
   readonly status = computed(() => getZoneStatus(this.zone()));

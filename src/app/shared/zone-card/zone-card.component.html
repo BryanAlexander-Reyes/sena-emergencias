@@ -39,6 +39,7 @@
 
 <div
   class="zone-card__controls"
+  tabindex="-1"
   (click)="$event.stopPropagation()"
   (keydown)="$event.stopPropagation()"
 >
@@ -74,7 +75,7 @@
     class="zone-card__reset"
     [disabled]="resetDisabled()"
     [attr.aria-label]="'Restablecer la ocupación de ' + zone().name"
-    (click)="reset.emit()"
+    (click)="resetRequested.emit()"
   >
     <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
     <span>Restablecer</span>

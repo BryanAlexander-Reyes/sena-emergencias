@@ -15,6 +15,7 @@ import {
 } from 'ionicons/icons';
 
 import {
+  ALERT_ORIGIN_LABELS,
   ALERT_REVIEW_LABELS,
   ALERT_SEVERITY_LABELS,
   ALERT_STATUS_LABELS,
@@ -45,6 +46,7 @@ export class AlertCardComponent {
   readonly severityLabel = computed(() => ALERT_SEVERITY_LABELS[this.alert().severity]);
   readonly statusLabel = computed(() => ALERT_STATUS_LABELS[this.alert().status]);
   readonly reviewLabel = computed(() => ALERT_REVIEW_LABELS[this.alert().review]);
+  readonly originLabel = computed(() => ALERT_ORIGIN_LABELS[this.alert().origin]);
   readonly severityIcon = computed(() => SEVERITY_ICONS[this.alert().severity]);
   readonly detailsId = computed(() => `alert-details-${this.alert().id}`);
   readonly isPending = computed(() => this.alert().review === 'pending');

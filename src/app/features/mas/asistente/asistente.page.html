@@ -2,9 +2,9 @@
   icon="chatbubbles-outline"
   eyebrow="Asistente IA"
   title="SENA AI Assistant"
-  description="Consultas sobre el monitoreo"
-  badge="ASISTENTE DE DEMOSTRACIÓN"
-  footerLabel="Fase 2.7 · Asistente IA"
+  description="Consultas sobre el monitoreo simulado"
+  badge="ASISTENTE DE DEMOSTRACIÓN — RESPUESTAS AUTOMÁTICAS LOCALES"
+  footerLabel="Fase 3.7 · Asistente"
 >
   <section class="app-card assistant" aria-labelledby="assistant-chat-title">
     <header class="assistant__head">
@@ -17,48 +17,40 @@
         <h2 id="assistant-chat-title" class="assistant__title">SENA AI Assistant</h2>
         <span class="app-status app-status--violet assistant__status">
           <span class="app-status__dot" aria-hidden="true"></span>
-          Modo demostración
+          Respuestas locales (sin IA externa)
         </span>
       </div>
     </header>
 
-    <div class="assistant__chat" role="log" aria-label="Conversación de ejemplo">
-      <p class="assistant__label">Ejemplo de conversación</p>
-
-      <div class="assistant__row">
-        <span class="assistant__bubble-avatar" aria-hidden="true">
-          <ion-icon name="sparkles-outline"></ion-icon>
-        </span>
-        <div class="assistant__bubble assistant__bubble--bot">
-          <p>
-            Hola, soy el asistente de demostración de SENA CROWD INTELLIGENCE. Puedo orientarte sobre las zonas y
-            alertas simuladas.
-          </p>
+    <div #chatLog class="assistant__chat" role="log" aria-label="Conversación con el asistente" aria-live="polite">
+      @for (message of messages(); track message.id) {
+        @if (message.sender === 'assistant') {
+        <div class="assistant__row">
+          <span class="assistant__bubble-avatar" aria-hidden="true">
+            <ion-icon name="sparkles-outline"></ion-icon>
+          </span>
+          <div class="assistant__bubble assistant__bubble--bot">
+            <p>{{ message.content }}</p>
+            <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
+          </div>
         </div>
-      </div>
-
-      <div class="assistant__row assistant__row--user">
-        <div class="assistant__bubble assistant__bubble--user">
-          <p>¿Cuál es la zona más ocupada?</p>
+        } @else {
+        <div class="assistant__row assistant__row--user">
+          <div class="assistant__bubble assistant__bubble--user">
+            <p>{{ message.content }}</p>
+            <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
+          </div>
         </div>
-      </div>
-
-      <div class="assistant__row">
-        <span class="assistant__bubble-avatar" aria-hidden="true">
-          <ion-icon name="sparkles-outline"></ion-icon>
-        </span>
-        <div class="assistant__bubble assistant__bubble--bot">
-          <p>En los datos simulados, el Pasillo principal registra la mayor ocupación estimada.</p>
-        </div>
-      </div>
+        }
+      }
     </div>
 
     <section class="assistant__suggestions" aria-labelledby="assistant-suggestions-title">
-      <h2 id="assistant-suggestions-title" class="app-overline">Preguntas sugeridas</h2>
+      <h2 id="assistant-suggestions-title" class="app-overline">Preguntas rápidas</h2>
       <ul class="assistant__suggestion-list">
-        @for (question of suggestions; track question) {
+        @for (question of quickQuestions; track question) {
         <li>
-          <button type="button" class="assistant__suggestion" disabled>
+          <button type="button" class="assistant__suggestion" (click)="askQuick(question)">
             <ion-icon name="help-circle-outline" aria-hidden="true"></ion-icon>
             <span>{{ question }}</span>
           </button>
@@ -67,22 +59,32 @@
       </ul>
     </section>
 
-    <div class="assistant__composer" aria-disabled="true">
+    <div class="assistant__composer">
       <input
         class="assistant__input"
         type="text"
+        [value]="draft()"
+        (input)="onDraftChange($any($event.target).value)"
+        (keydown)="onKeydown($event)"
+        [attr.maxlength]="maxLength"
         placeholder="Escribe tu consulta..."
         aria-label="Consulta para el asistente"
-        disabled
+        autocomplete="off"
       />
-      <button type="button" class="assistant__send" aria-label="Enviar consulta" disabled>
+      <button
+        type="button"
+        class="assistant__send"
+        aria-label="Enviar consulta"
+        [disabled]="!canSend()"
+        (click)="send()"
+      >
         <ion-icon name="send-outline" aria-hidden="true"></ion-icon>
       </button>
     </div>
 
     <p class="assistant__future">
       <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-      <span>El chat con IA se habilitará en una fase posterior.</span>
+      <span>Consultas locales sobre ocupación, zonas, alertas, sensores y estadísticas. La conversación se mantiene en memoria durante la sesión.</span>
     </p>
   </section>
 </app-secondary-page>

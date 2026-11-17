@@ -2,67 +2,201 @@
   icon="hardware-chip-outline"
   eyebrow="Dispositivos"
   title="Sensores IoT"
-  description="Monitoreo de dispositivos"
-  footerLabel="Fase 2.7 · Sensores IoT"
+  description="Panel interactivo de simulación"
+  badge="ENTORNO DE SIMULACIÓN — SIN HARDWARE CONECTADO"
+  footerLabel="Fase 3.6 · Sensores IoT"
 >
-  <section class="app-card sensor-status" aria-labelledby="sensor-status-title">
-    <span class="sensor-status__icon">
+  <section class="app-card sensor-env" aria-label="Aviso de simulación">
+    <span class="sensor-env__icon">
       <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
     </span>
-    <div class="sensor-status__body">
-      <h2 id="sensor-status-title" class="sensor-status__title">Dispositivos no conectados</h2>
-      <p class="sensor-status__text">No hay comunicación con hardware real en esta demostración.</p>
-      <span class="app-status app-status--warning sensor-status__badge">
-        <span class="app-status__dot" aria-hidden="true"></span>
-        Sin conexión
-      </span>
+    <div class="sensor-env__body">
+      <h2 class="sensor-env__title">Sin hardware conectado</h2>
+      <p class="sensor-env__text">
+        Todos los dispositivos y lecturas son ficticios y se controlan manualmente en memoria. No existe comunicación
+        física, telemetría real ni conexión con ESP32 u otros dispositivos.
+      </p>
     </div>
   </section>
 
-  <section class="app-card esp32-card" aria-labelledby="esp32-title">
-    <header class="esp32-card__head">
-      <span class="esp32-card__icon">
-        <ion-icon name="hardware-chip-outline" aria-hidden="true"></ion-icon>
-      </span>
-      <div class="esp32-card__identity">
-        <p class="app-overline">Controlador previsto</p>
-        <h2 id="esp32-title" class="esp32-card__title">ESP32</h2>
-      </div>
-      <span class="app-badge">No conectado</span>
-    </header>
-    <p class="esp32-card__text">
-      Placa de control prevista para integrar los sensores de la maqueta. En esta demostración no hay dispositivos ni
-      lecturas reales.
-    </p>
+  <section class="sensor-summary" aria-label="Resumen del simulador">
+    <article class="app-card sensor-summary__card">
+      <span class="sensor-summary__value">{{ totalDevices() }}</span>
+      <span class="sensor-summary__label">Dispositivos simulados</span>
+    </article>
+    <article class="app-card sensor-summary__card sensor-summary__card--active">
+      <span class="sensor-summary__value">{{ activeSimulations() }}</span>
+      <span class="sensor-summary__label">Simulaciones activas</span>
+    </article>
+    <article class="app-card sensor-summary__card sensor-summary__card--paused">
+      <span class="sensor-summary__value">{{ pausedSimulations() }}</span>
+      <span class="sensor-summary__label">Simulaciones pausadas</span>
+    </article>
+    <article class="app-card sensor-summary__card sensor-summary__card--fault">
+      <span class="sensor-summary__value">{{ faultSimulations() }}</span>
+      <span class="sensor-summary__label">Fallos ficticios</span>
+    </article>
   </section>
 
-  <section class="sensor-types" aria-labelledby="sensor-types-title">
-    <div class="app-section-head">
-      <p id="sensor-types-title" class="app-overline">Tipos de sensores previstos</p>
-      <span class="app-badge">{{ sensors.length }} tipos</span>
-    </div>
+  <div class="sensor-actions">
+    <ion-button fill="outline" color="medium" size="small" (click)="confirmResetAll()">
+      <ion-icon slot="start" name="refresh-outline"></ion-icon>
+      Restablecer todos
+    </ion-button>
+  </div>
 
-    <ul class="sensor-list">
-      @for (sensor of sensors; track sensor.id) {
-      <li class="app-card sensor-list__item">
-        <span class="sensor-list__icon">
-          <ion-icon [name]="sensor.icon" aria-hidden="true"></ion-icon>
+  <section class="sensor-list" aria-label="Dispositivos simulados">
+    @for (sensor of sensors(); track sensor.id) {
+    <article class="app-card sensor-card" [attr.data-state]="sensor.simulationState">
+      <header class="sensor-card__head">
+        <span class="sensor-card__icon">
+          <ion-icon [name]="iconFor(sensor)" aria-hidden="true"></ion-icon>
         </span>
-        <div class="sensor-list__body">
-          <h3 class="sensor-list__name">{{ sensor.name }}</h3>
-          <p class="sensor-list__description">{{ sensor.description }}</p>
+        <div class="sensor-card__identity">
+          <p class="app-overline">{{ typeLabel(sensor) }}</p>
+          <h2 class="sensor-card__name">{{ sensor.name }}</h2>
+          <p class="sensor-card__zone">Zona: {{ zoneName(sensor.zoneId) }}</p>
         </div>
-        <span class="sensor-list__state">Previsto</span>
-      </li>
+        <button
+          type="button"
+          class="sensor-card__toggle"
+          (click)="toggleExpanded(sensor.id)"
+          [attr.aria-expanded]="isExpanded(sensor.id)"
+        >
+          <ion-icon [name]="isExpanded(sensor.id) ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+        </button>
+      </header>
+
+      <p class="sensor-card__desc">{{ sensor.description }}</p>
+
+      <div class="sensor-card__meta">
+        <span class="sensor-chip" [attr.data-state]="sensor.simulationState">
+          Estado: {{ stateLabel(sensor.simulationState) }}
+        </span>
+        <span class="sensor-chip sensor-chip--hw">Hardware real: {{ sensor.hardwareConnection }}</span>
+      </div>
+
+      <p class="sensor-card__reading" aria-live="polite">{{ readingText(sensor) }}</p>
+
+      @if (isExpanded(sensor.id)) {
+      <div class="sensor-card__controls">
+        <div class="sensor-field">
+          <span>Estado lógico de simulación</span>
+          <ion-select
+            interface="popover"
+            [value]="sensor.simulationState"
+            (ionChange)="setState(sensor.id, $event.detail.value)"
+            aria-label="Estado lógico de simulación"
+          >
+            @for (st of simulationStates; track st) {
+            <ion-select-option [value]="st">{{ stateLabel(st) }}</ion-select-option>
+            }
+          </ion-select>
+        </div>
+
+        @if (sensor.type === 'ir') {
+        <div class="sensor-field">
+          <span>Lectura simulada (IR)</span>
+          <ion-button size="small" fill="outline" [disabled]="!canControlReading(sensor)" (click)="toggleIr(sensor.id)">
+            Alternar paso: {{ sensor.reading ? 'Sí' : 'No' }}
+          </ion-button>
+        </div>
+        }
+
+        @if (sensor.type === 'pir') {
+        <div class="sensor-field">
+          <span>Lectura simulada (PIR)</span>
+          <ion-button size="small" fill="outline" [disabled]="!canControlReading(sensor)" (click)="togglePir(sensor.id)">
+            Alternar movimiento: {{ sensor.reading ? 'Sí' : 'No' }}
+          </ion-button>
+        </div>
+        }
+
+        @if (sensor.type === 'ultrasonic') {
+        <div class="sensor-field">
+          <span>Distancia simulada (cm, ≥ 0)</span>
+          <div class="sensor-field__row">
+            <ion-input
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              [value]="sensor.reading"
+              [disabled]="!canControlReading(sensor)"
+              (ionChange)="setUltrasonic(sensor.id, $event.detail.value)"
+              aria-label="Distancia simulada en centímetros"
+            ></ion-input>
+            <span class="sensor-field__unit">cm</span>
+          </div>
+        </div>
+        }
+
+        @if (sensor.type === 'servo') {
+        <div class="sensor-field">
+          <span>Ángulo simulado (0°–180°)</span>
+          <div class="sensor-field__row">
+            <ion-input
+              type="number"
+              min="0"
+              max="180"
+              step="1"
+              inputmode="numeric"
+              [value]="sensor.servoAngle"
+              [disabled]="!canControlReading(sensor)"
+              (ionChange)="setServo(sensor.id, $event.detail.value)"
+              aria-label="Ángulo simulado del servomotor"
+            ></ion-input>
+            <span class="sensor-field__unit">°</span>
+          </div>
+        </div>
+        }
+
+        @if (sensor.type === 'led-matrix') {
+        <div class="sensor-field">
+          <span>Patrón visual simulado</span>
+          <div class="sensor-field__row">
+            <ion-select
+              interface="popover"
+              [value]="sensor.ledPattern"
+              [disabled]="!canControlReading(sensor)"
+              (ionChange)="setLed(sensor.id, $event.detail.value)"
+              aria-label="Patrón de matriz LED"
+            >
+              @for (p of ledPatterns; track p) {
+              <ion-select-option [value]="p">{{ ledLabel(p) }}</ion-select-option>
+              }
+            </ion-select>
+            <ion-button size="small" fill="clear" [disabled]="!canControlReading(sensor)" (click)="cycleLed(sensor.id)">
+              Cambiar
+            </ion-button>
+          </div>
+        </div>
+        }
+
+        @if (!canControlReading(sensor) && sensor.type !== 'esp32') {
+        <p class="sensor-card__hint">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          Lectura bloqueada mientras la simulación esté pausada o en fallo ficticio.
+        </p>
+        }
+
+        <div class="sensor-card__device-actions">
+          <ion-button size="small" fill="clear" color="medium" (click)="resetDevice(sensor.id)">
+            <ion-icon slot="start" name="refresh-outline"></ion-icon>
+            Restablecer dispositivo
+          </ion-button>
+        </div>
+      </div>
       }
-    </ul>
+    </article>
+    }
   </section>
 
   <p class="sensor-note">
     <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
     <span>
-      No se muestran lecturas ni se establece comunicación con dispositivos. La integración con hardware se implementará
-      en una fase posterior.
+      Las lecturas son ficticias y controladas manualmente. Los sensores simulados no modifican la ocupación, no generan
+      alertas ni registran eventos de ocupación.
     </span>
   </p>
 </app-secondary-page>

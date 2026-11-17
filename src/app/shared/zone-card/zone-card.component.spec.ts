@@ -79,7 +79,7 @@ describe('ZoneCardComponent', () => {
     const reset = vi.fn();
     fixture.componentInstance.increment.subscribe(increment);
     fixture.componentInstance.decrement.subscribe(decrement);
-    fixture.componentInstance.reset.subscribe(reset);
+    fixture.componentInstance.resetRequested.subscribe(reset);
 
     incrementButton().click();
     decrementButton().click();

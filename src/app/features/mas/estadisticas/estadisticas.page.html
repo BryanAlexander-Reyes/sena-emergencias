@@ -2,11 +2,11 @@
   icon="stats-chart-outline"
   eyebrow="Monitoreo"
   title="Estadísticas"
-  description="Análisis de ocupación"
+  description="Historial y estadísticas de la sesión"
   badge="DATOS DE DEMOSTRACIÓN"
-  footerLabel="Fase 2.7 · Estadísticas"
+  footerLabel="Fase 3.5 · Estadísticas"
 >
-  <section class="stats-grid" aria-label="Indicadores actuales de ocupación">
+  <section class="stats-grid" aria-label="Indicadores de la sesión">
     @for (metric of metrics(); track metric.title) {
     <app-metric-card
       [title]="metric.title"
@@ -18,31 +18,129 @@
     }
   </section>
 
-  <section class="app-card stats-future" aria-labelledby="stats-future-title">
-    <span class="stats-future__icon">
-      <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
-    </span>
-    <p class="app-overline">Sección preparada</p>
-    <h2 id="stats-future-title" class="stats-future__title">Gráficos de ocupación</h2>
-    <p class="stats-future__text">Este espacio mostrará tendencias cuando exista un historial de datos disponible.</p>
+  <section class="app-card stats-section" aria-labelledby="stats-chart-title">
+    <div class="stats-section__head">
+      <div>
+        <p class="app-overline">Evolución en sesión</p>
+        <h2 id="stats-chart-title" class="stats-section__title">Total de personas</h2>
+      </div>
+      <span class="stats-section__hint">
+        <ion-icon name="pulse-outline" aria-hidden="true"></ion-icon>
+        Punto inicial + cambios reales
+      </span>
+    </div>
 
-    <ul class="stats-future__list">
-      <li>
+    <div class="stats-chart" role="img" aria-label="Gráfico de evolución del total de personas durante la sesión">
+      <svg
+        [attr.viewBox]="'0 0 ' + chart().width + ' ' + chart().height"
+        preserveAspectRatio="none"
+        class="stats-chart__svg"
+      >
+        <line
+          [attr.x1]="chart().padX"
+          [attr.y1]="chart().padY + chart().innerH"
+          [attr.x2]="chart().width - chart().padX"
+          [attr.y2]="chart().padY + chart().innerH"
+          class="stats-chart__axis"
+        ></line>
+        @if (chart().coords.length > 1) {
+        <polygon [attr.points]="chart().area" class="stats-chart__area"></polygon>
+        <polyline [attr.points]="chart().line" class="stats-chart__line"></polyline>
+        }
+        @for (point of chart().coords; track $index) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" class="stats-chart__point">
+          <title>{{ point.label }}: {{ point.total }} personas</title>
+        </circle>
+        }
+      </svg>
+      <div class="stats-chart__legend">
+        <span>Inicio: {{ timeline()[0]?.total ?? 0 }}</span>
+        <span>Actual: {{ totalPeople() }}</span>
+        <span>Máx. sesión: {{ maxTotalObserved() }}</span>
+      </div>
+    </div>
+    <p class="stats-section__caption">
+      Referencia de la sesión actual (no es historial anterior). Se actualiza solo con cambios de ocupación confirmados.
+    </p>
+  </section>
+
+  <section class="app-card stats-section" aria-labelledby="stats-zones-title">
+    <div class="stats-section__head">
+      <div>
+        <p class="app-overline">Detalle por zona</p>
+        <h2 id="stats-zones-title" class="stats-section__title">Estadísticas por zona</h2>
+      </div>
+    </div>
+
+    <div class="stats-zones">
+      @for (row of zoneRows(); track row.id) {
+      <article class="stats-zone" [attr.data-status]="row.status">
+        <div class="stats-zone__top">
+          <h3 class="stats-zone__name">{{ row.name }}</h3>
+          <span class="stats-zone__badge">{{ row.statusLabel }}</span>
+        </div>
+        <dl class="stats-zone__grid">
+          <div>
+            <dt>Personas actuales</dt>
+            <dd>{{ row.people }} / {{ row.capacity }}</dd>
+          </div>
+          <div>
+            <dt>Porcentaje actual</dt>
+            <dd>{{ row.occupancy }}%</dd>
+          </div>
+          <div>
+            <dt>Máx. observado</dt>
+            <dd>{{ row.maxPeopleObserved }} pers.</dd>
+          </div>
+          <div>
+            <dt>Cambios</dt>
+            <dd>{{ row.changeCount }}</dd>
+          </div>
+        </dl>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="app-card stats-section" aria-labelledby="stats-history-title">
+    <div class="stats-section__head">
+      <div>
+        <p class="app-overline">Registro de la sesión</p>
+        <h2 id="stats-history-title" class="stats-section__title">Eventos recientes</h2>
+      </div>
+      <span class="stats-section__hint">
         <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-        Sin historial en la demostración
+        Más reciente primero
+      </span>
+    </div>
+
+    @if (isEmpty()) {
+    <p class="stats-empty">Aún no hay cambios registrados en esta sesión</p>
+    } @else {
+    <ul class="stats-events" aria-label="Historial de cambios de ocupación">
+      @for (event of events(); track event.id) {
+      <li class="stats-event">
+        <div class="stats-event__main">
+          <span class="stats-event__zone">{{ event.zoneName }}</span>
+          <span class="stats-event__action">{{ event.actionLabel }}</span>
+        </div>
+        <div class="stats-event__meta">
+          <span class="stats-event__time">{{ formatEventTime(event) }}</span>
+          <span class="stats-event__change">
+            {{ event.previousPeople }} → {{ event.newPeople }} personas ({{ deltaLabel(event) }})
+          </span>
+        </div>
       </li>
-      <li>
-        <ion-icon name="bar-chart-outline" aria-hidden="true"></ion-icon>
-        Gráficos aún no implementados
-      </li>
+      }
     </ul>
+    }
   </section>
 
   <p class="stats-note">
     <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
     <span>
-      Los indicadores se calculan con los datos simulados actuales. No representan mediciones reales ni series
-      históricas.
+      Los indicadores se calculan con datos simulados de la sesión actual en memoria (sin sensores ni persistencia).
+      Al recargar, la ocupación, el historial y los máximos observados vuelven a los valores iniciales.
     </span>
   </p>
 </app-secondary-page>

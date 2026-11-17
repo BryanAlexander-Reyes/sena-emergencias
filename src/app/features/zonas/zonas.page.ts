@@ -72,7 +72,7 @@ export class ZonasPage {
     const alert = await this.alertController.create({
       header: 'Restablecer todas las zonas',
       message:
-        'Se recuperarán las ocupaciones iniciales de las cuatro zonas. Las alertas existentes no se modifican.',
+        'Se recuperarán las ocupaciones iniciales de las cuatro zonas. Las alertas automáticas de ocupación se actualizarán según el estado restablecido.',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {

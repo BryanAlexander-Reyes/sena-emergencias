@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Fase 2.7 · Asistente IA
+   Fase 3.7 · Asistente de demostración (reglas locales)
    ========================================================================== */
 
 .assistant {
@@ -43,9 +43,7 @@
   min-width: 0;
 }
 
-.assistant__identity .app-overline {
-  margin-bottom: 0;
-}
+.assistant__identity .app-overline { margin-bottom: 0; }
 
 .assistant__title {
   margin: 0;
@@ -70,16 +68,9 @@
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
   background: rgba(8, 17, 31, 0.45);
-}
-
-.assistant__label {
-  margin: 0;
-  color: var(--app-text-muted);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-align: center;
-  text-transform: uppercase;
+  max-height: 340px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .assistant__row {
@@ -119,6 +110,13 @@
   overflow-wrap: anywhere;
 }
 
+.assistant__time {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.62rem;
+  color: var(--app-text-soft);
+}
+
 .assistant__bubble--bot {
   border: 1px solid var(--assistant-border);
   border-bottom-left-radius: var(--app-radius-sm);
@@ -133,19 +131,21 @@
   color: var(--app-text);
 }
 
+.assistant__bubble--user .assistant__time {
+  text-align: right;
+}
+
 .assistant__suggestions {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-2);
 }
 
-.assistant__suggestions .app-overline {
-  margin: 0;
-}
+.assistant__suggestions .app-overline { margin: 0; }
 
 .assistant__suggestion-list {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 0;
   padding: 0;
@@ -153,31 +153,30 @@
 }
 
 .assistant__suggestion {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--app-space-2);
-  width: 100%;
-  min-height: 44px;
-  padding: var(--app-space-2) var(--app-space-3);
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
+  border-radius: var(--app-radius-pill);
   background: rgba(8, 17, 31, 0.5);
   color: var(--app-text-muted);
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   text-align: left;
-  cursor: not-allowed;
+  cursor: pointer;
+}
+
+.assistant__suggestion:active {
+  border-color: var(--assistant-border);
+  color: var(--app-text);
 }
 
 .assistant__suggestion ion-icon {
   flex: 0 0 auto;
   color: var(--assistant-accent);
-  font-size: 0.95rem;
-}
-
-.assistant__suggestion span {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  font-size: 0.9rem;
 }
 
 .assistant__composer {
@@ -194,7 +193,7 @@
   border: 1px solid var(--assistant-border);
   border-radius: var(--app-radius-pill);
   background: rgba(8, 17, 31, 0.6);
-  color: var(--app-text-muted);
+  color: var(--app-text);
   font-family: inherit;
   font-size: 0.78rem;
 }
@@ -202,11 +201,6 @@
 .assistant__input::placeholder {
   color: var(--app-text-muted);
   opacity: 0.8;
-}
-
-.assistant__input:disabled {
-  cursor: not-allowed;
-  opacity: 0.85;
 }
 
 .assistant__send {
@@ -225,7 +219,7 @@
 
 .assistant__send:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.45;
 }
 
 .assistant__future {
@@ -250,23 +244,15 @@
     gap: var(--app-space-3);
     padding: var(--app-space-3);
   }
-
   .assistant__avatar {
     width: 42px;
     height: 42px;
     font-size: 1.2rem;
   }
-
   .assistant__bubble {
     max-width: 88%;
     padding: var(--app-space-2);
   }
-
-  .assistant__bubble p {
-    font-size: 0.72rem;
-  }
-
-  .assistant__suggestion {
-    font-size: 0.7rem;
-  }
+  .assistant__bubble p { font-size: 0.72rem; }
+  .assistant__chat { max-height: 300px; }
 }

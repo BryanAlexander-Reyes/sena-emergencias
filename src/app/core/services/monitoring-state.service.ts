@@ -1,5 +1,5 @@
 /**
- * SENA CROWD INTELLIGENCE — estado centralizado del monitoreo (Fase 3.2).
+ * SENA CROWD INTELLIGENCE — estado centralizado del monitoreo (Fases 3.2–3.5).
  *
  * Fuente única de verdad en memoria para las zonas simuladas. La capa de datos
  * (`core/data/demo-monitoring.ts`) conserva los valores iniciales y las
@@ -10,7 +10,7 @@
  * se conservan aparte para poder restablecer una zona o todas las zonas.
  */
 
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, Injectable, inject, signal } from '@angular/core';
 
 import {
   countPeople,
@@ -24,6 +24,8 @@ import {
   type MonitoringZone,
   type OccupancyStatus,
 } from '../data/demo-monitoring';
+
+import { SimulationHistoryService, type OccupancyChangeAction } from './simulation-history.service';
 
 export interface ZoneSnapshot {
   readonly zone: MonitoringZone;
@@ -61,6 +63,7 @@ function toZoneSnapshot(zone: MonitoringZone): ZoneSnapshot {
 @Injectable({ providedIn: 'root' })
 export class MonitoringStateService {
   private readonly zonesState = signal<readonly MonitoringZone[]>(DEMO_ZONES);
+  private readonly history = inject(SimulationHistoryService);
 
   readonly zones = this.zonesState.asReadonly();
   readonly lastUpdate = DEMO_LAST_UPDATE;
@@ -151,11 +154,11 @@ export class MonitoringStateService {
   }
 
   incrementOccupancy(zoneId: string): boolean {
-    return this.updateZone(zoneId, (zone) => zone.people + 1);
+    return this.updateZone(zoneId, (zone) => zone.people + 1, 'increment');
   }
 
   decrementOccupancy(zoneId: string): boolean {
-    return this.updateZone(zoneId, (zone) => zone.people - 1);
+    return this.updateZone(zoneId, (zone) => zone.people - 1, 'decrement');
   }
 
   resetZoneOccupancy(zoneId: string): boolean {
@@ -165,12 +168,12 @@ export class MonitoringStateService {
       return false;
     }
 
-    return this.updateZone(zoneId, () => initial);
+    return this.updateZone(zoneId, () => initial, 'reset-zone');
   }
 
   resetAllOccupancy(): boolean {
     const zones = this.zones();
-    let changed = false;
+    const changes: { zone: MonitoringZone; previousPeople: number; newPeople: number }[] = [];
 
     const nextZones = zones.map((zone) => {
       const initial = INITIAL_PEOPLE_BY_ID.get(zone.id);
@@ -179,21 +182,39 @@ export class MonitoringStateService {
         return zone;
       }
 
-      changed = true;
-
+      changes.push({ zone, previousPeople: zone.people, newPeople: initial });
       return { ...zone, people: initial };
     });
 
-    if (!changed) {
+    if (changes.length === 0) {
       return false;
     }
 
     this.zonesState.set(nextZones);
 
+    const operationId = `reset-all-${Date.now().toString(36)}`;
+    const totalAfter = this.totalPeople();
+    for (const change of changes) {
+      this.history.recordChange({
+        zoneId: change.zone.id,
+        zoneName: change.zone.name,
+        action: 'reset-all',
+        previousPeople: change.previousPeople,
+        newPeople: change.newPeople,
+        capacity: change.zone.capacity,
+        totalAfter,
+        operationId,
+      });
+    }
+
     return true;
   }
 
-  private updateZone(zoneId: string, resolvePeople: (zone: MonitoringZone) => number): boolean {
+  private updateZone(
+    zoneId: string,
+    resolvePeople: (zone: MonitoringZone) => number,
+    action?: OccupancyChangeAction,
+  ): boolean {
     const zones = this.zones();
     const zone = zones.find((item) => item.id === zoneId);
 
@@ -213,6 +234,18 @@ export class MonitoringStateService {
     }
 
     this.zonesState.set(zones.map((item) => (item === zone ? { ...item, people } : item)));
+
+    if (action) {
+      this.history.recordChange({
+        zoneId: zone.id,
+        zoneName: zone.name,
+        action,
+        previousPeople: zone.people,
+        newPeople: people,
+        capacity: zone.capacity,
+        totalAfter: this.totalPeople(),
+      });
+    }
 
     return true;
   }

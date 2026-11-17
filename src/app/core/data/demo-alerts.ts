@@ -1,11 +1,15 @@
 /**
- * SENA CROWD INTELLIGENCE — alertas simuladas del centro de eventos (Fase 2.6).
+ * SENA CROWD INTELLIGENCE — alertas simuladas del centro de eventos (Fase 3.4).
  *
- * Los nombres de zona y los porcentajes se derivan de `demo-monitoring.ts`
- * para no duplicar los datos compartidos con el Dashboard y el Mapa.
+ * Los nombres de zona y los porcentajes iniciales se derivan de `demo-monitoring.ts`
+ * para no duplicar datos. Las alertas y sus fechas son ficticias: no representan
+ * eventos en tiempo real ni lecturas de sensores conectados.
  *
- * Las alertas y sus fechas son ficticias: no representan eventos en tiempo
- * real ni lecturas de sensores conectados.
+ * Política de inicialización (3.4): se conservan los tres registros de la Fase 2.6.
+ * `ALR-001` (Pasillo principal, crítica activa) se reconcilia como la alerta de
+ * ocupación gestionada de su zona; `ALR-002` y `ALR-003` permanecen como registros
+ * históricos resueltos. No se generan alertas automáticas en la carga inicial; la
+ * evaluación por zona comienza a partir del primer cambio real de ocupación.
  */
 
 import { DEMO_ZONES, getZoneOccupancy, type MonitoringZone } from './demo-monitoring';
@@ -13,6 +17,8 @@ import { DEMO_ZONES, getZoneOccupancy, type MonitoringZone } from './demo-monito
 export type AlertSeverity = 'critical' | 'warning' | 'info';
 export type AlertStatus = 'active' | 'resolved';
 export type AlertReviewStatus = 'pending' | 'reviewed';
+export type AlertOrigin = 'demo' | 'automatic';
+export type AlertCondition = 'occupancy' | 'info';
 
 export interface DemoAlert {
   readonly id: string;
@@ -25,6 +31,8 @@ export interface DemoAlert {
   readonly occurredAt: string;
   readonly status: AlertStatus;
   readonly review: AlertReviewStatus;
+  readonly origin: AlertOrigin;
+  readonly condition: AlertCondition;
 }
 
 export const ALERT_SEVERITY_LABELS: Record<AlertSeverity, string> = {
@@ -41,6 +49,11 @@ export const ALERT_STATUS_LABELS: Record<AlertStatus, string> = {
 export const ALERT_REVIEW_LABELS: Record<AlertReviewStatus, string> = {
   pending: 'Pendiente',
   reviewed: 'Revisada',
+};
+
+export const ALERT_ORIGIN_LABELS: Record<AlertOrigin, string> = {
+  demo: 'Registro de demostración',
+  automatic: 'Generada automáticamente (simulada)',
 };
 
 function requireZone(zoneId: string): MonitoringZone {
@@ -69,6 +82,8 @@ export const DEMO_ALERTS: readonly DemoAlert[] = [
     occurredAt: 'Demo · 12 nov 2026 · 10:42 a. m.',
     status: 'active',
     review: 'pending',
+    origin: 'demo',
+    condition: 'occupancy',
   },
   {
     id: 'ALR-002',
@@ -81,6 +96,8 @@ export const DEMO_ALERTS: readonly DemoAlert[] = [
     occurredAt: 'Demo · 11 nov 2026 · 4:15 p. m.',
     status: 'resolved',
     review: 'reviewed',
+    origin: 'demo',
+    condition: 'occupancy',
   },
   {
     id: 'ALR-003',
@@ -93,8 +110,62 @@ export const DEMO_ALERTS: readonly DemoAlert[] = [
     occurredAt: 'Demo · 10 nov 2026 · 8:05 a. m.',
     status: 'resolved',
     review: 'reviewed',
+    origin: 'demo',
+    condition: 'info',
   },
 ];
+
+export const AUTO_OCCUPANCY_ALERT_PREFIX = 'auto-occupancy-';
+
+export function autoOccupancyAlertId(zoneId: string): string {
+  return `${AUTO_OCCUPANCY_ALERT_PREFIX}${zoneId}`;
+}
+
+export function isAutoOccupancyAlert(alert: Pick<DemoAlert, 'id' | 'condition'>): boolean {
+  return alert.condition === 'occupancy' && alert.id.startsWith(AUTO_OCCUPANCY_ALERT_PREFIX);
+}
+
+export function isOccupancyCondition(severity: AlertSeverity): boolean {
+  return severity === 'warning' || severity === 'critical';
+}
+
+export function occupancySeverityLabel(severity: 'warning' | 'critical'): string {
+  return severity === 'critical' ? 'Ocupación crítica' : 'Ocupación elevada';
+}
+
+export function formatSimulationTimestamp(date: Date = new Date()): string {
+  const day = date.getDate();
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const month = months[date.getMonth()] ?? '';
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const suffix = hours >= 12 ? 'p. m.' : 'a. m.';
+  hours = hours % 12 || 12;
+
+  return `Simulación · ${day} ${month} ${year} · ${hours}:${minutes} ${suffix}`;
+}
+
+export function buildOccupancyAlertContent(
+  zoneName: string,
+  people: number,
+  capacity: number,
+  occupancy: number,
+  severity: 'warning' | 'critical',
+  status: AlertStatus,
+): Pick<DemoAlert, 'title' | 'description' | 'detail'> {
+  const title = occupancySeverityLabel(severity);
+  const description = `Ocupación estimada del ${occupancy}%.`;
+  const level = severity === 'critical' ? 'crítica' : 'elevada';
+  const stateText =
+    status === 'active'
+      ? `se encuentra en nivel ${level}`
+      : 'volvió a un nivel normal y la alerta automática se marcó como resuelta';
+
+  const detail = `Simulación de ocupación: ${zoneName} ${stateText} (${people} de ${capacity} personas, ${occupancy}%). Alerta demostrativa generada por el motor de simulación; no proviene de sensores ni sustituye protocolos institucionales de emergencia.`;
+
+  return { title, description, detail };
+}
 
 export function countActiveAlerts(alerts: readonly DemoAlert[] = DEMO_ALERTS): number {
   return alerts.filter((alert) => alert.status === 'active').length;
