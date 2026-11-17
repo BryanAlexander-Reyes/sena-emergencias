@@ -1,7 +1,9 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 
+import { DemoSessionService } from '../../../core/auth/demo-session.service';
 import { AlertsStateService } from '../../../core/services/alerts-state.service';
 import { MonitoringStateService } from '../../../core/services/monitoring-state.service';
 import { SimulatedSensorsService } from '../../../core/services/simulated-sensors.service';
@@ -20,6 +22,7 @@ describe('SensoresPage (Fase 3.6)', () => {
       providers: [provideRouter([])],
     }).compileComponents();
 
+    TestBed.inject(DemoSessionService).selectProfile('administrador');
     fixture = TestBed.createComponent(SensoresPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -96,5 +99,108 @@ describe('SensoresPage (Fase 3.6)', () => {
 
     expect(back.getAttribute('href')).toBe('/tabs/mas');
     expect(back.textContent).toContain('Volver a Más');
+  });
+
+  it('muestra los controles y el reset con perfil administrador', () => {
+    expect(component.canControlSensors()).toBe(true);
+    expect(component.canResetSensors()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sensor-actions')).toBeTruthy();
+    expect(pageText()).not.toContain('no modificar sus simulaciones');
+  });
+
+  it('oculta el reset y bloquea todos los handlers para perfil de solo consulta', () => {
+    const sensors = TestBed.inject(SimulatedSensorsService);
+    const snapshot = JSON.stringify(sensors.sensors());
+
+    TestBed.inject(DemoSessionService).selectProfile('instructor');
+    fixture.detectChanges();
+
+    expect(component.canControlSensors()).toBe(false);
+    expect(component.canResetSensors()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sensor-actions')).toBeNull();
+    expect(pageText()).toContain('no modificar sus simulaciones');
+
+    component.setState('esp32-pasillo', 'paused');
+    component.toggleIr('ir-cafeteria');
+    component.togglePir('pir-pasillo');
+    component.setUltrasonic('ultrasonic-biblioteca', 10);
+    component.setServo('servo-cafeteria', 30);
+    component.setLed('led-pasillo', 'alerta');
+    component.cycleLed('led-pasillo');
+    component.resetDevice('esp32-pasillo');
+
+    expect(JSON.stringify(sensors.sensors())).toBe(snapshot);
+    expect(component.canControlReading(sensors.sensors()[1]!)).toBe(false);
+  });
+
+  it('aplica controles y reset de dispositivo con perfil administrador', () => {
+    const sensors = TestBed.inject(SimulatedSensorsService);
+    const get = (id: string) => sensors.sensors().find((sensor) => sensor.id === id);
+
+    component.setState('esp32-pasillo', 'paused');
+    expect(get('esp32-pasillo')?.simulationState).toBe('paused');
+
+    component.toggleIr('ir-cafeteria');
+    expect(get('ir-cafeteria')?.reading).toBe(true);
+
+    component.setUltrasonic('ultrasonic-biblioteca', 80);
+    expect(get('ultrasonic-biblioteca')?.reading).toBe(80);
+
+    component.setState('servo-cafeteria', 'active');
+    component.setServo('servo-cafeteria', 45);
+    expect(get('servo-cafeteria')?.servoAngle).toBe(45);
+
+    component.setLed('led-pasillo', 'alerta');
+    expect(get('led-pasillo')?.ledPattern).toBe('alerta');
+
+    component.resetDevice('esp32-pasillo');
+    expect(get('esp32-pasillo')?.simulationState).toBe('active');
+  });
+
+  it('restablece todos los sensores al confirmar el diálogo con permiso vigente', async () => {
+    const sensors = TestBed.inject(SimulatedSensorsService);
+    const alertController = TestBed.inject(AlertController);
+    const alert = { present: vi.fn().mockResolvedValue(undefined) };
+    const createSpy = vi
+      .spyOn(alertController, 'create')
+      .mockResolvedValue(alert as unknown as Awaited<ReturnType<AlertController['create']>>);
+
+    sensors.setSimulationState('esp32-pasillo', 'paused');
+    await component.confirmResetAll();
+
+    const options = createSpy.mock.calls.at(0)?.at(0);
+    const buttons = options?.buttons as { role?: string; handler?: () => void }[] | undefined;
+    const destructive = buttons?.find((button) => button.role === 'destructive');
+
+    destructive?.handler?.();
+
+    expect(sensors.sensors().find((sensor) => sensor.id === 'esp32-pasillo')?.simulationState).toBe('active');
+    expect(sensors.sensors().find((sensor) => sensor.id === 'ultrasonic-biblioteca')?.reading).toBe(120);
+  });
+
+  it('revalida el permiso al ejecutar un reset pendiente en el diálogo', async () => {
+    const sensors = TestBed.inject(SimulatedSensorsService);
+    const alertController = TestBed.inject(AlertController);
+    const alert = { present: vi.fn().mockResolvedValue(undefined) };
+    const createSpy = vi
+      .spyOn(alertController, 'create')
+      .mockResolvedValue(alert as unknown as Awaited<ReturnType<AlertController['create']>>);
+
+    sensors.toggleIrDetection('ir-cafeteria');
+    const snapshot = JSON.stringify(sensors.sensors());
+
+    await component.confirmResetAll();
+    expect(createSpy).toHaveBeenCalledTimes(1);
+
+    const options = createSpy.mock.calls.at(0)?.at(0);
+    expect(options).toBeDefined();
+    const buttons = options?.buttons as { role?: string; handler?: () => void }[] | undefined;
+    const destructive = buttons?.find((button) => button.role === 'destructive');
+    expect(destructive?.handler).toBeTypeOf('function');
+
+    TestBed.inject(DemoSessionService).selectProfile('visitante');
+    destructive?.handler?.();
+
+    expect(JSON.stringify(sensors.sensors())).toBe(snapshot);
   });
 });

@@ -166,6 +166,13 @@
   gap: var(--app-space-2);
 }
 
+.zone-card__read-only {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
 .zone-card__stepper {
   display: inline-flex;
   align-items: center;

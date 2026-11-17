@@ -40,6 +40,7 @@ const SEVERITY_ICONS: Record<AlertSeverity, string> = {
 })
 export class AlertCardComponent {
   readonly alert = input.required<DemoAlert>();
+  readonly canReview = input(false);
   readonly reviewRequested = output<string>();
 
   readonly expanded = signal(false);
@@ -50,6 +51,7 @@ export class AlertCardComponent {
   readonly severityIcon = computed(() => SEVERITY_ICONS[this.alert().severity]);
   readonly detailsId = computed(() => `alert-details-${this.alert().id}`);
   readonly isPending = computed(() => this.alert().review === 'pending');
+  readonly showReview = computed(() => this.isPending() && this.canReview());
 
   constructor() {
     addIcons({
@@ -71,7 +73,7 @@ export class AlertCardComponent {
   }
 
   requestReview(): void {
-    if (this.isPending()) {
+    if (this.showReview()) {
       this.reviewRequested.emit(this.alert().id);
     }
   }

@@ -83,11 +83,15 @@
         </div>
       </dl>
 
-      @if (isPending()) {
+      @if (showReview()) {
         <button type="button" class="alert-card__review" (click)="requestReview()">
           <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
           Marcar como revisada
         </button>
+      } @else if (isPending()) {
+        <p class="alert-card__review-locked" role="status">
+          Solo consulta: la revisión no está disponible para tu perfil.
+        </p>
       } @else {
         <p class="alert-card__reviewed" role="status">
           <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>

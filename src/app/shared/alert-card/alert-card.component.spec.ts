@@ -9,9 +9,10 @@ describe('AlertCardComponent', () => {
   let fixture: ComponentFixture<AlertCardComponent>;
   let element: HTMLElement;
 
-  const create = (index: number): void => {
+  const create = (index: number, canReview = true): void => {
     fixture = TestBed.createComponent(AlertCardComponent);
     fixture.componentRef.setInput('alert', DEMO_ALERTS[index]);
+    fixture.componentRef.setInput('canReview', canReview);
     fixture.detectChanges();
     element = fixture.nativeElement as HTMLElement;
   };
@@ -108,5 +109,21 @@ describe('AlertCardComponent', () => {
     expect(element.textContent).toContain('Informativa');
     expect(element.textContent).toContain('Biblioteca');
     expect(element.textContent).toContain('Zona en estado normal.');
+  });
+
+  it('oculta la revisión y no emite sin permiso', () => {
+    create(0, false);
+    const emitted: string[] = [];
+    fixture.componentInstance.reviewRequested.subscribe((id) => emitted.push(id));
+
+    toggle().click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.alert-card__review')).toBeNull();
+    expect(element.textContent).toContain('Solo consulta: la revisión no está disponible');
+    expect(fixture.componentInstance.showReview()).toBe(false);
+
+    fixture.componentInstance.requestReview();
+    expect(emitted).toEqual([]);
   });
 });

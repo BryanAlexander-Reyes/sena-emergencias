@@ -38,12 +38,16 @@
     </article>
   </section>
 
+  @if (canResetSensors()) {
   <div class="sensor-actions">
     <ion-button fill="outline" color="medium" size="small" (click)="confirmResetAll()">
       <ion-icon slot="start" name="refresh-outline"></ion-icon>
       Restablecer todos
     </ion-button>
   </div>
+  } @else {
+  <p class="sensor-permission-note">Tu perfil puede consultar los sensores, pero no modificar sus simulaciones.</p>
+  }
 
   <section class="sensor-list" aria-label="Dispositivos simulados">
     @for (sensor of sensors(); track sensor.id) {
@@ -85,6 +89,7 @@
           <ion-select
             interface="popover"
             [value]="sensor.simulationState"
+            [disabled]="!canControlSensors()"
             (ionChange)="setState(sensor.id, $event.detail.value)"
             aria-label="Estado lógico de simulación"
           >
@@ -101,18 +106,19 @@
             Alternar paso: {{ sensor.reading ? 'Sí' : 'No' }}
           </ion-button>
         </div>
-        }
-
-        @if (sensor.type === 'pir') {
+        } @if (sensor.type === 'pir') {
         <div class="sensor-field">
           <span>Lectura simulada (PIR)</span>
-          <ion-button size="small" fill="outline" [disabled]="!canControlReading(sensor)" (click)="togglePir(sensor.id)">
+          <ion-button
+            size="small"
+            fill="outline"
+            [disabled]="!canControlReading(sensor)"
+            (click)="togglePir(sensor.id)"
+          >
             Alternar movimiento: {{ sensor.reading ? 'Sí' : 'No' }}
           </ion-button>
         </div>
-        }
-
-        @if (sensor.type === 'ultrasonic') {
+        } @if (sensor.type === 'ultrasonic') {
         <div class="sensor-field">
           <span>Distancia simulada (cm, ≥ 0)</span>
           <div class="sensor-field__row">
@@ -129,9 +135,7 @@
             <span class="sensor-field__unit">cm</span>
           </div>
         </div>
-        }
-
-        @if (sensor.type === 'servo') {
+        } @if (sensor.type === 'servo') {
         <div class="sensor-field">
           <span>Ángulo simulado (0°–180°)</span>
           <div class="sensor-field__row">
@@ -149,9 +153,7 @@
             <span class="sensor-field__unit">°</span>
           </div>
         </div>
-        }
-
-        @if (sensor.type === 'led-matrix') {
+        } @if (sensor.type === 'led-matrix') {
         <div class="sensor-field">
           <span>Patrón visual simulado</span>
           <div class="sensor-field__row">
@@ -171,9 +173,7 @@
             </ion-button>
           </div>
         </div>
-        }
-
-        @if (!canControlReading(sensor) && sensor.type !== 'esp32') {
+        } @if (!canControlReading(sensor) && sensor.type !== 'esp32') {
         <p class="sensor-card__hint">
           <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
           Lectura bloqueada mientras la simulación esté pausada o en fallo ficticio.
@@ -181,11 +181,23 @@
         }
 
         <div class="sensor-card__device-actions">
-          <ion-button size="small" fill="clear" color="medium" (click)="resetDevice(sensor.id)">
+          <ion-button
+            size="small"
+            fill="clear"
+            color="medium"
+            [disabled]="!canResetSensors()"
+            (click)="resetDevice(sensor.id)"
+          >
             <ion-icon slot="start" name="refresh-outline"></ion-icon>
             Restablecer dispositivo
           </ion-button>
         </div>
+
+        @if (!canControlSensors() && !canResetSensors()) {
+        <p class="sensor-card__read-only" role="status">
+          Solo consulta: los controles de simulación no están disponibles para tu perfil.
+        </p>
+        }
       </div>
       }
     </article>

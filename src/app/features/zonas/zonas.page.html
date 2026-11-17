@@ -18,25 +18,22 @@
           <span class="app-badge app-badge--warning zonas-simulation__badge">MODO SIMULACIÓN — DATOS NO REALES</span>
         </div>
 
+        @if (canUpdateOccupancy() || canResetOccupancy()) {
         <p class="zonas-simulation__text">
           Usa los controles de cada tarjeta para aumentar o disminuir una persona. Los cambios son temporales y
           actualizan automáticamente las alertas de ocupación.
         </p>
-
+        } @else {
+        <p class="zonas-simulation__text">Tu perfil permite consultar la ocupación, pero no modificar la simulación.</p>
+        } @if (canResetOccupancy()) {
         <div class="zonas-simulation__actions">
-          <button
-            type="button"
-            class="zonas-simulation__reset"
-            [disabled]="!hasChanges()"
-            (click)="confirmResetAll()"
-          >
+          <button type="button" class="zonas-simulation__reset" [disabled]="!hasChanges()" (click)="confirmResetAll()">
             <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
             <span>Restablecer todas</span>
           </button>
         </div>
-
-        @if (simulationMessage(); as message) {
-          <p class="zonas-simulation__feedback" role="status" aria-live="polite">{{ message }}</p>
+        } @if (simulationMessage(); as message) {
+        <p class="zonas-simulation__feedback" role="status" aria-live="polite">{{ message }}</p>
         }
       </section>
 
@@ -54,13 +51,15 @@
 
       <section class="zonas-list" aria-label="Tarjetas de zonas">
         @for (zone of zones(); track zone.id) {
-          <app-zone-card
-            [zone]="zone"
-            [resetDisabled]="isAtInitial(zone.id)"
-            (increment)="increment(zone.id)"
-            (decrement)="decrement(zone.id)"
-            (resetRequested)="resetZone(zone.id)"
-          />
+        <app-zone-card
+          [zone]="zone"
+          [resetDisabled]="isAtInitial(zone.id)"
+          [canUpdate]="canUpdateOccupancy()"
+          [canReset]="canResetOccupancy()"
+          (increment)="increment(zone.id)"
+          (decrement)="decrement(zone.id)"
+          (resetRequested)="resetZone(zone.id)"
+        />
         }
       </section>
 

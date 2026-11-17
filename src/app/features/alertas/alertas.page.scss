@@ -167,6 +167,13 @@
   font-size: 1.05rem;
 }
 
+.alert-permission-note {
+  margin: 0 0 var(--app-space-3);
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
 .alert-list {
   display: flex;
   flex-direction: column;

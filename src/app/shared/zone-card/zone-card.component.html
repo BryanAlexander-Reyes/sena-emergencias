@@ -37,49 +37,58 @@
   <span class="zone-card__progress-fill" [style.width.%]="progressWidth()"></span>
 </div>
 
-<div
-  class="zone-card__controls"
-  tabindex="-1"
-  (click)="$event.stopPropagation()"
-  (keydown)="$event.stopPropagation()"
->
-  <div class="zone-card__stepper" role="group" [attr.aria-label]="'Simular ocupación de ' + zone().name">
-    <button
-      type="button"
-      class="zone-card__step zone-card__step--decrement"
-      [disabled]="!canDecrement()"
-      [attr.aria-label]="'Disminuir una persona en ' + zone().name"
-      (click)="decrement.emit()"
-    >
-      <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
-    </button>
+<div class="zone-card__controls" tabindex="-1" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+  <div
+    class="zone-card__stepper"
+    role="group"
+    [attr.aria-label]="canUpdate() ? 'Simular ocupación de ' + zone().name : 'Ocupación de ' + zone().name"
+  >
+    @if (canUpdate()) {
+      <button
+        type="button"
+        class="zone-card__step zone-card__step--decrement"
+        [disabled]="!canDecrement()"
+        [attr.aria-label]="'Disminuir una persona en ' + zone().name"
+        (click)="decrement.emit()"
+      >
+        <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+      </button>
+    }
 
     <span class="zone-card__people" role="status">
       <span class="zone-card__people-value">{{ zone().people }}</span>
       <span class="zone-card__people-unit">personas</span>
     </span>
 
-    <button
-      type="button"
-      class="zone-card__step zone-card__step--increment"
-      [disabled]="!canIncrement()"
-      [attr.aria-label]="'Aumentar una persona en ' + zone().name"
-      (click)="increment.emit()"
-    >
-      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-    </button>
+    @if (canUpdate()) {
+      <button
+        type="button"
+        class="zone-card__step zone-card__step--increment"
+        [disabled]="!canIncrement()"
+        [attr.aria-label]="'Aumentar una persona en ' + zone().name"
+        (click)="increment.emit()"
+      >
+        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+      </button>
+    }
   </div>
 
-  <button
-    type="button"
-    class="zone-card__reset"
-    [disabled]="resetDisabled()"
-    [attr.aria-label]="'Restablecer la ocupación de ' + zone().name"
-    (click)="resetRequested.emit()"
-  >
-    <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
-    <span>Restablecer</span>
-  </button>
+  @if (canReset()) {
+    <button
+      type="button"
+      class="zone-card__reset"
+      [disabled]="resetDisabled()"
+      [attr.aria-label]="'Restablecer la ocupación de ' + zone().name"
+      (click)="resetRequested.emit()"
+    >
+      <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+      <span>Restablecer</span>
+    </button>
+  }
+
+  @if (!canUpdate() && !canReset()) {
+    <p class="zone-card__read-only">Solo consulta: simulación no disponible para tu perfil.</p>
+  }
 </div>
 
 <footer class="zone-card__footer">

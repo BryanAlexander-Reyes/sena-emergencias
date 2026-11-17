@@ -80,10 +80,12 @@
         <span class="app-badge">{{ filteredAlerts().length }} de {{ totalAlerts() }}</span>
       </div>
 
-      @if (filteredAlerts().length > 0) {
+      @if (!canReviewAlerts()) {
+      <p class="alert-permission-note">Tu perfil puede consultar las alertas, pero no marcarlas como revisadas.</p>
+      } @if (filteredAlerts().length > 0) {
       <section class="alert-list" aria-label="Lista de alertas">
         @for (alert of filteredAlerts(); track alert.id) {
-        <app-alert-card [alert]="alert" (reviewRequested)="reviewAlert($event)" />
+        <app-alert-card [alert]="alert" [canReview]="canReviewAlerts()" (reviewRequested)="reviewAlert($event)" />
         }
       </section>
       } @else {

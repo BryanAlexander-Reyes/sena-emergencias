@@ -9,9 +9,14 @@ describe('ZoneCardComponent', () => {
   let fixture: ComponentFixture<ZoneCardComponent>;
   let element: HTMLElement;
 
-  const create = (zone: MonitoringZone): void => {
+  const create = (
+    zone: MonitoringZone,
+    permissions: { canUpdate: boolean; canReset: boolean } = { canUpdate: true, canReset: true },
+  ): void => {
     fixture = TestBed.createComponent(ZoneCardComponent);
     fixture.componentRef.setInput('zone', zone);
+    fixture.componentRef.setInput('canUpdate', permissions.canUpdate);
+    fixture.componentRef.setInput('canReset', permissions.canReset);
     fixture.detectChanges();
     element = fixture.nativeElement as HTMLElement;
   };
@@ -133,5 +138,26 @@ describe('ZoneCardComponent', () => {
 
     expect(element.querySelector('.zone-card__note')).toBeNull();
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('oculta la simulación y muestra solo consulta sin permisos', () => {
+    create(DEMO_ZONES[0], { canUpdate: false, canReset: false });
+
+    expect(incrementButton()).toBeNull();
+    expect(decrementButton()).toBeNull();
+    expect(resetButton()).toBeNull();
+    expect(element.querySelector('.zone-card__people-value')?.textContent).toContain('35');
+    expect(element.querySelector('.zone-card__read-only')?.textContent).toContain('Solo consulta');
+    expect(fixture.componentInstance.canIncrement()).toBe(false);
+    expect(fixture.componentInstance.canDecrement()).toBe(false);
+  });
+
+  it('mantiene la lectura de personas con permiso de restablecimiento', () => {
+    create(DEMO_ZONES[3], { canUpdate: false, canReset: true });
+
+    expect(incrementButton()).toBeNull();
+    expect(decrementButton()).toBeNull();
+    expect(resetButton()).toBeTruthy();
+    expect(element.querySelector('.zone-card__people-value')?.textContent).toContain('12');
   });
 });

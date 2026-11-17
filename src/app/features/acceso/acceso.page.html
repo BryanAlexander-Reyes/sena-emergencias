@@ -1,0 +1,83 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <a class="acceso-back" routerLink="/tabs/inicio">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>Volver al inicio</span>
+      </a>
+
+      <app-feature-intro
+        icon="key-outline"
+        eyebrow="SENA CROWD INTELLIGENCE"
+        title="Acceso de demostración"
+        description="Selecciona un perfil para explorar las funcionalidades del prototipo SENA CROWD INTELLIGENCE"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="app-card acceso-notice" aria-labelledby="acceso-notice-title">
+        <span class="acceso-notice__icon">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="acceso-notice__body">
+          <h2 id="acceso-notice-title" class="acceso-notice__title">Aviso importante</h2>
+          <p class="acceso-notice__text">
+            Este acceso simula perfiles y permisos. No verifica identidades ni se conecta a un servidor
+          </p>
+        </div>
+      </section>
+
+      <section class="acceso-profiles" aria-labelledby="acceso-profiles-title">
+        <div class="app-section-head">
+          <p id="acceso-profiles-title" class="app-overline">Perfiles disponibles</p>
+          <span class="app-badge">4 opciones</span>
+        </div>
+
+        <div class="acceso-options" role="group" aria-label="Perfiles de demostración">
+          @for (profile of profiles; track profile.id) {
+          <button
+            type="button"
+            class="app-card acceso-option"
+            [class.acceso-option--selected]="session.profileId() === profile.id"
+            [attr.aria-pressed]="session.profileId() === profile.id"
+            (click)="selectProfile(profile.id)"
+          >
+            <span class="acceso-option__icon">
+              <ion-icon [name]="profile.icon" aria-hidden="true"></ion-icon>
+            </span>
+            <span class="acceso-option__body">
+              <span class="acceso-option__title">{{ profile.label }}</span>
+              <span class="acceso-option__description">{{ profile.description }}</span>
+            </span>
+            <ion-icon class="acceso-option__check" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          </button>
+          }
+        </div>
+      </section>
+
+      @if (confirmationLabel(); as label) {
+      <section class="app-card acceso-confirmation" role="status" aria-live="polite">
+        <ion-icon class="acceso-confirmation__icon" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+        <div>
+          <p class="app-overline">Perfil seleccionado</p>
+          <p class="acceso-confirmation__label">{{ label }}</p>
+        </div>
+      </section>
+      }
+
+      <section class="app-card acceso-current" aria-labelledby="acceso-current-title">
+        <p id="acceso-current-title" class="app-overline">Perfil activo en la sesión</p>
+        <p class="acceso-current__value">{{ session.profile().label }}</p>
+      </section>
+
+      @if (confirmationLabel()) {
+      <ion-button class="app-button acceso-continue" routerLink="/tabs/inicio">Continuar al inicio</ion-button>
+      }
+
+      <footer class="acceso-footer">
+        <span>Fase 4.2 · Acceso de demostración</span>
+        <span class="acceso-footer__dot" aria-hidden="true"></span>
+        <span>Sin autenticación real</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

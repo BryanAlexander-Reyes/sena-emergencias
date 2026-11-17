@@ -1,0 +1,165 @@
+<app-secondary-page
+  icon="shield-checkmark-outline"
+  eyebrow="SENA CROWD INTELLIGENCE"
+  [title]="canAccess() ? 'Administración' : 'Acceso restringido'"
+  [description]="
+    canAccess()
+      ? 'Usuarios y roles ficticios del prototipo'
+      : 'Tu perfil ya no tiene permiso para ver el panel administrativo'
+  "
+  badge="Modo demostración"
+  footerLabel="Fase 4.4 · Administración"
+  footerVersion="v0.4"
+>
+  @if (canAccess()) {
+  <section class="app-card admin-session" aria-labelledby="admin-session-title">
+    <p id="admin-session-title" class="app-overline">Sesión activa</p>
+    <div class="admin-session__identity">
+      <span class="admin-session__icon">
+        <ion-icon [name]="activeProfile().icon" aria-hidden="true"></ion-icon>
+      </span>
+      <div>
+        <span class="admin-session__label">Perfil con acceso</span>
+        <strong class="admin-session__value">{{ activeProfile().label }}</strong>
+        <span class="admin-session__hint">{{ activeProfile().description }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-summary" aria-label="Resumen de usuarios ficticios">
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ totalUsers }}</span>
+      <span class="admin-summary__label">Usuarios ficticios</span>
+    </article>
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ roleSummaries.length }}</span>
+      <span class="admin-summary__label">Roles definidos</span>
+    </article>
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ activeUsers }}</span>
+      <span class="admin-summary__label">Activos (demo)</span>
+    </article>
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ readOnlyUsers }}</span>
+      <span class="admin-summary__label">Solo lectura</span>
+    </article>
+  </section>
+
+  <section class="app-card admin-roles" aria-labelledby="admin-roles-title">
+    <div class="app-section-head">
+      <p id="admin-roles-title" class="app-overline">Resumen de roles</p>
+      <span class="app-badge">Demostración</span>
+    </div>
+    <div class="admin-roles__list">
+      @for (summary of roleSummaries; track summary.role) {
+      <div class="admin-roles__item">
+        <span class="admin-roles__label">{{ summary.label }}</span>
+        <span class="admin-roles__count">{{ summary.count }} usuario</span>
+      </div>
+      }
+    </div>
+  </section>
+
+  <section class="app-card admin-users" aria-labelledby="admin-users-title">
+    <div class="app-section-head">
+      <p id="admin-users-title" class="app-overline">Usuarios ficticios</p>
+      <span class="app-badge">{{ filteredUsers().length }} de {{ totalUsers }}</span>
+    </div>
+
+    <div class="admin-users__filters" role="group" aria-label="Filtrar usuarios por rol">
+      @for (filter of roleFilters; track filter.value) {
+      <button
+        type="button"
+        class="admin-users__filter"
+        [class.admin-users__filter--on]="roleFilter() === filter.value"
+        [attr.aria-pressed]="roleFilter() === filter.value"
+        [attr.data-role]="filter.value"
+        (click)="setRoleFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+      }
+    </div>
+
+    <div class="admin-users__filters" role="group" aria-label="Filtrar usuarios por estado">
+      @for (filter of statusFilters; track filter.value) {
+      <button
+        type="button"
+        class="admin-users__filter"
+        [class.admin-users__filter--on]="statusFilter() === filter.value"
+        [attr.aria-pressed]="statusFilter() === filter.value"
+        [attr.data-status]="filter.value"
+        (click)="setStatusFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+      }
+    </div>
+
+    @if (filteredUsers().length > 0) {
+    <div class="admin-users__list">
+      @for (user of filteredUsers(); track user.id) {
+      <article class="admin-user" [attr.data-role]="user.role">
+        <header class="admin-user__head">
+          <span class="admin-user__avatar">
+            <ion-icon [name]="iconForRole(user.role)" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="admin-user__identity">
+            <h3 class="admin-user__name">{{ user.name }}</h3>
+            <p class="admin-user__id">Identificador ficticio · {{ user.id }}</p>
+          </div>
+          <span class="admin-user__status" [attr.data-status]="user.status"> {{ statusLabel(user.status) }} </span>
+        </header>
+
+        <dl class="admin-user__data">
+          <div class="admin-user__data-item">
+            <dt>Rol</dt>
+            <dd>{{ roleLabel(user.role) }}</dd>
+          </div>
+          <div class="admin-user__data-item">
+            <dt>Estado</dt>
+            <dd>{{ statusLabel(user.status) }}</dd>
+          </div>
+          <div class="admin-user__data-item">
+            <dt>Alcance</dt>
+            <dd>{{ user.scope }}</dd>
+          </div>
+        </dl>
+      </article>
+      }
+    </div>
+    } @else {
+    <p class="admin-users__empty" role="status">No hay usuarios ficticios para los filtros seleccionados.</p>
+    }
+  </section>
+
+  <section class="app-card admin-scope" aria-labelledby="admin-scope-title">
+    <span class="admin-scope__icon">
+      <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <div>
+      <h2 id="admin-scope-title" class="admin-scope__title">Alcance del prototipo</h2>
+      <p class="admin-scope__text">
+        Este panel solo consulta registros ficticios en memoria. No crea cuentas, no modifica el perfil activo, no
+        guarda cambios de roles, no elimina usuarios y no se conecta a bases de datos, servidores ni proveedores de
+        identidad.
+      </p>
+      <p class="admin-scope__text">
+        La creación, edición y eliminación de cuentas requieren una arquitectura de administración real y quedan
+        pendientes para fases posteriores.
+      </p>
+    </div>
+  </section>
+  } @else {
+  <section class="app-card admin-denied" role="alert">
+    <span class="admin-denied__icon">
+      <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <h2 class="admin-denied__title">Acceso retirado</h2>
+    <p class="admin-denied__text">
+      Tu perfil ya no tiene el permiso administrativo. Redirigiendo a Más opciones; los datos del panel no permanecen
+      visibles.
+    </p>
+  </section>
+  }
+</app-secondary-page>

@@ -23,6 +23,8 @@ import {
 export class ZoneCardComponent {
   readonly zone = input.required<MonitoringZone>();
   readonly resetDisabled = input(false);
+  readonly canUpdate = input(false);
+  readonly canReset = input(false);
 
   readonly increment = output<void>();
   readonly decrement = output<void>();
@@ -35,9 +37,11 @@ export class ZoneCardComponent {
   readonly canIncrement = computed(() => {
     const zone = this.zone();
 
-    return Number.isInteger(zone.people) && zone.people >= 0 && zone.people < zone.capacity;
+    return this.canUpdate() && Number.isInteger(zone.people) && zone.people >= 0 && zone.people < zone.capacity;
   });
-  readonly canDecrement = computed(() => Number.isInteger(this.zone().people) && this.zone().people > 0);
+  readonly canDecrement = computed(
+    () => this.canUpdate() && Number.isInteger(this.zone().people) && this.zone().people > 0,
+  );
   readonly noteId = computed(() => `zone-note-${this.zone().id}`);
   readonly expanded = signal(false);
 

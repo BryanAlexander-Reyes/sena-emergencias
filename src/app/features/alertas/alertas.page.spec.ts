@@ -1,6 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 
+import { DemoSessionService } from '../../core/auth/demo-session.service';
 import { DEMO_ALERTS } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 
@@ -33,6 +34,7 @@ describe('AlertasPage', () => {
       imports: [AlertasPage],
     }).compileComponents();
 
+    TestBed.inject(DemoSessionService).selectProfile('administrador');
     fixture = TestBed.createComponent(AlertasPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -208,5 +210,38 @@ describe('AlertasPage', () => {
     expect(content).toContain('no cambia el estado ni elimina el riesgo simulado');
     expect(content).toContain('Fase 2.6 · Alertas');
     expect(content).toContain('v0.6');
+  });
+
+  it('muestra la revisión con perfil administrador', () => {
+    expect(component.canReviewAlerts()).toBe(true);
+    expect(pageText()).not.toContain('no marcarlas como revisadas');
+
+    const toggle = cards()[0].querySelector('.alert-card__toggle') as HTMLButtonElement;
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(cards()[0].querySelector('.alert-card__review')).toBeTruthy();
+  });
+
+  it('oculta la revisión y bloquea el handler para perfil de solo consulta', () => {
+    const alertsState = TestBed.inject(AlertsStateService);
+    const review = alertsState.alerts()[0].review;
+
+    TestBed.inject(DemoSessionService).selectProfile('aprendiz');
+    fixture.detectChanges();
+
+    expect(component.canReviewAlerts()).toBe(false);
+    expect(pageText()).toContain('no marcarlas como revisadas');
+
+    const toggle = cards()[0].querySelector('.alert-card__toggle') as HTMLButtonElement;
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(cards()[0].querySelector('.alert-card__review')).toBeNull();
+    expect(cards()[0].textContent).toContain('Solo consulta: la revisión no está disponible');
+
+    component.reviewAlert(DEMO_ALERTS[0].id);
+    expect(alertsState.alerts()[0].review).toBe(review);
+    expect(statsValues()).toEqual(['1', '2', '3']);
   });
 });

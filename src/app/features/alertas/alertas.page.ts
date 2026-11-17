@@ -11,6 +11,7 @@ import {
   warningOutline,
 } from 'ionicons/icons';
 
+import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import type { AlertSeverity, AlertStatus } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { AlertCardComponent } from '../../shared/alert-card/alert-card.component';
@@ -32,6 +33,7 @@ interface FilterOption<T extends string> {
 })
 export class AlertasPage {
   private readonly alertsState = inject(AlertsStateService);
+  private readonly permissions = inject(DemoPermissionsService);
 
   readonly alerts = this.alertsState.alerts;
   readonly activeAlerts = this.alertsState.activeAlerts;
@@ -54,6 +56,7 @@ export class AlertasPage {
     { value: 'resolved', label: 'Resueltas' },
   ];
 
+  readonly canReviewAlerts = computed(() => this.permissions.can('alerts:review'));
   readonly filtersActive = computed(() => this.severityFilter() !== 'all' || this.statusFilter() !== 'all');
   readonly filteredAlerts = computed(() => {
     const severity = this.severityFilter();
@@ -90,6 +93,10 @@ export class AlertasPage {
   }
 
   reviewAlert(alertId: string): void {
+    if (!this.permissions.can('alerts:review')) {
+      return;
+    }
+
     this.alertsState.markReviewed(alertId);
   }
 }

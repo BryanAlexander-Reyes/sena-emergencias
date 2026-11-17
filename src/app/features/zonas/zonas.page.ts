@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { AlertController, IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -11,6 +11,7 @@ import {
   walkOutline,
 } from 'ionicons/icons';
 
+import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import { MonitoringStateService } from '../../core/services/monitoring-state.service';
 import { FeatureIntroComponent } from '../../shared/feature-intro/feature-intro.component';
 import { ZoneCardComponent } from '../../shared/zone-card/zone-card.component';
@@ -24,12 +25,16 @@ import { ZoneCardComponent } from '../../shared/zone-card/zone-card.component';
 export class ZonasPage {
   private readonly monitoring = inject(MonitoringStateService);
   private readonly alertController = inject(AlertController);
+  private readonly permissions = inject(DemoPermissionsService);
 
   readonly zones = this.monitoring.zones;
   readonly totalPeople = this.monitoring.totalPeople;
   readonly totalZones = this.monitoring.monitoredZones;
   readonly hasChanges = this.monitoring.hasOccupancyChanges;
   readonly simulationMessage = signal('');
+  readonly canUpdateOccupancy = computed(() => this.permissions.can('occupancy:update'));
+  readonly canResetOccupancy = computed(() => this.permissions.can('occupancy:reset'));
+  private readonly readOnlyMessage = 'Tu perfil solo permite consultar la ocupación.';
 
   constructor() {
     addIcons({
@@ -44,11 +49,21 @@ export class ZonasPage {
   }
 
   increment(zoneId: string): void {
+    if (!this.permissions.can('occupancy:update')) {
+      this.simulationMessage.set(this.readOnlyMessage);
+      return;
+    }
+
     this.simulationMessage.set('');
     this.monitoring.incrementOccupancy(zoneId);
   }
 
   decrement(zoneId: string): void {
+    if (!this.permissions.can('occupancy:update')) {
+      this.simulationMessage.set(this.readOnlyMessage);
+      return;
+    }
+
     this.simulationMessage.set('');
     this.monitoring.decrementOccupancy(zoneId);
   }
@@ -58,6 +73,11 @@ export class ZonasPage {
   }
 
   resetZone(zoneId: string): void {
+    if (!this.permissions.can('occupancy:reset')) {
+      this.simulationMessage.set(this.readOnlyMessage);
+      return;
+    }
+
     const name = this.monitoring.zoneById(zoneId)?.name;
 
     if (!this.monitoring.resetZoneOccupancy(zoneId)) {
@@ -69,6 +89,11 @@ export class ZonasPage {
   }
 
   async confirmResetAll(): Promise<void> {
+    if (!this.permissions.can('occupancy:reset')) {
+      this.simulationMessage.set(this.readOnlyMessage);
+      return;
+    }
+
     const alert = await this.alertController.create({
       header: 'Restablecer todas las zonas',
       message:
@@ -87,6 +112,11 @@ export class ZonasPage {
   }
 
   private resetAllZones(): void {
+    if (!this.permissions.can('occupancy:reset')) {
+      this.simulationMessage.set(this.readOnlyMessage);
+      return;
+    }
+
     if (!this.monitoring.resetAllOccupancy()) {
       return;
     }
