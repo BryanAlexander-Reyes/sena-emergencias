@@ -40,9 +40,7 @@ export const ACTION_LABELS: Readonly<Record<OccupancyChangeAction, string>> = {
   'reset-all': 'Restablecimiento general',
 };
 
-const INITIAL_PEOPLE_BY_ID: ReadonlyMap<string, number> = new Map(
-  DEMO_ZONES.map((zone) => [zone.id, zone.people]),
-);
+const INITIAL_PEOPLE_BY_ID: ReadonlyMap<string, number> = new Map(DEMO_ZONES.map((zone) => [zone.id, zone.people]));
 const INITIAL_TOTAL = countPeople(DEMO_ZONES);
 
 function createId(): string {
@@ -66,17 +64,15 @@ export class SimulationHistoryService {
     return max;
   });
 
-  readonly totalTimeline = computed<
-    readonly { readonly total: number; readonly at?: Date; readonly label: string }[]
-  >(() => {
-    const points: { total: number; at?: Date; label: string }[] = [
-      { total: INITIAL_TOTAL, label: 'Inicio' },
-    ];
-    for (const event of this.events()) {
-      points.push({ total: event.totalAfter, at: event.occurredAt, label: event.zoneName });
-    }
-    return points;
-  });
+  readonly totalTimeline = computed<readonly { readonly total: number; readonly at?: Date; readonly label: string }[]>(
+    () => {
+      const points: { total: number; at?: Date; label: string }[] = [{ total: INITIAL_TOTAL, label: 'Inicio' }];
+      for (const event of this.events()) {
+        points.push({ total: event.totalAfter, at: event.occurredAt, label: event.zoneName });
+      }
+      return points;
+    },
+  );
 
   readonly zoneStats = computed<readonly ZoneHistoryStats[]>(() => {
     const stats = new Map<string, { count: number; max: number }>();
@@ -110,14 +106,21 @@ export class SimulationHistoryService {
     totalAfter: number;
     operationId?: string;
   }): void {
-    const { zoneId, zoneName, action, previousPeople, newPeople, capacity, totalAfter, operationId } =
-      params;
+    const { zoneId, zoneName, action, previousPeople, newPeople, capacity, totalAfter, operationId } = params;
 
     if (!Number.isInteger(previousPeople) || !Number.isInteger(newPeople) || previousPeople === newPeople) {
       return;
     }
 
-    const zoneRef = { id: zoneId, code: '', name: zoneName, people: newPeople, capacity, icon: '', type: 'cafeteria' as const };
+    const zoneRef = {
+      id: zoneId,
+      code: '',
+      name: zoneName,
+      people: newPeople,
+      capacity,
+      icon: '',
+      type: 'cafeteria' as const,
+    };
     const resultOccupancy = getZoneOccupancy(zoneRef);
     const resultStatus = getOccupancyStatus(resultOccupancy);
 

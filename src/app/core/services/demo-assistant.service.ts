@@ -164,14 +164,11 @@ export class DemoAssistantService {
   private detectIntent(text: string): Intent {
     if (!text) return 'unknown';
 
-    if (
-      includesAny(text, ['evacuar', 'evacuacion', 'ruta', 'salir', 'salida', 'hacia donde', 'por donde'])
-    ) {
+    if (includesAny(text, ['evacuar', 'evacuacion', 'ruta', 'salir', 'salida', 'hacia donde', 'por donde'])) {
       return 'evacuation';
     }
 
-    const asksAlerts =
-      text.includes('alerta') || (text.includes('activ') && text.includes('alerta'));
+    const asksAlerts = text.includes('alerta') || (text.includes('activ') && text.includes('alerta'));
     if (asksAlerts || (includesAny(text, ['cuantas alertas', 'alertas activas']) && !text.includes('zona critica'))) {
       return 'active-alerts';
     }
@@ -186,21 +183,22 @@ export class DemoAssistantService {
     ]);
     if (asksStats) return 'stats';
 
-    const asksSensors = includesAny(text, [
-      'sensor',
-      'sensores',
-      'esp32',
-      'ultrasonico',
-      'pir',
-      'matriz',
-      'led',
-      'servo',
-      'infrarrojo',
-      ' ir ',
-      'hardware',
-      'conectado',
-      'dispositivo',
-    ]) || text.startsWith('ir ');
+    const asksSensors =
+      includesAny(text, [
+        'sensor',
+        'sensores',
+        'esp32',
+        'ultrasonico',
+        'pir',
+        'matriz',
+        'led',
+        'servo',
+        'infrarrojo',
+        ' ir ',
+        'hardware',
+        'conectado',
+        'dispositivo',
+      ]) || text.startsWith('ir ');
     if (asksSensors) return 'sensors';
 
     if (includesAny(text, ['ayuda', 'que puedes', 'que preguntas', 'como funcionas', 'funciones'])) {
@@ -208,13 +206,24 @@ export class DemoAssistantService {
     }
 
     const asksSafe = includesAny(text, ['zona segura', 'punto de encuentro']);
-    if (asksSafe && (includesAny(text, ['donde', 'cuantas', 'capacidad', 'ocupacion', 'estado', 'como esta', 'personas']) || text === 'zona segura')) {
+    if (
+      asksSafe &&
+      (includesAny(text, ['donde', 'cuantas', 'capacidad', 'ocupacion', 'estado', 'como esta', 'personas']) ||
+        text === 'zona segura')
+    ) {
       return 'safe-zone';
     }
 
     const asksCritical = includesAny(text, ['critica', 'criticas', 'critico', 'criticos']);
     const asksWarning = includesAny(text, ['precaucion', 'elevada', 'advertencia', 'amarilla']);
-    const asksZonesList = includesAny(text, ['que zonas', 'cuales zonas', 'muestrame', 'mostrar', 'hay zonas', 'zonas en']);
+    const asksZonesList = includesAny(text, [
+      'que zonas',
+      'cuales zonas',
+      'muestrame',
+      'mostrar',
+      'hay zonas',
+      'zonas en',
+    ]);
     if (asksCritical && (asksZonesList || text.includes('zona'))) return 'critical-zones';
     if (asksWarning && (asksZonesList || text.includes('zona'))) return 'warning-zones';
 
@@ -277,7 +286,10 @@ export class DemoAssistantService {
       return 'Actualmente no hay alertas activas según el servicio de alertas.';
     }
     const list = active
-      .map((a) => `${a.title} en ${a.zoneName} (${a.severity === 'critical' ? 'crítica' : a.severity === 'warning' ? 'precaución' : 'informativa'})`)
+      .map(
+        (a) =>
+          `${a.title} en ${a.zoneName} (${a.severity === 'critical' ? 'crítica' : a.severity === 'warning' ? 'precaución' : 'informativa'})`,
+      )
       .join('; ');
     return `Alertas activas actuales: ${count}. ${list}.`;
   }
@@ -307,8 +319,19 @@ export class DemoAssistantService {
       return `No hay hardware conectado físicamente. Todos los dispositivos del panel están en simulación: ${total} dispositivos (${active} activos, ${paused} pausados, ${fault} con fallo ficticio), cada uno con estado "Sin conexión física".`;
     }
 
-    const specificType =
-      mentionsEsp32 ? 'esp32' : mentionsPir ? 'pir' : mentionsIr ? 'ir' : mentionsUltra ? 'ultrasonic' : mentionsLed ? 'led-matrix' : mentionsServo ? 'servo' : undefined;
+    const specificType = mentionsEsp32
+      ? 'esp32'
+      : mentionsPir
+        ? 'pir'
+        : mentionsIr
+          ? 'ir'
+          : mentionsUltra
+            ? 'ultrasonic'
+            : mentionsLed
+              ? 'led-matrix'
+              : mentionsServo
+                ? 'servo'
+                : undefined;
 
     if (specificType) {
       const list = devices.filter((d) => d.type === specificType);
@@ -327,7 +350,12 @@ export class DemoAssistantService {
     return `El sistema cuenta con ${total} dispositivos simulados: ${types}. Resumen de simulación: ${active} activos, ${paused} pausados, ${fault} con fallo ficticio. Ninguno tiene conexión física real (hardware: sin conexión).`;
   }
 
-  private sensorReading(d: { type: string; reading?: string | number | boolean; servoAngle?: number; ledPattern?: string }): string {
+  private sensorReading(d: {
+    type: string;
+    reading?: string | number | boolean;
+    servoAngle?: number;
+    ledPattern?: string;
+  }): string {
     switch (d.type) {
       case 'ir':
         return `paso detectado: ${d.reading ? 'Sí' : 'No'}`;

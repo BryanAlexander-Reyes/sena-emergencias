@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -40,10 +41,13 @@ export class MasPage {
   readonly session = inject(DemoSessionService);
   private readonly permissions = inject(DemoPermissionsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   readonly accessDenied = computed(
     () =>
-      this.route.snapshot.queryParamMap.get(ADMIN_ACCESS_DENIED_PARAM) === ADMIN_ACCESS_DENIED_VALUE &&
+      this.queryParams().get(ADMIN_ACCESS_DENIED_PARAM) === ADMIN_ACCESS_DENIED_VALUE &&
       !this.permissions.can('admin:access'),
   );
 

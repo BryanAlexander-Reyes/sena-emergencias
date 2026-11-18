@@ -23,26 +23,24 @@
     </header>
 
     <div #chatLog class="assistant__chat" role="log" aria-label="Conversación con el asistente" aria-live="polite">
-      @for (message of messages(); track message.id) {
-        @if (message.sender === 'assistant') {
-        <div class="assistant__row">
-          <span class="assistant__bubble-avatar" aria-hidden="true">
-            <ion-icon name="sparkles-outline"></ion-icon>
-          </span>
-          <div class="assistant__bubble assistant__bubble--bot">
-            <p>{{ message.content }}</p>
-            <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
-          </div>
+      @for (message of messages(); track message.id) { @if (message.sender === 'assistant') {
+      <div class="assistant__row">
+        <span class="assistant__bubble-avatar" aria-hidden="true">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </span>
+        <div class="assistant__bubble assistant__bubble--bot">
+          <p>{{ message.content }}</p>
+          <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
         </div>
-        } @else {
-        <div class="assistant__row assistant__row--user">
-          <div class="assistant__bubble assistant__bubble--user">
-            <p>{{ message.content }}</p>
-            <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
-          </div>
+      </div>
+      } @else {
+      <div class="assistant__row assistant__row--user">
+        <div class="assistant__bubble assistant__bubble--user">
+          <p>{{ message.content }}</p>
+          <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
         </div>
-        }
-      }
+      </div>
+      } }
     </div>
 
     <section class="assistant__suggestions" aria-labelledby="assistant-suggestions-title">
@@ -84,7 +82,10 @@
 
     <p class="assistant__future">
       <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-      <span>Consultas locales sobre ocupación, zonas, alertas, sensores y estadísticas. La conversación se mantiene en memoria durante la sesión.</span>
+      <span
+        >Consultas locales sobre ocupación, zonas, alertas, sensores y estadísticas. La conversación se mantiene en
+        memoria durante la sesión.</span
+      >
     </p>
   </section>
 </app-secondary-page>

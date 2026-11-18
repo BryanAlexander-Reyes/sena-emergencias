@@ -25,13 +25,17 @@ describe('OccupancyAlertEngineService (Fase 3.4)', () => {
   it('should start with one active alert and no duplicate critical alerts', () => {
     expect(alerts.totalAlerts()).toBe(3);
     expect(alerts.activeAlerts()).toBe(1);
-    expect(alerts.alerts().filter((alert) => alert.status === 'active' && alert.severity === 'critical')).toHaveLength(1);
+    expect(alerts.alerts().filter((alert) => alert.status === 'active' && alert.severity === 'critical')).toHaveLength(
+      1,
+    );
     expect(alerts.activeCriticalAlert()?.id).toBe('ALR-001');
     expect(DEMO_ALERTS[0].id).toBe('ALR-001');
   });
 
   it('should not generate a cafeteria alert on initial load even though it starts in precaution', () => {
-    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(0);
+    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(
+      0,
+    );
     expect(alerts.activeAlerts()).toBe(1);
   });
 
@@ -42,7 +46,9 @@ describe('OccupancyAlertEngineService (Fase 3.4)', () => {
     expect(monitoring.occupancyOf('cafeteria')).toBe(68);
     expect(monitoring.statusOf('cafeteria')).toBe('normal');
     expect(alerts.alerts().find((alert) => alert.id === autoOccupancyAlertId('cafeteria'))).toBeUndefined();
-    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(0);
+    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(
+      0,
+    );
     expect(alerts.activeAlerts()).toBe(1);
   });
 
@@ -123,7 +129,9 @@ describe('OccupancyAlertEngineService (Fase 3.4)', () => {
     expect(monitoring.occupancyOf('cafeteria')).toBe(68);
     expect(monitoring.statusOf('cafeteria')).toBe('normal');
     expect(auto?.status).toBe('resolved');
-    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(0);
+    expect(alerts.alerts().filter((alert) => alert.zoneId === 'cafeteria' && alert.status === 'active')).toHaveLength(
+      0,
+    );
   });
 
   it('should not duplicate alerts when occupancy changes within the same level', () => {

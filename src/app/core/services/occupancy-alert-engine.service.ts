@@ -89,7 +89,14 @@ export class OccupancyAlertEngineService {
 
     if (!severity) {
       if (this.alerts.hasManagedOccupancyAlert(alertId)) {
-        const content = buildOccupancyAlertContent(zone.name, zone.people, zone.capacity, occupancy, 'warning', 'resolved');
+        const content = buildOccupancyAlertContent(
+          zone.name,
+          zone.people,
+          zone.capacity,
+          occupancy,
+          'warning',
+          'resolved',
+        );
         this.alerts.resolveManagedOccupancyAlert(alertId, timestamp, content.detail, content.description);
       }
       return;

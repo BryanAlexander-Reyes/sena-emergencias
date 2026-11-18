@@ -114,15 +114,9 @@ export class SimulatedSensorsService {
 
   readonly sensors = this.sensorsState.asReadonly();
   readonly totalDevices = computed(() => this.sensors().length);
-  readonly activeSimulations = computed(
-    () => this.sensors().filter((s) => s.simulationState === 'active').length,
-  );
-  readonly pausedSimulations = computed(
-    () => this.sensors().filter((s) => s.simulationState === 'paused').length,
-  );
-  readonly faultSimulations = computed(
-    () => this.sensors().filter((s) => s.simulationState === 'fault').length,
-  );
+  readonly activeSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'active').length);
+  readonly pausedSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'paused').length);
+  readonly faultSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'fault').length);
 
   sensorsByZone(zoneId: string): readonly SimulatedSensor[] {
     return this.sensors().filter((s) => s.zoneId === zoneId);

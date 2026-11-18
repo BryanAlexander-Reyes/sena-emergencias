@@ -109,8 +109,7 @@ export class AlertsStateService {
       const sameSeverity = existing.severity === input.severity;
       const sameStatus = existing.status === input.status;
       const keepReview = input.keepReview ?? (sameSeverity && sameStatus);
-      const review: AlertReviewStatus =
-        keepReview || existing.review === 'reviewed' ? existing.review : 'pending';
+      const review: AlertReviewStatus = keepReview || existing.review === 'reviewed' ? existing.review : 'pending';
 
       if (
         sameSeverity &&
@@ -134,8 +133,7 @@ export class AlertsStateService {
               title: input.title,
               description: input.description,
               detail: input.detail,
-              occurredAt:
-                sameSeverity && sameStatus && existing.occurredAt ? existing.occurredAt : input.occurredAt,
+              occurredAt: sameSeverity && sameStatus && existing.occurredAt ? existing.occurredAt : input.occurredAt,
               review,
               origin: existing.origin,
               condition: 'occupancy',

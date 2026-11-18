@@ -1,6 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 
 import { ADMIN_ACCESS_DENIED_PARAM, ADMIN_ACCESS_DENIED_VALUE } from '../../core/auth/admin-access.guard';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
@@ -196,6 +197,7 @@ describe('MasPage acceso denegado', () => {
             snapshot: {
               queryParamMap: convertToParamMap({ [ADMIN_ACCESS_DENIED_PARAM]: ADMIN_ACCESS_DENIED_VALUE }),
             },
+            queryParamMap: of(convertToParamMap({ [ADMIN_ACCESS_DENIED_PARAM]: ADMIN_ACCESS_DENIED_VALUE })),
           },
         },
       ],

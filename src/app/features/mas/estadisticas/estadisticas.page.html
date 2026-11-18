@@ -46,8 +46,7 @@
         @if (chart().coords.length > 1) {
         <polygon [attr.points]="chart().area" class="stats-chart__area"></polygon>
         <polyline [attr.points]="chart().line" class="stats-chart__line"></polyline>
-        }
-        @for (point of chart().coords; track $index) {
+        } @for (point of chart().coords; track $index) {
         <circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" class="stats-chart__point">
           <title>{{ point.label }}: {{ point.total }} personas</title>
         </circle>
@@ -139,8 +138,8 @@
   <p class="stats-note">
     <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
     <span>
-      Los indicadores se calculan con datos simulados de la sesión actual en memoria (sin sensores ni persistencia).
-      Al recargar, la ocupación, el historial y los máximos observados vuelven a los valores iniciales.
+      Los indicadores se calculan con datos simulados de la sesión actual en memoria (sin sensores ni persistencia). Al
+      recargar, la ocupación, el historial y los máximos observados vuelven a los valores iniciales.
     </span>
   </p>
 </app-secondary-page>

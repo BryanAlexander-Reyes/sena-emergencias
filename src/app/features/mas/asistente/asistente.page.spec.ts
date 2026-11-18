@@ -39,7 +39,9 @@ describe('AsistentePage (Fase 3.7)', () => {
 
   it('should show welcome message and enabled quick questions/composer', () => {
     const bubbles = Array.from(fixture.nativeElement.querySelectorAll('.assistant__bubble')) as HTMLElement[];
-    const suggestions = Array.from(fixture.nativeElement.querySelectorAll('.assistant__suggestion')) as HTMLButtonElement[];
+    const suggestions = Array.from(
+      fixture.nativeElement.querySelectorAll('.assistant__suggestion'),
+    ) as HTMLButtonElement[];
     const input = fixture.nativeElement.querySelector('.assistant__input') as HTMLInputElement;
     const send = fixture.nativeElement.querySelector('.assistant__send') as HTMLButtonElement;
 

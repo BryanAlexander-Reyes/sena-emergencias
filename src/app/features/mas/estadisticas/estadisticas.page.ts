@@ -139,9 +139,7 @@ export class EstadisticasPage {
     });
     const line = coords.map((c) => `${c.x},${c.y}`).join(' ');
     const area =
-      coords.length > 0
-        ? `${padX},${padY + innerH} ${line} ${coords[coords.length - 1].x},${padY + innerH}`
-        : '';
+      coords.length > 0 ? `${padX},${padY + innerH} ${line} ${coords[coords.length - 1].x},${padY + innerH}` : '';
     return { width, height, padX, padY, innerH, coords, line, area, min, max };
   });
 

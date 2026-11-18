@@ -49,5 +49,35 @@
     "typescript-eslint": "^8.61.0",
     "vitest": "^5.1.0"
   },
-  "prettier": "@ionic/prettier-config"
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": true,
+    "quoteProps": "as-needed",
+    "jsxSingleQuote": false,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "always",
+    "endOfLine": "auto",
+    "overrides": [
+      {
+        "files": ["*.java"],
+        "options": {
+          "printWidth": 140,
+          "tabWidth": 4,
+          "useTabs": false,
+          "trailingComma": "none"
+        }
+      },
+      {
+        "files": "*.md",
+        "options": {
+          "parser": "mdx"
+        }
+      }
+    ]
+  }
 }

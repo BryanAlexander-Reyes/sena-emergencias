@@ -43,9 +43,7 @@ export interface MonitoringSummary {
   readonly statusCounts: Readonly<Record<OccupancyStatus, number>>;
 }
 
-const INITIAL_PEOPLE_BY_ID: ReadonlyMap<string, number> = new Map(
-  DEMO_ZONES.map((zone) => [zone.id, zone.people]),
-);
+const INITIAL_PEOPLE_BY_ID: ReadonlyMap<string, number> = new Map(DEMO_ZONES.map((zone) => [zone.id, zone.people]));
 
 function toZoneSnapshot(zone: MonitoringZone): ZoneSnapshot {
   const occupancy = getZoneOccupancy(zone);
@@ -224,12 +222,7 @@ export class MonitoringStateService {
 
     const people = resolvePeople(zone);
 
-    if (
-      !Number.isInteger(people) ||
-      people < 0 ||
-      people > zone.capacity ||
-      people === zone.people
-    ) {
+    if (!Number.isInteger(people) || people < 0 || people > zone.capacity || people === zone.people) {
       return false;
     }
 
