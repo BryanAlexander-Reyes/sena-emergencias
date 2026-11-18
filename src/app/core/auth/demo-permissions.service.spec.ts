@@ -37,13 +37,25 @@ describe('DemoPermissionsService', () => {
   it('no concede permisos de simulación a instructor ni aprendiz', () => {
     for (const profileId of ['instructor', 'aprendiz'] as const) {
       session.selectProfile(profileId);
-      expect(permissions.granted()).toEqual([]);
       expect(permissions.can('occupancy:update')).toBe(false);
       expect(permissions.can('occupancy:reset')).toBe(false);
       expect(permissions.can('sensors:control')).toBe(false);
       expect(permissions.can('sensors:reset')).toBe(false);
       expect(permissions.can('alerts:review')).toBe(false);
       expect(permissions.can('admin:access')).toBe(false);
+    }
+
+    session.selectProfile('instructor');
+    expect(permissions.granted()).toEqual(['alarm:control']);
+
+    session.selectProfile('aprendiz');
+    expect(permissions.granted()).toEqual([]);
+  });
+
+  it('reserva alarm:control para administrador e instructor', () => {
+    for (const profile of DEMO_PROFILES) {
+      session.selectProfile(profile.id);
+      expect(permissions.can('alarm:control')).toBe(profile.id === 'administrador' || profile.id === 'instructor');
     }
   });
 
@@ -61,7 +73,7 @@ describe('DemoPermissionsService', () => {
 
     session.selectProfile('instructor');
     expect(permissions.can('occupancy:update')).toBe(false);
-    expect(permissions.granted()).toEqual([]);
+    expect(permissions.granted()).toEqual(['alarm:control']);
 
     session.selectProfile('administrador');
     expect(permissions.can('sensors:control')).toBe(true);

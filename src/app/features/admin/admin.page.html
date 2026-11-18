@@ -133,6 +133,125 @@
     }
   </section>
 
+  @if (canManageInstructors()) {
+  <section class="app-card instructor-management" aria-labelledby="instructor-management-title">
+    <div class="app-section-head">
+      <p id="instructor-management-title" class="app-overline">Gestión de instructores</p>
+      <span class="app-badge">Solo administrador</span>
+    </div>
+
+    <p class="instructor-management__intro">
+      Registra cuentas de Instructor para la demostración. Los datos viven solo en memoria y desaparecen al recargar.
+    </p>
+
+    <form class="instructor-form" (submit)="registerInstructor($event)" novalidate>
+      <ion-input
+        class="instructor-form__username"
+        type="text"
+        fill="outline"
+        label="Nombre de usuario"
+        label-placement="stacked"
+        aria-label="Nombre de usuario"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        [value]="instructorUsername()"
+        (ionInput)="onInstructorUsernameInput($event)"
+      ></ion-input>
+
+      <ion-input
+        class="instructor-form__password"
+        type="password"
+        fill="outline"
+        label="Contraseña"
+        label-placement="stacked"
+        aria-label="Contraseña"
+        autocomplete="new-password"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        [value]="instructorPassword()"
+        (ionInput)="onInstructorPasswordInput($event)"
+      ></ion-input>
+
+      <ion-input
+        class="instructor-form__confirmation"
+        type="password"
+        fill="outline"
+        label="Confirmar contraseña"
+        label-placement="stacked"
+        aria-label="Confirmar contraseña"
+        autocomplete="new-password"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        [value]="instructorConfirmation()"
+        (ionInput)="onInstructorConfirmationInput($event)"
+      ></ion-input>
+
+      @if (registrationError()) {
+      <p class="instructor-form__error" role="alert">{{ registrationError() }}</p>
+      } @if (registrationSuccess()) {
+      <p class="instructor-form__success" role="status">{{ registrationSuccess() }}</p>
+      }
+
+      <ion-button class="app-button instructor-form__submit" type="submit"> Registrar instructor </ion-button>
+    </form>
+
+    <div class="instructor-list">
+      <div class="app-section-head">
+        <p id="instructor-list-title" class="app-overline">Instructores registrados</p>
+        <span class="app-badge">{{ instructorAccounts().length }} cuentas</span>
+      </div>
+
+      @for (account of instructorAccounts(); track account.id) {
+      <article class="instructor-item" [attr.data-account-id]="account.id">
+        <div class="instructor-item__head">
+          <span class="instructor-item__avatar">
+            <ion-icon name="school-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="instructor-item__identity">
+            <h3 class="instructor-item__username">{{ account.username }}</h3>
+            <p class="instructor-item__id">Identificador temporal · {{ account.id }}</p>
+          </div>
+          <span class="instructor-item__status" [attr.data-status]="account.status">
+            {{ account.status === 'activo' ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <dl class="instructor-item__data">
+          <div class="instructor-item__data-item">
+            <dt>Rol</dt>
+            <dd>{{ account.role }}</dd>
+          </div>
+          <div class="instructor-item__data-item">
+            <dt>Estado</dt>
+            <dd class="instructor-item__state">{{ account.status === 'activo' ? 'Activo' : 'Inactivo' }}</dd>
+          </div>
+          <div class="instructor-item__data-item">
+            <dt>Acción</dt>
+            @if (account.status === 'activo') {
+            <dd>
+              <ion-button class="instructor-item__deactivate" type="button" (click)="deactivateInstructor(account)">
+                Desactivar
+              </ion-button>
+            </dd>
+            } @else {
+            <dd class="instructor-item__no-action">Sin acceso</dd>
+            }
+          </div>
+        </dl>
+      </article>
+      } @if (deactivationError()) {
+      <p class="instructor-list__error" role="alert">{{ deactivationError() }}</p>
+      } @if (deactivationNotice()) {
+      <p class="instructor-list__notice" role="status">{{ deactivationNotice() }}</p>
+      }
+    </div>
+  </section>
+  }
+
   <section class="app-card admin-scope" aria-labelledby="admin-scope-title">
     <span class="admin-scope__icon">
       <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
@@ -140,13 +259,13 @@
     <div>
       <h2 id="admin-scope-title" class="admin-scope__title">Alcance del prototipo</h2>
       <p class="admin-scope__text">
-        Este panel solo consulta registros ficticios en memoria. No crea cuentas, no modifica el perfil activo, no
-        guarda cambios de roles, no elimina usuarios y no se conecta a bases de datos, servidores ni proveedores de
-        identidad.
+        Este panel consulta registros ficticios y permite registrar y desactivar cuentas de Instructor únicamente en
+        memoria. Registrar no cambia la sesión del Administrador; no crea Administradores, no edita roles, no elimina
+        registros y no se conecta a bases de datos, servidores ni proveedores de identidad.
       </p>
       <p class="admin-scope__text">
-        La creación, edición y eliminación de cuentas requieren una arquitectura de administración real y quedan
-        pendientes para fases posteriores.
+        Las credenciales se validan dentro del servicio de autenticación simulado y no se guardan en el navegador. No
+        constituyen seguridad real: las cuentas temporales desaparecen al recargar la aplicación.
       </p>
     </div>
   </section>

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
 import { DEMO_ALERTS } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
+import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
 
 import { AlertasPage } from './alertas.page';
 
@@ -243,5 +244,57 @@ describe('AlertasPage', () => {
     component.reviewAlert(DEMO_ALERTS[0].id);
     expect(alertsState.alerts()[0].review).toBe(review);
     expect(statsValues()).toEqual(['1', '2', '3']);
+  });
+
+  it('muestra el estado de la alarma y el aviso combinado sin botones de control', () => {
+    const section = fixture.nativeElement.querySelector('.alert-alarm') as HTMLElement;
+    const state = section.querySelector('.alert-alarm__state') as HTMLElement;
+    const message = section.querySelector('.alert-alarm__message') as HTMLElement;
+
+    expect(section).toBeTruthy();
+    expect(state.textContent).toContain('Alarma apagada · simulado, sin hardware conectado');
+    expect(message.getAttribute('data-scenario')).toBe('B');
+    expect(message.textContent).toContain(
+      'Aglomeración detectada. Mantenga la calma y esté atento a las indicaciones del personal autorizado.',
+    );
+    expect(section.querySelector('button')).toBeNull();
+    expect(section.querySelector('ion-button')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
+  });
+
+  it('actualiza reactivamente el aviso combinado al encender la alarma', () => {
+    TestBed.inject(DemoAlarmStateService).turnOn();
+    fixture.detectChanges();
+
+    const message = fixture.nativeElement.querySelector('.alert-alarm__message') as HTMLElement;
+    expect(message.getAttribute('data-scenario')).toBe('D');
+    expect(message.textContent).toContain(
+      'Aglomeración detectada y alarma activada. Siga las indicaciones del personal autorizado.',
+    );
+    expect((fixture.nativeElement.querySelector('.alert-alarm__state') as HTMLElement).textContent).toContain(
+      'Alarma activada · simulado, sin hardware conectado',
+    );
+  });
+
+  it('no crea alertas ni instrucciones LED al cambiar de perfil con la alarma encendida', () => {
+    const alertsState = TestBed.inject(AlertsStateService);
+    const alarm = TestBed.inject(DemoAlarmStateService);
+    const session = TestBed.inject(DemoSessionService);
+    const initialIds = alertsState.alerts().map((alert) => alert.id);
+
+    alarm.turnOn();
+    for (const profileId of ['visitante', 'aprendiz', 'instructor', 'administrador'] as const) {
+      session.selectProfile(profileId);
+      fixture.detectChanges();
+    }
+
+    expect(alertsState.alerts().map((alert) => alert.id)).toEqual(initialIds);
+    expect(alertsState.totalAlerts()).toBe(3);
+    expect(alertsState.activeAlerts()).toBe(1);
+    expect(fixture.nativeElement.querySelector('.alert-alarm__led')).toBeNull();
+    expect(pageText()).not.toContain('LED verdes');
+    expect((fixture.nativeElement.querySelector('.alert-alarm__state') as HTMLElement).textContent).toContain(
+      'Alarma activada',
+    );
   });
 });

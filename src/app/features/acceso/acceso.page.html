@@ -26,6 +26,7 @@
         </div>
       </section>
 
+      @if (view() === 'select') {
       <section class="acceso-profiles" aria-labelledby="acceso-profiles-title">
         <div class="app-section-head">
           <p id="acceso-profiles-title" class="app-overline">Perfiles disponibles</p>
@@ -37,8 +38,8 @@
           <button
             type="button"
             class="app-card acceso-option"
-            [class.acceso-option--selected]="session.profileId() === profile.id"
-            [attr.aria-pressed]="session.profileId() === profile.id"
+            [class.acceso-option--selected]="session.selectedProfileId() === profile.id"
+            [attr.aria-pressed]="session.selectedProfileId() === profile.id"
             (click)="selectProfile(profile.id)"
           >
             <span class="acceso-option__icon">
@@ -70,7 +71,65 @@
       </section>
 
       @if (confirmationLabel()) {
-      <ion-button class="app-button acceso-continue" routerLink="/tabs/inicio">Continuar al inicio</ion-button>
+      <ion-button class="app-button acceso-continue" type="button" (click)="continueToInicio()">
+        Continuar al inicio
+      </ion-button>
+      } } @if (view() === 'login') {
+      <section class="app-card acceso-login" aria-labelledby="acceso-login-title">
+        <div class="acceso-login__head">
+          <span class="acceso-login__icon">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="acceso-login__headings">
+            <p class="app-overline">Inicio de sesión simulado</p>
+            <h2 id="acceso-login-title" class="acceso-login__title">{{ loginTitle() }}</h2>
+          </div>
+          <span class="acceso-login__demo">Modo demostración</span>
+        </div>
+
+        <p class="acceso-login__hint">Ingresa las credenciales ficticias de este perfil para continuar al inicio.</p>
+
+        <form class="acceso-login__form" (submit)="onSubmit($event)" novalidate>
+          <ion-input
+            class="acceso-login__username"
+            type="text"
+            fill="outline"
+            label="Nombre de usuario"
+            label-placement="stacked"
+            aria-label="Nombre de usuario"
+            autocomplete="username"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            (ionInput)="onUsernameInput($event)"
+          ></ion-input>
+
+          <ion-input
+            class="acceso-login__password"
+            type="password"
+            fill="outline"
+            label="Contraseña"
+            label-placement="stacked"
+            aria-label="Contraseña"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            (ionInput)="onPasswordInput($event)"
+          ></ion-input>
+
+          @if (loginError()) {
+          <p class="acceso-login__error" role="alert">{{ loginError() }}</p>
+          }
+
+          <ion-button class="app-button acceso-login__submit" type="button" (click)="login()">
+            Iniciar sesión
+          </ion-button>
+          <ion-button class="app-button app-button--ghost acceso-login__back" type="button" (click)="back()">
+            Volver
+          </ion-button>
+        </form>
+      </section>
       }
 
       <footer class="acceso-footer">

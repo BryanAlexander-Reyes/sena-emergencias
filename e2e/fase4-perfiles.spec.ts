@@ -4,6 +4,15 @@ const ADMIN_LABEL = /Administrador de demostraci\u00f3n/;
 const INSTRUCTOR_LABEL = /Instructor de demostraci\u00f3n/;
 const ADMIN_LINK = 'app-nav-card a[href="/tabs/mas/administracion"]';
 
+// Credenciales ficticias de la Fase 5.1; solo se usan en el formulario de la demo.
+const ADMIN_CREDENTIALS = { username: 'admin_demo', password: 'Admin1234!' };
+const INSTRUCTOR_CREDENTIALS = { username: 'instructor_demo', password: 'Instructor1234!' };
+
+interface DemoCredentials {
+  readonly username: string;
+  readonly password: string;
+}
+
 async function openMas(page: Page): Promise<void> {
   await page.locator('ion-tab-button[tab="mas"]').click();
   await expect(page).toHaveURL(/\/tabs\/mas$/);
@@ -17,10 +26,18 @@ async function openAcceso(page: Page): Promise<void> {
   await expect(page.locator('button.acceso-option')).toHaveCount(4);
 }
 
-async function selectProfile(page: Page, label: RegExp): Promise<void> {
+async function selectProfile(page: Page, label: RegExp, credentials?: DemoCredentials): Promise<void> {
   await page.getByRole('button', { name: label }).click();
   await expect(page.locator('.acceso-confirmation')).toBeVisible();
   await page.locator('.acceso-continue').click();
+
+  if (credentials) {
+    await expect(page.locator('.acceso-login')).toBeVisible();
+    await page.getByLabel('Nombre de usuario').fill(credentials.username);
+    await page.getByLabel('Contraseña').fill(credentials.password);
+    await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  }
+
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
   await expect(page.locator('app-inicio h1')).toBeVisible();
 }
@@ -59,6 +76,10 @@ test('navega a Acceso y selecciona el perfil administrador', async ({ page }) =>
   await expect(page.locator('.acceso-confirmation')).toContainText('Administrador de demostración');
   await expect(page.getByRole('button', { name: ADMIN_LABEL })).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.acceso-continue').click();
+  await expect(page.locator('.acceso-login')).toBeVisible();
+  await page.getByLabel('Nombre de usuario').fill(ADMIN_CREDENTIALS.username);
+  await page.getByLabel('Contraseña').fill(ADMIN_CREDENTIALS.password);
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
 
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
   await openMas(page);
@@ -70,7 +91,7 @@ test('navega a Acceso y selecciona el perfil administrador', async ({ page }) =>
 test('muestra usuarios ficticios en el panel de administración', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
-  await selectProfile(page, ADMIN_LABEL);
+  await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
   await openAdmin(page);
 
   await expect(page.locator('.admin-summary__value')).toHaveText(['4', '4', '3', '1']);
@@ -86,11 +107,11 @@ test('muestra usuarios ficticios en el panel de administración', async ({ page 
 test('cambia de administrador a instructor y retira las opciones administrativas', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
-  await selectProfile(page, ADMIN_LABEL);
+  await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
   await openAdmin(page);
   await leaveAdmin(page);
   await openAcceso(page);
-  await selectProfile(page, INSTRUCTOR_LABEL);
+  await selectProfile(page, INSTRUCTOR_LABEL, INSTRUCTOR_CREDENTIALS);
   await openMas(page);
 
   await expect(page.locator('.mas-profile__value')).toHaveText('Instructor de demostración');
@@ -110,11 +131,11 @@ test('niega la URL directa de administración sin permisos', async ({ page }) =>
 test('no recupera administración con Atrás después de perder el permiso', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
-  await selectProfile(page, ADMIN_LABEL);
+  await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
   await openAdmin(page);
   await leaveAdmin(page);
   await openAcceso(page);
-  await selectProfile(page, INSTRUCTOR_LABEL);
+  await selectProfile(page, INSTRUCTOR_LABEL, INSTRUCTOR_CREDENTIALS);
   await openMas(page);
 
   for (let step = 0; step < 4; step += 1) {
@@ -129,7 +150,7 @@ test('no recupera administración con Atrás después de perder el permiso', asy
 test('vuelve al perfil visitante después de recargar', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
-  await selectProfile(page, ADMIN_LABEL);
+  await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
   await openMas(page);
 
   await expect(page.locator('.mas-profile__value')).toHaveText('Administrador de demostración');
@@ -145,7 +166,7 @@ test('vuelve al perfil visitante después de recargar', async ({ page }) => {
 test('bloquea los controles de escritura para un perfil de consulta', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
-  await selectProfile(page, INSTRUCTOR_LABEL);
+  await selectProfile(page, INSTRUCTOR_LABEL, INSTRUCTOR_CREDENTIALS);
   await openMas(page);
 
   await page.locator('app-nav-card a[href="/tabs/mas/sensores"]').click();

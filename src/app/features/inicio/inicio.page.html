@@ -102,6 +102,65 @@
         </ion-button>
       </section>
 
+      <section class="app-card alarm-control" aria-labelledby="alarm-control-title">
+        <div class="app-section-head">
+          <div class="alarm-control__heading">
+            <span class="alarm-control__icon">
+              <ion-icon name="alarm-outline" aria-hidden="true"></ion-icon>
+            </span>
+            <div class="alarm-control__titles">
+              <p class="app-overline">Buzzer simulado</p>
+              <h2 id="alarm-control-title" class="app-card-title">Control de alarma</h2>
+            </div>
+          </div>
+          <span class="app-badge app-badge--demo">Modo demostración</span>
+        </div>
+
+        <div class="alarm-control__state" role="status" aria-live="polite">
+          <span class="alarm-control__dot" [class.alarm-control__dot--on]="alarm.isOn()" aria-hidden="true"></span>
+          <span class="alarm-control__status">{{ alarm.label() }}</span>
+          <span class="alarm-control__simulated">Simulado · sin hardware conectado</span>
+        </div>
+
+        <p class="alarm-control__text">Control manual del buzzer</p>
+
+        @if (canControlAlarm()) {
+        <div class="alarm-control__actions">
+          @if (alarm.isOn()) {
+          <ion-button
+            expand="block"
+            class="app-button alarm-control__button alarm-control__button--off"
+            (click)="confirmTurnOff()"
+          >
+            Apagar alarma
+          </ion-button>
+          } @else {
+          <ion-button
+            expand="block"
+            class="app-button alarm-control__button alarm-control__button--on"
+            (click)="confirmTurnOn()"
+          >
+            Encender alarma
+          </ion-button>
+          }
+        </div>
+        } @else {
+        <p class="alarm-control__note">Solo Administradores e Instructores pueden controlar la alarma.</p>
+        }
+
+        <div class="alarm-control__notice" role="status" [attr.data-scenario]="notice().scenario">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <div class="alarm-control__notice-copy">
+            <p class="alarm-control__notice-message">{{ notice().message }}</p>
+            @if (notice().zoneName; as zoneName) {
+            <p class="alarm-control__notice-zone">Zona afectada: {{ zoneName }}</p>
+            } @if (ledInstruction(); as instruction) {
+            <p class="alarm-control__notice-led">{{ instruction }}</p>
+            }
+          </div>
+        </div>
+      </section>
+
       <footer class="dash-footer">
         <span>Fase 2.3 · Dashboard</span>
         <span class="dash-footer__dot" aria-hidden="true"></span>

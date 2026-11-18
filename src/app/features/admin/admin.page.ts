@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonIcon } from '@ionic/angular';
+import { AlertController, IonButton, IonIcon, IonInput } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   bookOutline,
@@ -12,6 +12,11 @@ import {
 } from 'ionicons/icons';
 
 import { ADMIN_ACCESS_DENIED_QUERY_PARAMS } from '../../core/auth/admin-access.guard';
+import {
+  DEMO_INSTRUCTOR_PERMISSION_ERROR,
+  DemoAuthService,
+  type DemoInstructorAccount,
+} from '../../core/auth/demo-auth.service';
 import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
 import { SecondaryPageComponent } from '../../shared/secondary-page/secondary-page.component';
@@ -40,15 +45,20 @@ interface RoleSummary {
   selector: 'app-admin',
   templateUrl: './admin.page.html',
   styleUrls: ['./admin.page.scss'],
-  imports: [IonIcon, SecondaryPageComponent],
+  imports: [IonButton, IonIcon, IonInput, SecondaryPageComponent],
 })
 export class AdminPage {
   private readonly permissions = inject(DemoPermissionsService);
   private readonly session = inject(DemoSessionService);
+  private readonly auth = inject(DemoAuthService);
+  private readonly alertController = inject(AlertController);
   private readonly router = inject(Router);
+  private readonly confirmingDeactivation = signal(false);
 
   readonly activeProfile = this.session.profile;
   readonly canAccess = computed(() => this.permissions.can('admin:access'));
+  readonly canManageInstructors = computed(() => this.permissions.can('instructors:manage'));
+  readonly instructorAccounts = this.auth.instructorAccounts;
   readonly users = DEMO_ADMIN_USERS;
   readonly totalUsers = DEMO_ADMIN_USERS.length;
   readonly activeUsers = DEMO_ADMIN_USERS.filter((user) => user.status === 'activo').length;
@@ -68,6 +78,13 @@ export class AdminPage {
   ];
   readonly roleFilter = signal<RoleFilter>('all');
   readonly statusFilter = signal<StatusFilter>('all');
+  readonly instructorUsername = signal('');
+  readonly instructorPassword = signal('');
+  readonly instructorConfirmation = signal('');
+  readonly registrationError = signal<string | null>(null);
+  readonly registrationSuccess = signal<string | null>(null);
+  readonly deactivationError = signal<string | null>(null);
+  readonly deactivationNotice = signal<string | null>(null);
   readonly filteredUsers = computed(() => {
     if (!this.canAccess()) {
       return [];
@@ -152,5 +169,93 @@ export class AdminPage {
       case 'visitante':
         return 'person-outline';
     }
+  }
+
+  onInstructorUsernameInput(event: CustomEvent<{ value?: string | null }>): void {
+    this.instructorUsername.set(event.detail.value ?? '');
+  }
+
+  onInstructorPasswordInput(event: CustomEvent<{ value?: string | null }>): void {
+    this.instructorPassword.set(event.detail.value ?? '');
+  }
+
+  onInstructorConfirmationInput(event: CustomEvent<{ value?: string | null }>): void {
+    this.instructorConfirmation.set(event.detail.value ?? '');
+  }
+
+  registerInstructor(event?: Event): void {
+    event?.preventDefault();
+
+    if (!this.canManageInstructors()) {
+      this.registrationError.set(DEMO_INSTRUCTOR_PERMISSION_ERROR);
+      this.registrationSuccess.set(null);
+      return;
+    }
+
+    const result = this.auth.registerInstructor(
+      this.instructorUsername(),
+      this.instructorPassword(),
+      this.instructorConfirmation(),
+    );
+
+    if (!result.ok) {
+      this.registrationError.set(result.error);
+      this.registrationSuccess.set(null);
+      return;
+    }
+
+    this.registrationError.set(null);
+    this.registrationSuccess.set(result.message);
+    this.instructorUsername.set('');
+    this.instructorPassword.set('');
+    this.instructorConfirmation.set('');
+  }
+
+  async deactivateInstructor(account: DemoInstructorAccount): Promise<void> {
+    if (!this.canManageInstructors() || this.confirmingDeactivation() || account.status === 'inactivo') {
+      return;
+    }
+
+    const accountId = account.id;
+    this.confirmingDeactivation.set(true);
+    this.deactivationError.set(null);
+    this.deactivationNotice.set(null);
+
+    try {
+      const confirmation = await this.alertController.create({
+        header: 'Desactivar instructor',
+        message: '¿Deseas desactivar esta cuenta de Instructor? No podrá iniciar sesión mientras permanezca inactiva.',
+        buttons: [
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Desactivar',
+            handler: () => this.confirmDeactivation(accountId),
+          },
+        ],
+      });
+
+      await confirmation.present();
+      await confirmation.onDidDismiss();
+    } finally {
+      this.confirmingDeactivation.set(false);
+    }
+  }
+
+  private confirmDeactivation(accountId: string): void {
+    // El permiso se comprueba de nuevo tras el diálogo y también dentro del
+    // servicio, por si el perfil cambió mientras la confirmación estaba abierta.
+    if (!this.canManageInstructors()) {
+      return;
+    }
+
+    const result = this.auth.deactivateInstructor(accountId);
+
+    if (!result.ok) {
+      this.deactivationError.set(result.error);
+      return;
+    }
+
+    this.deactivationError.set(null);
+    this.deactivationNotice.set(result.message);
   }
 }

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
+  alarmOutline,
   albumsOutline,
   checkmarkDoneOutline,
   informationCircleOutline,
@@ -14,6 +15,8 @@ import {
 import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import type { AlertSeverity, AlertStatus } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
+import { DemoAlarmNoticeService } from '../../core/services/demo-alarm-notice.service';
+import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
 import { AlertCardComponent } from '../../shared/alert-card/alert-card.component';
 import { FeatureIntroComponent } from '../../shared/feature-intro/feature-intro.component';
 
@@ -34,6 +37,13 @@ interface FilterOption<T extends string> {
 export class AlertasPage {
   private readonly alertsState = inject(AlertsStateService);
   private readonly permissions = inject(DemoPermissionsService);
+  private readonly alarmState = inject(DemoAlarmStateService);
+  private readonly alarmNoticeService = inject(DemoAlarmNoticeService);
+
+  readonly alarmOn = this.alarmState.isOn;
+  readonly alarmLabel = this.alarmState.label;
+  readonly alarmNoticeText = this.alarmNoticeService.notice;
+  readonly ledInstruction = this.alarmNoticeService.ledInstruction;
 
   readonly alerts = this.alertsState.alerts;
   readonly activeAlerts = this.alertsState.activeAlerts;
@@ -69,6 +79,7 @@ export class AlertasPage {
 
   constructor() {
     addIcons({
+      alarmOutline,
       albumsOutline,
       checkmarkDoneOutline,
       informationCircleOutline,

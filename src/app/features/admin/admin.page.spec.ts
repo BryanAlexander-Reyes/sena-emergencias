@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 
 import { ADMIN_ACCESS_DENIED_QUERY_PARAMS } from '../../core/auth/admin-access.guard';
+import { DemoAuthService } from '../../core/auth/demo-auth.service';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { DemoAssistantService } from '../../core/services/demo-assistant.service';
@@ -58,7 +60,9 @@ describe('AdminPage', () => {
     expect(text).toContain('Aprendiz Demo');
     expect(text).toContain('Visitante Demo');
     expect(text).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
-    expect(text).not.toContain('contraseña');
+    // La Fase 5.1.1 muestra etiquetas de credenciales, pero nunca sus valores.
+    expect(text).not.toContain('Admin1234!');
+    expect(text).not.toContain('Instructor1234!');
   });
 
   it('filtra usuarios ficticios por rol y permite volver a todos', () => {
@@ -177,5 +181,61 @@ describe('AdminPage', () => {
     expect(history.isEmpty()).toBe(true);
     expect(sensors.totalDevices()).toBe(6);
     expect(assistant.messages()).toHaveLength(1);
+  });
+
+  it('16. cancelar la desactivación conserva el estado de la cuenta', async () => {
+    const auth = TestBed.inject(DemoAuthService);
+    const account = auth.instructorAccounts()[0];
+    const alert = {
+      present: vi.fn().mockResolvedValue(undefined),
+      onDidDismiss: vi.fn().mockResolvedValue(undefined),
+    };
+    const createSpy = vi
+      .spyOn(TestBed.inject(AlertController), 'create')
+      .mockResolvedValue(alert as unknown as Awaited<ReturnType<AlertController['create']>>);
+
+    await fixture.componentInstance.deactivateInstructor(account);
+
+    const options = createSpy.mock.calls[0]?.[0];
+    const buttons = options?.buttons as { text?: string; role?: string; handler?: () => void }[] | undefined;
+
+    expect(options?.header).toBe('Desactivar instructor');
+    expect(options?.message).toBe(
+      '¿Deseas desactivar esta cuenta de Instructor? No podrá iniciar sesión mientras permanezca inactiva.',
+    );
+    expect(buttons?.map((button) => button.text)).toEqual(['Cancelar', 'Desactivar']);
+    expect(auth.instructorAccounts().find((item) => item.id === account.id)?.status).toBe('activo');
+
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll(".instructor-item__status[data-status='inactivo']").length).toBe(0);
+  });
+
+  it('18. revoca la desactivación si el permiso cambia durante la confirmación', async () => {
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const auth = TestBed.inject(DemoAuthService);
+    const account = auth.instructorAccounts()[0];
+    const alert = {
+      present: vi.fn().mockResolvedValue(undefined),
+      onDidDismiss: vi.fn().mockResolvedValue(undefined),
+    };
+    const createSpy = vi
+      .spyOn(TestBed.inject(AlertController), 'create')
+      .mockResolvedValue(alert as unknown as Awaited<ReturnType<AlertController['create']>>);
+
+    const deactivation = fixture.componentInstance.deactivateInstructor(account);
+    await Promise.resolve();
+    await fixture.whenStable();
+
+    const options = createSpy.mock.calls[0]?.[0];
+    const buttons = options?.buttons as { text?: string; role?: string; handler?: () => void }[] | undefined;
+
+    session.selectProfile('visitante');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    buttons?.find((button) => button.text === 'Desactivar')?.handler?.();
+    await deactivation;
+
+    expect(fixture.componentInstance.canManageInstructors()).toBe(false);
+    expect(auth.instructorAccounts().find((item) => item.id === account.id)?.status).toBe('activo');
   });
 });

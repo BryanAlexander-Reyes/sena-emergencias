@@ -35,6 +35,28 @@
         </article>
       </section>
 
+      <section class="app-card alert-alarm" aria-labelledby="alert-alarm-title">
+        <div class="alert-alarm__head">
+          <span class="alert-alarm__icon">
+            <ion-icon name="alarm-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="alert-alarm__titles">
+            <p class="app-overline">Señalización simulada</p>
+            <h2 id="alert-alarm-title" class="app-card-title">Estado de la alarma</h2>
+          </div>
+          <span class="app-badge">Solo lectura</span>
+        </div>
+        <p class="alert-alarm__state" role="status">{{ alarmLabel() }} · simulado, sin hardware conectado</p>
+        <p class="alert-alarm__message" [attr.data-scenario]="alarmNoticeText().scenario">
+          {{ alarmNoticeText().message }}
+        </p>
+        @if (alarmNoticeText().zoneName; as zoneName) {
+        <p class="alert-alarm__zone">Zona afectada: {{ zoneName }}</p>
+        } @if (ledInstruction(); as instruction) {
+        <p class="alert-alarm__led">{{ instruction }}</p>
+        }
+      </section>
+
       <section class="app-card alert-filters" aria-label="Filtros de alertas">
         <div class="alert-filters__group" role="group" aria-label="Filtrar por severidad">
           <p class="app-overline">Severidad</p>

@@ -294,6 +294,164 @@
 }
 
 /* ==========================================================================
+   Control de alarma (Fase 4.6)
+   ========================================================================== */
+
+.alarm-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+  /* 20 px por encima y por debajo: separa "Resumen de monitoreo" del control
+     sin acumular un margen adicional en .dash-summary. */
+  margin-block: var(--app-space-5);
+}
+
+.alarm-control .app-section-head {
+  margin-bottom: 0;
+}
+
+.alarm-control__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-3);
+  min-width: 0;
+}
+
+.alarm-control__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-radius: var(--app-radius-md);
+  background: var(--app-red-soft);
+  color: var(--app-red);
+  font-size: 1.15rem;
+}
+
+.alarm-control__titles {
+  min-width: 0;
+}
+
+.alarm-control__titles .app-overline {
+  margin-bottom: 2px;
+}
+
+.alarm-control__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-2) var(--app-space-3);
+  padding: var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: rgba(8, 17, 31, 0.45);
+}
+
+.alarm-control__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--app-text-muted);
+  box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.08);
+}
+
+.alarm-control__dot--on {
+  background: var(--app-red);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+}
+
+.alarm-control__status {
+  color: var(--app-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.alarm-control__simulated {
+  margin-left: auto;
+  color: var(--app-text-muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.alarm-control__text {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+}
+
+.alarm-control__actions {
+  display: flex;
+}
+
+.alarm-control__button--off {
+  --background: var(--app-red);
+}
+
+.alarm-control__note {
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+  color: var(--app-text-muted);
+  font-size: 0.74rem;
+}
+
+.alarm-control__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+  padding: var(--app-space-3) var(--app-space-4);
+  border: 1px solid rgba(0, 212, 255, 0.24);
+  border-radius: var(--app-radius-md);
+  background: var(--app-cyan-soft);
+}
+
+.alarm-control__notice[data-scenario='B'],
+.alarm-control__notice[data-scenario='D'] {
+  border-color: rgba(250, 204, 21, 0.3);
+  background: var(--app-yellow-soft);
+}
+
+.alarm-control__notice ion-icon {
+  flex: 0 0 auto;
+  color: var(--app-cyan);
+  font-size: 1.1rem;
+}
+
+.alarm-control__notice[data-scenario='B'] ion-icon,
+.alarm-control__notice[data-scenario='D'] ion-icon {
+  color: var(--app-yellow);
+}
+
+.alarm-control__notice-copy {
+  min-width: 0;
+}
+
+.alarm-control__notice-message {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.alarm-control__notice-zone {
+  margin: var(--app-space-2) 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+}
+
+.alarm-control__notice-led {
+  margin: var(--app-space-2) 0 0;
+  color: var(--app-green);
+  font-size: 0.7rem;
+}
+
+/* ==========================================================================
    Pie
    ========================================================================== */
 
@@ -324,5 +482,14 @@
 
   .dash-summary__stats {
     grid-template-columns: 1fr;
+  }
+
+  .alarm-control__heading {
+    align-items: flex-start;
+  }
+
+  .alarm-control__simulated {
+    width: 100%;
+    margin-left: 0;
   }
 }
