@@ -145,6 +145,19 @@ describe('AlertasPage', () => {
     expect(resolved.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('should keep both filter groups and their machine-readable state', () => {
+    const filters = fixture.nativeElement.querySelector('.alert-filters') as HTMLElement;
+    const severity = filters.querySelector('[role="group"][aria-label="Filtrar por severidad"]') as HTMLElement;
+    const status = filters.querySelector('[role="group"][aria-label="Filtrar por estado de la alerta"]') as HTMLElement;
+
+    expect(severity).toBeTruthy();
+    expect(status).toBeTruthy();
+    expect(Array.from(severity.querySelectorAll('.alert-filter'))).toHaveLength(4);
+    expect(Array.from(status.querySelectorAll('.alert-filter'))).toHaveLength(3);
+    expect(severity.querySelector('[data-severity="critical"]')?.getAttribute('aria-pressed')).toBe('false');
+    expect(status.querySelector('[data-status="all"]')?.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('should show an empty state with an icon and message when there are no results', () => {
     clickFilter('severity', 'critical');
     clickFilter('status', 'resolved');

@@ -40,6 +40,14 @@ describe('NavCardComponent', () => {
     expect(icons[1].getAttribute('name')).toBe('chevron-forward-outline');
   });
 
+  it('should keep decorative icons hidden from assistive technology', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const icons = Array.from(element.querySelectorAll('ion-icon')) as HTMLElement[];
+
+    expect(icons.length).toBeGreaterThan(0);
+    expect(icons.every((icon) => icon.getAttribute('aria-hidden') === 'true')).toBe(true);
+  });
+
   it('should expose the accent through a host class', () => {
     expect(fixture.nativeElement.classList).toContain('nav-card-host--green');
   });

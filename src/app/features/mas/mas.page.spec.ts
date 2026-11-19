@@ -81,6 +81,17 @@ describe('MasPage', () => {
     expect(texts[4]).toContain('Preferencias e información');
   });
 
+  it('should keep the accessible profile and navigation structure used by the visual layout', () => {
+    const profile = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
+    const menu = fixture.nativeElement.querySelector('.mas-menu') as HTMLElement;
+    const list = fixture.nativeElement.querySelector('.mas-menu__list') as HTMLElement;
+
+    expect(profile.getAttribute('aria-labelledby')).toBe('mas-profile-title');
+    expect(menu.getAttribute('aria-labelledby')).toBe('mas-menu-title');
+    expect(list.getAttribute('aria-label')).toBe('Opciones del menú Más');
+    expect(list.querySelectorAll('app-nav-card')).toHaveLength(5);
+  });
+
   it('should link every card to its secondary route', () => {
     const links = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card a')) as HTMLAnchorElement[];
 

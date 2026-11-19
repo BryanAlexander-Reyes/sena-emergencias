@@ -1,7 +1,26 @@
+@use '../../../theme/breakpoints' as bp;
+
+/* ==========================================================================
+   UIX.5 · Administración: resumen, filtros, tarjetas y formulario
+   ========================================================================== */
+
 .admin-session {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--app-space-3);
+  overflow: hidden;
+  padding: var(--app-space-4);
+  border-color: rgba(21, 61, 50, 0.18);
+  background: linear-gradient(120deg, rgba(21, 61, 50, 0.06) 0%, rgba(255, 255, 255, 0) 60%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--sena-brand-900);
+  }
 }
 
 .admin-session__identity {
@@ -15,28 +34,28 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(0, 212, 255, 0.32);
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(21, 61, 50, 0.18);
   border-radius: var(--app-radius-md);
   background: var(--app-cyan-soft);
-  color: var(--app-cyan);
-  font-size: 1.25rem;
+  color: var(--sena-brand-900);
+  font-size: 1.3rem;
 }
 
 .admin-session__label,
 .admin-session__hint {
   display: block;
   color: var(--app-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   line-height: 1.45;
 }
 
 .admin-session__value {
   display: block;
   margin: 2px 0;
-  color: var(--app-text);
-  font-size: 1rem;
+  color: var(--app-text-strong);
+  font-size: 1.02rem;
   font-weight: 700;
 }
 
@@ -50,22 +69,41 @@
 .admin-summary__card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: var(--app-space-3);
+  justify-content: space-between;
+  gap: var(--app-space-2);
+  min-height: 96px;
+  padding: var(--app-space-4);
+}
+
+.admin-summary__card:first-child {
+  border-color: var(--sena-brand-900);
+  background:
+    linear-gradient(145deg, rgba(57, 168, 107, 0.18) 0%, rgba(21, 61, 50, 0) 70%), var(--sena-brand-900);
+  box-shadow: var(--app-shadow-md);
+}
+
+.admin-summary__card:first-child .admin-summary__value {
+  color: var(--color-on-brand);
+}
+
+.admin-summary__card:first-child .admin-summary__label {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .admin-summary__value {
-  color: var(--app-cyan);
-  font-size: 1.45rem;
+  color: var(--sena-brand-900);
+  font-size: clamp(1.4rem, 3.6vw, 1.8rem);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .admin-summary__label {
   color: var(--app-text-muted);
   font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
@@ -79,7 +117,7 @@
 
 .admin-roles__list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--app-space-2);
 }
 
@@ -88,66 +126,98 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-2);
-  padding: var(--app-space-2) var(--app-space-3);
+  padding: var(--app-space-3);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-sm);
-  background: rgba(8, 17, 31, 0.4);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
 }
 
 .admin-roles__label {
-  color: var(--app-text);
-  font-size: 0.76rem;
+  color: var(--app-text-strong);
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
 .admin-roles__count {
   color: var(--app-text-muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  text-align: right;
 }
 
 .admin-users__filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--app-space-2);
   margin-bottom: var(--app-space-3);
 }
 
 .admin-users__filter {
-  min-height: 38px;
-  padding: 0 var(--app-space-3);
+  min-height: 44px;
+  padding: 0 var(--app-space-4);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-pill);
-  background: rgba(8, 17, 31, 0.5);
+  background: var(--sena-surface-raised);
   color: var(--app-text-muted);
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease,
+    transform var(--app-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: var(--app-focus-ring);
+    outline-offset: var(--app-focus-offset);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .admin-users__filter--on {
-  border-color: rgba(0, 212, 255, 0.5);
-  background: var(--app-cyan-soft);
-  color: var(--app-cyan);
+  border-color: var(--sena-brand-900);
+  background: var(--sena-brand-900);
+  color: var(--color-on-brand);
 }
 
 .admin-users__list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--app-space-3);
 }
 
 .admin-user {
-  padding: var(--app-space-3);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--app-space-4);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: rgba(8, 17, 31, 0.35);
+  border-radius: var(--app-radius-lg);
+  background: var(--app-bg-secondary);
+  transition:
+    border-color var(--app-motion-base) ease,
+    box-shadow var(--app-motion-base) ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sena-brand-900), var(--sena-brand-500));
+    opacity: 0.65;
+  }
 }
 
 .admin-user__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--app-space-2);
+  gap: var(--app-space-3);
 }
 
 .admin-user__avatar {
@@ -155,94 +225,133 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-sm);
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--app-cyan);
-  font-size: 1rem;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(21, 61, 50, 0.16);
+  border-radius: var(--app-radius-md);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.15rem;
 }
 
 .admin-user__identity {
-  flex: 1 1 auto;
+  flex: 1 1 140px;
   min-width: 0;
 }
 
 .admin-user__name {
   margin: 0;
-  color: var(--app-text);
-  font-size: 0.88rem;
+  color: var(--app-text-strong);
+  font-size: 0.96rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .admin-user__id {
   margin: 2px 0 0;
   color: var(--app-text-muted);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .admin-user__status {
   flex: 0 0 auto;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(30, 122, 76, 0.34);
   border-radius: var(--app-radius-pill);
   background: var(--app-green-soft);
-  color: var(--app-green);
-  font-size: 0.6rem;
+  color: var(--color-success);
+  font-size: 0.66rem;
   font-weight: 700;
 }
 
 .admin-user__status[data-status='inactivo'] {
-  border-color: rgba(250, 204, 21, 0.32);
+  border-color: rgba(233, 180, 76, 0.55);
   background: var(--app-yellow-soft);
-  color: var(--app-yellow);
+  color: var(--color-warning);
 }
 
 .admin-user__data {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--app-space-2);
-  margin: var(--app-space-3) 0 0;
+  gap: var(--app-space-3);
+  margin: var(--app-space-4) 0 0;
 }
 
 .admin-user__data-item {
   min-width: 0;
+  padding: var(--app-space-2) var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--sena-surface-raised);
 }
 
 .admin-user__data-item dt {
   color: var(--app-text-muted);
-  font-size: 0.56rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .admin-user__data-item dd {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   color: var(--app-text);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .admin-users__empty,
 .admin-users__loading {
   margin: 0;
+  padding: var(--app-space-4);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
   color: var(--app-text-muted);
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   line-height: 1.5;
+  text-align: center;
+}
+
+.admin-users__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+}
+
+.admin-users__loading::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(30, 122, 76, 0.25);
+  border-top-color: var(--color-success);
+  border-radius: 50%;
+  animation: admin-users-spin 700ms linear infinite;
+}
+
+@keyframes admin-users-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .admin-users__success {
-  margin: 0 0 var(--app-space-2);
-  padding: var(--app-space-2) var(--app-space-3);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: var(--app-radius-sm);
+  margin: 0 0 var(--app-space-3);
+  padding: var(--app-space-3);
+  border: 1px solid rgba(30, 122, 76, 0.34);
+  border-left-width: 3px;
+  border-radius: var(--app-radius-md);
   background: var(--app-green-soft);
-  color: var(--app-green);
-  font-size: 0.72rem;
-  line-height: 1.45;
+  color: var(--color-success);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .admin-user__actions {
@@ -250,17 +359,20 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--app-space-2);
-  margin-top: var(--app-space-3);
+  margin-top: var(--app-space-4);
   padding-top: var(--app-space-3);
   border-top: 1px solid var(--app-border);
 }
 
 .admin-user__actions ion-button {
-  --padding-start: 0;
-  --padding-end: 0;
-  min-height: 34px;
+  --background: transparent;
+  --border-color: rgba(57, 168, 107, 0.55);
+  --color: var(--sena-brand-900);
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 44px;
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
 }
 
 .admin-user__action-error {
@@ -269,96 +381,119 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--app-space-2);
-  padding: var(--app-space-2) var(--app-space-3);
-  border: 1px solid rgba(250, 204, 21, 0.32);
-  border-radius: var(--app-radius-sm);
+  padding: var(--app-space-3);
+  border: 1px solid rgba(233, 180, 76, 0.5);
+  border-radius: var(--app-radius-md);
   background: var(--app-yellow-soft);
 }
 
 .admin-user__action-error p {
   flex: 1 1 auto;
   margin: 0;
-  color: var(--app-yellow);
-  font-size: 0.68rem;
+  color: var(--color-warning);
+  font-size: 0.74rem;
+  font-weight: 600;
   line-height: 1.45;
 }
 
 .admin-user__action-error ion-button {
-  --padding-start: 0;
-  --padding-end: 0;
-  min-height: 28px;
+  --color: var(--color-warning);
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 44px;
   margin: 0;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .admin-users__error {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--app-space-2);
-  padding: var(--app-space-3);
-  border: 1px solid rgba(250, 204, 21, 0.32);
-  border-radius: var(--app-radius-sm);
+  gap: var(--app-space-3);
+  padding: var(--app-space-4);
+  border: 1px solid rgba(233, 180, 76, 0.5);
+  border-left-width: 3px;
+  border-radius: var(--app-radius-md);
   background: var(--app-yellow-soft);
 }
 
 .admin-users__error-text {
   margin: 0;
-  color: var(--app-yellow);
-  font-size: 0.74rem;
+  color: var(--color-warning);
+  font-size: 0.8rem;
+  font-weight: 600;
   line-height: 1.5;
 }
 
 .admin-users__retry {
-  --padding-start: 0;
-  --padding-end: 0;
-  min-height: 32px;
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 44px;
 }
 
 .instructor-management {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-4);
+  border-color: rgba(21, 61, 50, 0.18);
+  background: linear-gradient(150deg, rgba(21, 61, 50, 0.05) 0%, rgba(255, 255, 255, 0) 55%), var(--app-surface);
 }
 
 .instructor-management__intro {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.74rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .instructor-form {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--app-space-3);
-  padding-top: var(--app-space-3);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--app-space-4);
+  padding-top: var(--app-space-4);
   border-top: 1px solid var(--app-border);
+}
+
+.instructor-form ion-input {
+  --background: var(--sena-surface-raised);
+  --border-color: rgba(21, 61, 50, 0.18);
+  --border-radius: var(--app-radius-md);
+  --color: var(--app-text);
+  --label-color: var(--app-text-muted);
+  --placeholder-color: var(--app-text-muted);
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 56px;
 }
 
 .instructor-form__error,
 .instructor-form__success {
+  grid-column: 1 / -1;
   margin: 0;
-  padding: var(--app-space-2) var(--app-space-3);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-sm);
-  font-size: 0.72rem;
-  line-height: 1.45;
+  padding: var(--app-space-3);
+  border-left-width: 3px;
+  border-radius: var(--app-radius-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .instructor-form__error {
-  border-color: rgba(250, 204, 21, 0.32);
+  border-color: rgba(233, 180, 76, 0.5);
   background: var(--app-yellow-soft);
-  color: var(--app-yellow);
+  color: var(--color-warning);
 }
 
 .instructor-form__success {
-  border-color: rgba(34, 197, 94, 0.3);
+  border-color: rgba(30, 122, 76, 0.34);
   background: var(--app-green-soft);
-  color: var(--app-green);
+  color: var(--color-success);
 }
 
 .instructor-form__submit {
+  grid-column: 1 / -1;
   justify-self: start;
 }
 
@@ -367,20 +502,23 @@
   display: flex;
   align-items: flex-start;
   gap: var(--app-space-3);
+  padding: var(--app-space-4);
+  border-color: rgba(21, 61, 50, 0.14);
+  background: var(--app-bg-secondary);
 }
 
 .admin-scope__icon,
 .admin-denied__icon {
   flex: 0 0 auto;
-  color: var(--app-cyan);
-  font-size: 1.15rem;
+  color: var(--sena-brand-900);
+  font-size: 1.25rem;
 }
 
 .admin-scope__title,
 .admin-denied__title {
   margin: 0 0 6px;
-  color: var(--app-text);
-  font-size: 0.92rem;
+  color: var(--app-text-strong);
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -388,30 +526,77 @@
 .admin-denied__text {
   margin: 0 0 6px;
   color: var(--app-text-muted);
-  font-size: 0.74rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.admin-denied {
+  border-color: rgba(233, 180, 76, 0.5);
+  background: var(--app-yellow-soft);
 }
 
 .admin-denied__icon {
-  color: var(--app-yellow);
+  color: var(--color-warning);
 }
 
-@media (min-width: 640px) {
+@include bp.sm-up {
+  .admin-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-roles__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-users__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .instructor-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.lg-up {
   .admin-summary {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 420px) {
-  .admin-user__head {
-    flex-wrap: wrap;
+@include bp.xl-up {
+  .admin-summary {
+    grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-users__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@include bp.xs-only {
+  .admin-session,
+  .admin-summary__card,
+  .admin-user,
+  .admin-users__error,
+  .instructor-management,
+  .admin-scope,
+  .admin-denied {
+    padding: var(--app-space-3);
   }
 
   .admin-user__data {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-users__filter,
+  .admin-user {
+    transition: none;
   }
 
-  .admin-roles__list {
-    grid-template-columns: 1fr;
+  .admin-users__filter:active {
+    transform: none;
   }
 }

@@ -58,6 +58,19 @@ describe('SensoresPage (Fase 3.6)', () => {
     expect(content).toContain('Servomotor');
   });
 
+  it('should keep the accessible simulation summary and expandable cards', () => {
+    const environment = fixture.nativeElement.querySelector('.sensor-env') as HTMLElement;
+    const summary = fixture.nativeElement.querySelector('.sensor-summary') as HTMLElement;
+    const list = fixture.nativeElement.querySelector('.sensor-list') as HTMLElement;
+    const toggle = fixture.nativeElement.querySelector('.sensor-card__toggle') as HTMLButtonElement;
+
+    expect(environment?.getAttribute('aria-label')).toBe('Aviso de simulación');
+    expect(summary?.getAttribute('aria-label')).toBe('Resumen del simulador');
+    expect(summary?.querySelectorAll('.sensor-summary__card')).toHaveLength(4);
+    expect(list?.getAttribute('aria-label')).toBe('Dispositivos simulados');
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('should show zone association and physical disconnection explicitly', () => {
     const content = pageText();
 

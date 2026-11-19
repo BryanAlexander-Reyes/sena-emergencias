@@ -133,6 +133,26 @@ describe('MapaPage', () => {
     expect(groups[0].getAttribute('tabindex')).toBe('0');
   });
 
+  it('should expose the selected occupancy as text for assistive technology', () => {
+    const progress = element.querySelector('.app-progress.map-detail__progress') as HTMLElement;
+    const fill = element.querySelector('.app-progress__fill.map-detail__progress-fill') as HTMLElement;
+
+    expect(progress.getAttribute('role')).toBe('progressbar');
+    expect(progress.getAttribute('aria-valuenow')).toBe('84');
+    expect(progress.getAttribute('aria-valuetext')).toContain('84%');
+    expect(progress.getAttribute('aria-valuetext')).toContain('Crítico');
+    expect(fill.style.width).toBeTruthy();
+  });
+
+  it('should keep the plan and the detail in the responsive layout', () => {
+    const layout = element.querySelector('.map-layout') as HTMLElement;
+
+    expect(layout.querySelector('.map-layout__primary .map-card')).toBeTruthy();
+    expect(layout.querySelector('.map-layout__primary .map-route-note')).toBeTruthy();
+    expect(layout.querySelector('.map-layout__aside .map-detail')).toBeTruthy();
+    expect(layout.querySelector('.map-layout__aside .map-legend')).toBeTruthy();
+  });
+
   it('should render the legend and the demo disclaimer', () => {
     const content = element.textContent ?? '';
 

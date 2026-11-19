@@ -1,3 +1,5 @@
+@use '../../../theme/breakpoints' as bp;
+
 .secondary-page__back {
   display: inline-flex;
   align-items: center;
@@ -7,31 +9,26 @@
   padding: var(--app-space-2) var(--app-space-4);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-pill);
-  background: rgba(17, 30, 50, 0.7);
+  background: var(--app-surface);
   color: var(--app-text-muted);
-  font-size: 0.78rem;
+  font-size: var(--app-font-size-sm);
   font-weight: 600;
   text-decoration: none;
   transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.secondary-page__back:hover {
-  border-color: rgba(0, 212, 255, 0.4);
-  background: var(--app-cyan-soft);
-  color: var(--app-cyan);
-}
-
 .secondary-page__back:active {
-  background: rgba(0, 212, 255, 0.16);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
 }
 
 .secondary-page__back:focus-visible {
-  outline: 2px solid var(--app-cyan);
-  outline-offset: 2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 .secondary-page__back ion-icon {
@@ -45,26 +42,29 @@
   gap: var(--app-space-2);
   margin-top: var(--app-space-6);
   color: var(--app-text-muted);
-  font-size: 0.68rem;
+  font-size: var(--app-font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .secondary-page__dot {
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--app-border);
 }
 
-@media (max-width: 359px) {
+@media (hover: hover) {
+  .secondary-page__back:hover {
+    border-color: rgba(57, 168, 107, 0.4);
+    background: var(--app-cyan-soft);
+    color: var(--sena-brand-900);
+  }
+}
+
+@include bp.xs-only {
   .secondary-page__back {
     padding: var(--app-space-2) var(--app-space-3);
-    font-size: 0.74rem;
-  }
-
-  .secondary-page__footer {
-    font-size: 0.62rem;
   }
 }
 

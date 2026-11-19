@@ -34,6 +34,19 @@ describe('ConfiguracionPage', () => {
     expect(content).toContain('Versión de demostración 0.7');
   });
 
+  it('should keep the accessible section and status structure', () => {
+    const app = fixture.nativeElement.querySelector('.config-app') as HTMLElement;
+    const list = fixture.nativeElement.querySelector('.config-list') as HTMLElement;
+    const project = fixture.nativeElement.querySelector('.config-project') as HTMLElement;
+    const statuses = Array.from(fixture.nativeElement.querySelectorAll('.config-row__state')) as HTMLElement[];
+
+    expect(app?.getAttribute('aria-labelledby')).toBe('config-app-title');
+    expect(list?.getAttribute('aria-labelledby')).toBe('config-status-title');
+    expect(project?.getAttribute('aria-labelledby')).toBe('config-project-title');
+    expect(statuses).toHaveLength(2);
+    expect(statuses.every((status) => status.classList.contains('app-status'))).toBe(true);
+  });
+
   it('should show the dark theme and disconnected IoT status', () => {
     const content = pageText();
 

@@ -16,11 +16,12 @@ import { INSTRUCTOR_ACCOUNT_REPOSITORY } from './app/core/auth/instructor-accoun
 import { SupabaseAuthService } from './app/core/auth/supabase-auth.service';
 import { SupabaseInstructorAccountRepository } from './app/core/auth/supabase-instructor-account.repository';
 import { SupabaseSessionService } from './app/core/auth/supabase-session.service';
+import { uixRouteAnimation } from './app/route-transition';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    provideIonicAngular(),
+    provideIonicAngular({ navAnimation: uixRouteAnimation }),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     { provide: AUTH_FACADE, useClass: SupabaseAuthService },
     { provide: INSTRUCTOR_ACCOUNT_REPOSITORY, useClass: SupabaseInstructorAccountRepository },

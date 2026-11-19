@@ -126,6 +126,18 @@ describe('AccesoPage', () => {
     expect(icons).toEqual(['shield-checkmark-outline', 'school-outline', 'book-outline']);
   });
 
+  it('should keep the accessible group and notice structure used by the visual layout', () => {
+    const group = query('.acceso-options');
+    const notice = query('.acceso-notice');
+    const current = query('.acceso-current');
+
+    expect(group?.getAttribute('role')).toBe('group');
+    expect(group?.getAttribute('aria-label')).toBe('Perfiles de demostración');
+    expect(options().every((option) => option.hasAttribute('aria-pressed'))).toBe(true);
+    expect(notice?.getAttribute('aria-labelledby')).toBe('acceso-notice-title');
+    expect(current?.getAttribute('aria-labelledby')).toBe('acceso-current-title');
+  });
+
   it('should start on the learner profile without confirmation or continue action', () => {
     expect(session.profileId()).toBe('aprendiz');
     expect(pageText()).toContain('Perfil activo en la sesión');
@@ -232,9 +244,12 @@ describe('AccesoPage', () => {
     options()[0].click();
     fixture.detectChanges();
     openLogin();
+    expect(query('.acceso-login__form')?.getAttribute('aria-busy')).toBe('false');
+
     await submitLogin('admin_demo', 'contraseña-mala');
 
     expect(query('.acceso-login')).not.toBeNull();
+    expect(query('.acceso-login__error')?.getAttribute('role')).toBe('alert');
     expect(query('.acceso-login__error')?.textContent).toContain(SUPABASE_LOGIN_ERROR);
     expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);

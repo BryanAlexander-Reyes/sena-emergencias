@@ -1,15 +1,17 @@
+@use '../../../theme/breakpoints' as bp;
+
 :host {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--app-space-3);
   overflow: hidden;
-  padding: var(--app-space-4) var(--app-space-4) var(--app-space-3);
+  padding: clamp(var(--app-space-4), 2.6vw, var(--app-space-5)) var(--app-space-4) var(--app-space-3);
   cursor: pointer;
   transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+    transform var(--app-motion-base) ease,
+    border-color var(--app-motion-base) ease,
+    box-shadow var(--app-motion-base) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -18,8 +20,8 @@
 }
 
 :host(:focus-visible) {
-  outline: 2px solid var(--zone-accent);
-  outline-offset: 2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 :host::before {
@@ -33,19 +35,19 @@
 :host(.zone-card--normal) {
   --zone-accent: var(--app-green);
   --zone-accent-soft: var(--app-green-soft);
-  --zone-accent-border: rgba(34, 197, 94, 0.32);
+  --zone-accent-border: rgba(30, 122, 76, 0.32);
 }
 
 :host(.zone-card--warning) {
   --zone-accent: var(--app-yellow);
   --zone-accent-soft: var(--app-yellow-soft);
-  --zone-accent-border: rgba(250, 204, 21, 0.32);
+  --zone-accent-border: rgba(138, 90, 0, 0.32);
 }
 
 :host(.zone-card--critical) {
   --zone-accent: var(--app-red);
   --zone-accent-soft: var(--app-red-soft);
-  --zone-accent-border: rgba(239, 68, 68, 0.32);
+  --zone-accent-border: rgba(179, 38, 30, 0.32);
 }
 
 .zone-card__head {
@@ -60,50 +62,51 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--zone-accent-border);
   border-radius: var(--app-radius-md);
   background: var(--zone-accent-soft);
   color: var(--zone-accent);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 .zone-card__identity {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
 }
 
 .zone-card__code {
   color: var(--app-text-muted);
-  font-size: 0.62rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .zone-card__name {
   margin: 0;
-  color: var(--app-text);
-  font-size: 0.98rem;
+  color: var(--app-text-strong);
+  font-size: 1rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .zone-card__badge {
   flex: 0 0 auto;
-  padding: 0.28rem 0.55rem;
+  padding: 0.3rem 0.6rem;
   border: 1px solid var(--zone-accent-border);
   border-radius: var(--app-radius-pill);
   background: var(--zone-accent-soft);
   color: var(--zone-accent);
-  font-size: 0.6rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -117,22 +120,23 @@
 
 .zone-card__metric {
   padding: var(--app-space-2);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--app-border-subtle);
   border-radius: var(--app-radius-sm);
-  background: rgba(8, 17, 31, 0.4);
+  background: var(--app-bg-secondary);
 }
 
 .zone-card__metric dt {
   color: var(--app-text-muted);
-  font-size: 0.58rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
 .zone-card__metric dd {
   margin: 2px 0 0;
-  color: var(--app-text);
+  color: var(--app-text-strong);
   font-size: 1.1rem;
   font-weight: 800;
   line-height: 1.1;
@@ -142,20 +146,10 @@
   color: var(--zone-accent);
 }
 
-.zone-card__progress {
-  height: 8px;
-  overflow: hidden;
-  border-radius: var(--app-radius-pill);
-  background: rgba(148, 163, 184, 0.14);
-}
-
 .zone-card__progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
   background: var(--zone-accent);
   box-shadow: 0 0 12px var(--zone-accent-soft);
-  transition: width 320ms ease;
+  transition: width var(--app-motion-slow) ease;
 }
 
 .zone-card__controls {
@@ -169,8 +163,8 @@
 .zone-card__read-only {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.7rem;
-  line-height: 1.4;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
 }
 
 .zone-card__stepper {
@@ -180,7 +174,7 @@
   padding: 3px;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-pill);
-  background: rgba(8, 17, 31, 0.55);
+  background: var(--app-surface);
 }
 
 .zone-card__step {
@@ -199,19 +193,18 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background 140ms ease,
-    color 140ms ease,
-    opacity 140ms ease;
+    background-color var(--app-motion-fast) ease,
+    color var(--app-motion-fast) ease,
+    opacity var(--app-motion-fast) ease;
 }
 
-.zone-card__step:not(:disabled):hover,
 .zone-card__step:not(:disabled):active {
   background: var(--zone-accent-soft);
 }
 
 .zone-card__step:disabled {
-  color: var(--app-text-muted);
-  opacity: 0.4;
+  color: var(--app-text-soft);
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -225,7 +218,7 @@
 }
 
 .zone-card__people-value {
-  color: var(--app-text);
+  color: var(--app-text-strong);
   font-size: 1.15rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
@@ -234,9 +227,9 @@
 .zone-card__people-unit {
   margin-top: 3px;
   color: var(--app-text-muted);
-  font-size: 0.5rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -250,38 +243,37 @@
   padding: 0 var(--app-space-3);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-pill);
-  background: transparent;
+  background: var(--app-surface);
   color: var(--app-text-muted);
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease,
-    opacity 140ms ease;
+    background-color var(--app-motion-fast) ease,
+    border-color var(--app-motion-fast) ease,
+    color var(--app-motion-fast) ease,
+    opacity var(--app-motion-fast) ease;
 }
 
-.zone-card__reset:not(:disabled):hover,
 .zone-card__reset:not(:disabled):active {
   border-color: var(--zone-accent-border);
   background: var(--zone-accent-soft);
-  color: var(--app-text);
+  color: var(--app-text-strong);
 }
 
 .zone-card__reset:disabled {
-  opacity: 0.4;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .zone-card__step:focus-visible,
 .zone-card__reset:focus-visible,
 .zone-card__hint:focus-visible {
-  outline: 2px solid var(--zone-accent);
-  outline-offset: 2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 .zone-card__footer {
@@ -293,18 +285,22 @@
 
 .zone-card__simulated {
   color: var(--app-text-muted);
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
+  font-size: var(--app-font-size-xs);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .zone-card__hint {
-  padding: 4px 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--app-space-2);
   border: 0;
+  border-radius: var(--app-radius-sm);
   background: transparent;
   color: var(--zone-accent);
   font-family: inherit;
-  font-size: 0.66rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
   line-height: 1.2;
   cursor: pointer;
@@ -317,12 +313,42 @@
   padding: var(--app-space-2) var(--app-space-3);
   border: 1px dashed var(--app-border);
   border-radius: var(--app-radius-sm);
-  background: rgba(8, 17, 31, 0.45);
+  background: var(--app-bg-secondary);
   color: var(--app-text-muted);
-  font-size: 0.72rem;
+  font-size: var(--app-font-size-xs);
   line-height: 1.5;
 }
 
 .zone-card__note strong {
-  color: var(--app-text);
+  color: var(--app-text-strong);
+}
+
+@media (hover: hover) {
+  .zone-card__step:not(:disabled):hover {
+    background: var(--zone-accent-soft);
+  }
+
+  .zone-card__reset:not(:disabled):hover {
+    border-color: var(--zone-accent-border);
+    background: var(--zone-accent-soft);
+    color: var(--app-text-strong);
+  }
+
+  .zone-card__hint:hover {
+    background: var(--zone-accent-soft);
+  }
+}
+
+@include bp.xs-only {
+  :host {
+    padding: var(--app-space-3) var(--app-space-3) var(--app-space-2);
+  }
+
+  .zone-card__metrics {
+    gap: var(--app-space-1);
+  }
+
+  .zone-card__metric {
+    padding: var(--app-space-1) var(--app-space-2);
+  }
 }

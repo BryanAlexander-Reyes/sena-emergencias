@@ -60,7 +60,7 @@
     </div>
   </section>
 
-  <section class="app-card admin-users" aria-labelledby="admin-users-title">
+  <section class="app-card admin-users" aria-labelledby="admin-users-title" [attr.aria-busy]="usersLoading()">
     <div class="app-section-head">
       <p id="admin-users-title" class="app-overline">Usuarios registrados</p>
       <span class="app-badge">{{ filteredUsers().length }} de {{ totalUsers() }}</span>

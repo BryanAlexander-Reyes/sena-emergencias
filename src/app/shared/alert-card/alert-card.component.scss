@@ -1,3 +1,5 @@
+@use '../../../theme/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -8,10 +10,11 @@
   flex-direction: column;
   gap: var(--app-space-3);
   overflow: hidden;
-  padding: var(--app-space-4) var(--app-space-4) var(--app-space-4) calc(var(--app-space-4) + 4px);
+  padding: clamp(var(--app-space-4), 2.6vw, var(--app-space-5)) var(--app-space-4) var(--app-space-4)
+    calc(var(--app-space-4) + 4px);
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+    border-color var(--app-motion-base) ease,
+    box-shadow var(--app-motion-base) ease;
 }
 
 .alert-card::before {
@@ -22,26 +25,22 @@
   background: var(--alert-accent);
 }
 
-.alert-card:hover {
-  border-color: var(--alert-accent-border);
-}
-
 .alert-card--critical {
   --alert-accent: var(--app-red);
   --alert-accent-soft: var(--app-red-soft);
-  --alert-accent-border: rgba(239, 68, 68, 0.34);
+  --alert-accent-border: rgba(179, 38, 30, 0.32);
 }
 
 .alert-card--warning {
   --alert-accent: var(--app-yellow);
   --alert-accent-soft: var(--app-yellow-soft);
-  --alert-accent-border: rgba(250, 204, 21, 0.34);
+  --alert-accent-border: rgba(138, 90, 0, 0.32);
 }
 
 .alert-card--info {
   --alert-accent: var(--app-cyan);
   --alert-accent-soft: var(--app-cyan-soft);
-  --alert-accent-border: rgba(0, 212, 255, 0.34);
+  --alert-accent-border: rgba(57, 168, 107, 0.32);
 }
 
 /* --- Resumen interactivo ------------------------------------------------ */
@@ -51,6 +50,7 @@
   align-items: flex-start;
   gap: var(--app-space-3);
   width: 100%;
+  min-height: 44px;
   padding: 0;
   border: 0;
   border-radius: var(--app-radius-sm);
@@ -59,7 +59,7 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: opacity var(--app-motion-fast) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -68,8 +68,8 @@
 }
 
 .alert-card__toggle:focus-visible {
-  outline: 2px solid var(--alert-accent);
-  outline-offset: -2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 .alert-card__icon {
@@ -103,9 +103,10 @@
 
 .alert-card__severity {
   color: var(--alert-accent);
-  font-size: 0.62rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
@@ -114,21 +115,21 @@
   align-items: center;
   gap: 4px;
   color: var(--app-text-muted);
-  font-size: 0.62rem;
-  line-height: 1.35;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.4;
 }
 
 .alert-card__time ion-icon {
   flex: 0 0 auto;
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .alert-card__title {
   display: block;
-  color: var(--app-text);
-  font-size: 1rem;
+  color: var(--app-text-strong);
+  font-size: 1.05rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
@@ -137,28 +138,28 @@
   align-items: center;
   gap: 4px;
   color: var(--app-text-muted);
-  font-size: 0.72rem;
+  font-size: var(--app-font-size-sm);
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .alert-card__zone ion-icon {
   flex: 0 0 auto;
   color: var(--alert-accent);
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .alert-card__description {
   display: block;
   color: var(--app-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: var(--app-font-size-sm);
+  line-height: 1.5;
 }
 
 .alert-card__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--app-space-2);
   margin-top: 2px;
 }
 
@@ -166,58 +167,59 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 0.22rem 0.5rem;
+  padding: 0.28rem 0.6rem;
   border: 1px solid var(--chip-border);
   border-radius: var(--app-radius-pill);
   background: var(--chip-soft);
   color: var(--chip-color);
-  font-size: 0.6rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   line-height: 1.3;
 }
 
 .alert-card__chip ion-icon {
   flex: 0 0 auto;
-  font-size: 0.76rem;
+  font-size: 0.95rem;
 }
 
 .alert-card__chip--active {
   --chip-color: var(--app-red);
   --chip-soft: var(--app-red-soft);
-  --chip-border: rgba(239, 68, 68, 0.32);
+  --chip-border: rgba(179, 38, 30, 0.32);
 }
 
 .alert-card__chip--resolved {
   --chip-color: var(--app-green);
   --chip-soft: var(--app-green-soft);
-  --chip-border: rgba(34, 197, 94, 0.32);
+  --chip-border: rgba(30, 122, 76, 0.32);
 }
 
 .alert-card__chip--review-pending {
   --chip-color: var(--app-yellow);
   --chip-soft: var(--app-yellow-soft);
-  --chip-border: rgba(250, 204, 21, 0.32);
+  --chip-border: rgba(138, 90, 0, 0.32);
 }
 
 .alert-card__chip--review-reviewed {
   --chip-color: var(--app-cyan);
   --chip-soft: var(--app-cyan-soft);
-  --chip-border: rgba(0, 212, 255, 0.32);
+  --chip-border: rgba(57, 168, 107, 0.32);
 }
 
 .alert-card__hint {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 44px;
   margin-top: 2px;
   color: var(--alert-accent);
-  font-size: 0.66rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
 }
 
 .alert-card__hint ion-icon {
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 /* --- Detalle expandible ------------------------------------------------- */
@@ -228,13 +230,13 @@
   gap: var(--app-space-3);
   padding-top: var(--app-space-3);
   border-top: 1px dashed var(--app-border);
-  animation: alert-card-reveal 180ms ease;
+  animation: alert-card-reveal var(--app-motion-slow) ease;
 }
 
 .alert-card__detail {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.78rem;
+  font-size: var(--app-font-size-sm);
   line-height: 1.55;
 }
 
@@ -248,25 +250,26 @@
 .alert-card__data-item {
   min-width: 0;
   padding: var(--app-space-2) var(--app-space-3);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--app-border-subtle);
   border-radius: var(--app-radius-sm);
-  background: rgba(8, 17, 31, 0.4);
+  background: var(--app-bg-secondary);
 }
 
 .alert-card__data-item dt {
   color: var(--app-text-muted);
-  font-size: 0.56rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
 .alert-card__data-item dd {
   margin: 2px 0 0;
-  color: var(--app-text);
-  font-size: 0.72rem;
+  color: var(--app-text-strong);
+  font-size: var(--app-font-size-xs);
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
@@ -278,25 +281,20 @@
   width: 100%;
   min-height: 44px;
   padding: 0 var(--app-space-4);
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  border: 1px solid var(--sena-brand-500);
   border-radius: var(--app-radius-md);
   background: var(--app-cyan-soft);
-  color: var(--app-cyan);
+  color: var(--sena-brand-900);
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    transform 150ms ease;
+    background-color var(--app-motion-fast) ease,
+    border-color var(--app-motion-fast) ease,
+    transform var(--app-motion-fast) ease;
   -webkit-tap-highlight-color: transparent;
-}
-
-.alert-card__review:hover {
-  border-color: rgba(0, 212, 255, 0.65);
-  background: rgba(0, 212, 255, 0.18);
 }
 
 .alert-card__review:active {
@@ -304,12 +302,12 @@
 }
 
 .alert-card__review:focus-visible {
-  outline: 2px solid var(--app-cyan);
-  outline-offset: 2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 .alert-card__review ion-icon {
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .alert-card__review-locked {
@@ -317,11 +315,11 @@
   padding: var(--app-space-2) var(--app-space-3);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-sm);
-  background: rgba(8, 17, 31, 0.4);
+  background: var(--app-bg-secondary);
   color: var(--app-text-muted);
-  font-size: 0.7rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .alert-card__reviewed {
@@ -330,19 +328,19 @@
   gap: 6px;
   margin: 0;
   padding: var(--app-space-2) var(--app-space-3);
-  border: 1px solid rgba(34, 197, 94, 0.28);
+  border: 1px solid rgba(30, 122, 76, 0.28);
   border-radius: var(--app-radius-sm);
   background: var(--app-green-soft);
   color: var(--app-green);
-  font-size: 0.7rem;
+  font-size: var(--app-font-size-xs);
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .alert-card__reviewed ion-icon {
   flex: 0 0 auto;
   margin-top: 1px;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 @keyframes alert-card-reveal {
@@ -357,7 +355,18 @@
   }
 }
 
-@media (max-width: 359px) {
+@media (hover: hover) {
+  .alert-card:hover {
+    border-color: var(--alert-accent-border);
+  }
+
+  .alert-card__review:hover {
+    border-color: var(--sena-brand-900);
+    background: rgba(57, 168, 107, 0.2);
+  }
+}
+
+@include bp.xs-only {
   .alert-card {
     padding: var(--app-space-3) var(--app-space-3) var(--app-space-3) calc(var(--app-space-3) + 4px);
   }

@@ -1,27 +1,36 @@
+@use '../../../../theme/breakpoints' as bp;
+
 /* ==========================================================================
-   Fase 2.7 · Zona segura
+   UIX.5 · Zona segura: ficha de ocupación y punto de encuentro
    ========================================================================== */
 
 .safe-card {
-  --safe-accent: var(--app-green);
+  --safe-accent: var(--color-success);
   --safe-accent-soft: var(--app-green-soft);
-  --safe-accent-border: rgba(34, 197, 94, 0.32);
+  --safe-accent-border: rgba(30, 122, 76, 0.34);
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-3);
+  gap: var(--app-space-4);
   overflow: hidden;
   padding: var(--app-space-5);
   border-color: var(--safe-accent-border);
-  background:
-    radial-gradient(120% 90% at 100% 0%, rgba(34, 197, 94, 0.12) 0%, rgba(17, 30, 50, 0) 55%), var(--app-surface);
+  background: linear-gradient(150deg, rgba(57, 168, 107, 0.12) 0%, rgba(255, 255, 255, 0) 58%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sena-brand-900), var(--sena-brand-500));
+  }
 }
 
 .safe-card__head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--app-space-2) var(--app-space-3);
+  gap: var(--app-space-3);
 }
 
 .safe-card__icon {
@@ -29,26 +38,26 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border: 1px solid var(--safe-accent-border);
   border-radius: var(--app-radius-md);
   background: var(--safe-accent-soft);
   color: var(--safe-accent);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
 }
 
 .safe-card__identity {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
 }
 
 .safe-card__code {
   color: var(--safe-accent);
-  font-size: 0.6rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -56,8 +65,8 @@
 
 .safe-card__title {
   margin: 0;
-  color: var(--app-text);
-  font-size: 1rem;
+  color: var(--app-text-strong);
+  font-size: clamp(1rem, 2.6vw, 1.2rem);
   font-weight: 700;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -66,19 +75,20 @@
 .safe-card__status {
   flex: 0 0 auto;
   margin-left: auto;
-  padding: 0.3rem 0.6rem;
+  padding: 0.35rem 0.7rem;
   border: 1px solid var(--safe-accent-border);
   border-radius: var(--app-radius-pill);
   background: var(--safe-accent-soft);
   color: var(--safe-accent);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .safe-card__occupancy {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--app-space-2);
+  gap: var(--app-space-3);
 }
 
 .safe-card__numbers {
@@ -89,8 +99,8 @@
 }
 
 .safe-card__value {
-  color: var(--app-text);
-  font-size: 2.6rem;
+  color: var(--app-text-strong);
+  font-size: clamp(2.4rem, 9vw, 3.2rem);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.03em;
@@ -98,38 +108,38 @@
 
 .safe-card__total {
   color: var(--app-text-muted);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
 }
 
 .safe-card__percent {
   color: var(--safe-accent);
-  font-size: 1.35rem;
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .safe-card__caption {
-  margin: calc(var(--app-space-2) * -1) 0 0;
+  margin: calc(var(--app-space-3) * -1) 0 0;
   color: var(--app-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.4;
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 .safe-card__progress {
   height: 10px;
   overflow: hidden;
   border-radius: var(--app-radius-pill);
-  background: rgba(148, 163, 184, 0.14);
+  background: var(--app-bg-secondary);
 }
 
 .safe-card__progress-fill {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--safe-accent);
-  box-shadow: 0 0 14px var(--safe-accent-soft);
-  transition: width 320ms ease;
+  background: linear-gradient(90deg, var(--sena-brand-900), var(--sena-brand-500));
+  box-shadow: 0 0 12px rgba(57, 168, 107, 0.28);
+  transition: width var(--app-motion-slow) ease;
 }
 
 .safe-card__foot {
@@ -137,21 +147,23 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--app-space-2);
+  gap: var(--app-space-3);
+  padding-top: var(--app-space-3);
+  border-top: 1px solid var(--app-border);
 }
 
 .safe-card__metric {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--app-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-weight: 600;
 }
 
 .safe-card__metric ion-icon {
   color: var(--safe-accent);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .safe-note {
@@ -160,6 +172,7 @@
   gap: var(--app-space-3);
   margin-top: var(--app-space-4);
   padding: var(--app-space-4);
+  background: var(--app-bg-secondary);
 }
 
 .safe-note__icon {
@@ -167,13 +180,13 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--app-border);
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(21, 61, 50, 0.14);
   border-radius: var(--app-radius-md);
-  background: rgba(8, 17, 31, 0.5);
-  color: var(--app-text-muted);
-  font-size: 1rem;
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.15rem;
 }
 
 .safe-note__body {
@@ -182,40 +195,33 @@
 
 .safe-note__title {
   margin: 0;
-  color: var(--app-text);
-  font-size: 0.9rem;
+  color: var(--app-text-strong);
+  font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.3;
 }
 
 .safe-note__text {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   color: var(--app-text-muted);
-  font-size: 0.76rem;
-  line-height: 1.55;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 359px) {
-  .safe-card {
-    gap: var(--app-space-2);
-    padding: var(--app-space-4);
+@include bp.xs-only {
+  .safe-card,
+  .safe-note {
+    padding: var(--app-space-3);
   }
 
-  .safe-card__value {
-    font-size: 2.2rem;
-  }
-
-  .safe-card__percent {
-    font-size: 1.15rem;
+  .safe-card__icon {
+    width: 44px;
+    height: 44px;
   }
 
   .safe-card__status {
-    padding: 0.24rem 0.5rem;
-    font-size: 0.62rem;
-  }
-
-  .safe-note {
-    padding: var(--app-space-3);
+    margin-left: 0;
   }
 }
 

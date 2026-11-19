@@ -49,6 +49,19 @@ describe('AlertCardComponent', () => {
     expect(element.querySelector('.alert-card__details')).toBeNull();
   });
 
+  it('should communicate status with icons and text, not only color', () => {
+    create(0);
+
+    const chips = Array.from(element.querySelectorAll('.alert-card__chip')) as HTMLElement[];
+    expect(chips).toHaveLength(2);
+    for (const chip of chips) {
+      expect(chip.textContent?.trim()).toBeTruthy();
+      expect(chip.querySelector('ion-icon')?.getAttribute('aria-hidden')).toBe('true');
+    }
+
+    expect(element.querySelector('.alert-card__severity')?.textContent).toContain('Crítica');
+  });
+
   it('should expand and collapse the details with the native toggle button', () => {
     create(0);
 

@@ -44,8 +44,19 @@ describe('InicioPage', () => {
     expect(content).toContain('MODO DEMOSTRACIÓN');
     expect(content).toContain('Panel de monitoreo');
     expect(content).toContain('Estado general del sistema');
-    expect(content).toContain('Operativo');
+    expect(content).not.toContain('Operativo');
     expect(content).toContain('DATOS SIMULADOS');
+  });
+
+  it('presenta el estado real usando solo la alerta crítica ya disponible', () => {
+    const content = fixture.nativeElement.textContent as string;
+    const status = fixture.nativeElement.querySelector('.dash-status') as HTMLElement;
+    const label = fixture.nativeElement.querySelector('.dash-status__label') as HTMLElement;
+
+    expect(label.textContent).toContain('Alerta crítica activa');
+    expect(status.classList).toContain('dash-status--attention');
+    expect(content).toContain('Alerta activa');
+    expect(content).toContain('Pasillo principal');
   });
 
   it('should render four coherent metric cards', () => {

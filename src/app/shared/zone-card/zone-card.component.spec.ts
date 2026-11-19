@@ -68,6 +68,17 @@ describe('ZoneCardComponent', () => {
     expect(element.classList).toContain('zone-card--warning');
   });
 
+  it('should expose the occupancy state beyond color alone', () => {
+    create(DEMO_ZONES[2]);
+
+    const progress = element.querySelector('.app-progress.zone-card__progress') as HTMLElement;
+    expect(progress.getAttribute('role')).toBe('progressbar');
+    expect(progress.getAttribute('aria-valuenow')).toBe('84');
+    expect(progress.getAttribute('aria-valuetext')).toContain('84%');
+    expect(progress.getAttribute('aria-valuetext')).toContain('Crítico');
+    expect(element.querySelector('.zone-card__badge')?.textContent).toContain('Crítico');
+  });
+
   it('should expose accessible labels on every control', () => {
     create(DEMO_ZONES[0]);
 

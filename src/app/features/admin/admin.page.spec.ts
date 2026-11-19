@@ -222,6 +222,22 @@ describe('AdminPage', () => {
       expect(query('.instructor-management')).not.toBeNull();
     });
 
+    it('mantiene la estructura visual de resumen, filtros y tarjetas', async () => {
+      await setUp();
+      await settle();
+
+      const filterGroups = Array.from(queryAll('.admin-users__filters'));
+      const roleActions = query('.admin-user[data-role="instructor"] .admin-user__actions');
+
+      expect(queryAll('.admin-summary__card')).toHaveLength(4);
+      expect(filterGroups).toHaveLength(2);
+      expect(filterGroups.map((group) => group.getAttribute('role'))).toEqual(['group', 'group']);
+      expect(queryAll('.admin-users__filter')).toHaveLength(6);
+      expect(queryAll('.admin-user')).toHaveLength(3);
+      expect(roleActions?.getAttribute('aria-busy')).toBe('false');
+      expect(query('.instructor-form')?.getAttribute('aria-busy')).toBe('false');
+    });
+
     it('consulta el repositorio una sola vez y conserva el orden del servidor', async () => {
       await setUp();
       await settle();

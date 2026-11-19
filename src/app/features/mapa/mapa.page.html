@@ -9,227 +9,236 @@
         badge="MODO DEMOSTRACIÓN"
       />
 
-      <section class="app-card app-card--accent map-card" aria-labelledby="map-plan-title">
-        <div class="map-card__head">
-          <div class="map-card__heading">
-            <p class="app-overline">Plano ilustrativo de las instalaciones</p>
-            <h2 id="map-plan-title" class="app-card-title">Nivel 1 · Zonas monitoreadas</h2>
-          </div>
+      <div class="map-layout">
+        <div class="map-layout__primary">
+          <section class="app-card app-card--accent map-card" aria-labelledby="map-plan-title">
+            <div class="map-card__head">
+              <div class="map-card__heading">
+                <p class="app-overline">Plano ilustrativo de las instalaciones</p>
+                <h2 id="map-plan-title" class="app-card-title">Nivel 1 · Zonas monitoreadas</h2>
+              </div>
 
-          <button type="button" class="map-zoom" [attr.aria-pressed]="zoomed()" (click)="toggleZoom()">
-            <ion-icon [name]="zoomed() ? 'contract-outline' : 'expand-outline'" aria-hidden="true"></ion-icon>
-            <span>{{ zoomed() ? 'Ajustar' : 'Ampliar' }}</span>
-          </button>
+              <button type="button" class="map-zoom" [attr.aria-pressed]="zoomed()" (click)="toggleZoom()">
+                <ion-icon [name]="zoomed() ? 'contract-outline' : 'expand-outline'" aria-hidden="true"></ion-icon>
+                <span>{{ zoomed() ? 'Ajustar' : 'Ampliar' }}</span>
+              </button>
+            </div>
+
+            <div class="map-plan" [class.map-plan--zoomed]="zoomed()">
+              <svg class="map-plan__svg" viewBox="0 0 360 480" role="group" aria-labelledby="map-plan-title">
+                <defs>
+                  <pattern id="map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill="rgba(21, 61, 50, 0.12)" />
+                  </pattern>
+                  <marker
+                    id="map-route-arrow"
+                    viewBox="0 0 10 10"
+                    refX="8"
+                    refY="5"
+                    markerWidth="4"
+                    markerHeight="4"
+                    orient="auto-start-reverse"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 Z" fill="#39a86b" />
+                  </marker>
+                </defs>
+
+                <rect class="map-plan__floor" x="6" y="6" width="348" height="468" rx="20" />
+                <rect class="map-plan__grid" x="10" y="10" width="340" height="460" rx="16" fill="url(#map-grid)" />
+                <text class="map-plan__level" x="28" y="36">NIVEL 1 · PLANO ILUSTRATIVO</text>
+
+                <rect class="map-plan__corridor" x="78" y="164" width="44" height="36" rx="4" />
+                <rect class="map-plan__corridor" x="238" y="164" width="44" height="36" rx="4" />
+                <rect class="map-plan__corridor" x="154" y="296" width="52" height="46" rx="4" />
+
+                @for (item of mapZones(); track item.zone.id) {
+                <g
+                  [class]="zoneClass(item)"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-pressed]="isSelected(item.zone.id)"
+                  [attr.aria-label]="item.ariaLabel"
+                  (click)="selectZone(item.zone.id)"
+                  (keydown.enter)="selectZone(item.zone.id)"
+                  (keydown.space)="onZoneKeydown($event, item.zone.id)"
+                >
+                  <title>
+                    {{ item.zone.name }}. {{ item.occupancy }}% de ocupación. Estado {{ item.statusLabel }}.
+                  </title>
+                  <rect
+                    class="map-zone__shape"
+                    [attr.x]="item.layout.x"
+                    [attr.y]="item.layout.y"
+                    [attr.width]="item.layout.width"
+                    [attr.height]="item.layout.height"
+                    rx="12"
+                  />
+                  <text
+                    class="map-zone__overline"
+                    [attr.x]="item.layout.labelX"
+                    [attr.y]="item.layout.labelY - 22"
+                    text-anchor="middle"
+                  >
+                    {{ item.layout.overline }}
+                  </text>
+                  <text
+                    class="map-zone__name"
+                    [attr.x]="item.layout.labelX"
+                    [attr.y]="item.layout.labelY - 3"
+                    text-anchor="middle"
+                  >
+                    {{ item.zone.name }}
+                  </text>
+                  <text
+                    class="map-zone__value"
+                    [attr.x]="item.layout.labelX"
+                    [attr.y]="item.layout.labelY + 19"
+                    text-anchor="middle"
+                  >
+                    {{ item.occupancy }}%
+                  </text>
+                  <text
+                    class="map-zone__status"
+                    [attr.x]="item.layout.labelX"
+                    [attr.y]="item.layout.labelY + 37"
+                    text-anchor="middle"
+                  >
+                    {{ item.statusLabel }}
+                  </text>
+                </g>
+                }
+
+                <path
+                  class="map-route"
+                  d="M 100 170 L 100 288 L 180 288 L 180 352"
+                  marker-mid="url(#map-route-arrow)"
+                  marker-end="url(#map-route-arrow)"
+                />
+                <text class="map-plan__route-tag" x="180" y="184" text-anchor="middle">RUTA DEMO</text>
+
+                <g class="map-sensor" transform="translate(140 58)" aria-hidden="true">
+                  <rect class="map-sensor__box" width="26" height="17" rx="5" />
+                  <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">IR</text>
+                </g>
+                <g class="map-sensor" transform="translate(296 58)" aria-hidden="true">
+                  <rect class="map-sensor__box" width="26" height="17" rx="5" />
+                  <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">US</text>
+                </g>
+                <g class="map-sensor" transform="translate(40 208)" aria-hidden="true">
+                  <rect class="map-sensor__box" width="26" height="17" rx="5" />
+                  <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">PIR</text>
+                </g>
+                <g class="map-sensor" transform="translate(236 352)" aria-hidden="true">
+                  <rect class="map-sensor__box" width="26" height="17" rx="5" />
+                  <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">LED</text>
+                </g>
+              </svg>
+            </div>
+
+            <p class="map-plan__meta">
+              <span><strong>{{ totalPeople() }}</strong> personas estimadas</span>
+              <span class="map-plan__meta-dot" aria-hidden="true"></span>
+              <span><strong>{{ mapZones().length }}</strong> zonas monitoreadas</span>
+            </p>
+          </section>
+
+          <p class="map-route-note">
+            <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
+            <span>Ruta demostrativa — no verificada para evacuación</span>
+          </p>
         </div>
 
-        <div class="map-plan" [class.map-plan--zoomed]="zoomed()">
-          <svg class="map-plan__svg" viewBox="0 0 360 480" role="group" aria-labelledby="map-plan-title">
-            <defs>
-              <pattern id="map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="rgba(148, 163, 184, 0.16)" />
-              </pattern>
-              <marker
-                id="map-route-arrow"
-                viewBox="0 0 10 10"
-                refX="8"
-                refY="5"
-                markerWidth="4"
-                markerHeight="4"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 0 L 10 5 L 0 10 Z" fill="#00d4ff" />
-              </marker>
-            </defs>
+        <div class="map-layout__aside">
+          <section [class]="detailClass()" aria-live="polite" aria-labelledby="map-detail-title">
+            <header class="map-detail__head">
+              <span class="map-detail__icon">
+                <ion-icon [name]="selectedZone().zone.icon" aria-hidden="true"></ion-icon>
+              </span>
 
-            <rect class="map-plan__floor" x="6" y="6" width="348" height="468" rx="20" />
-            <rect class="map-plan__grid" x="10" y="10" width="340" height="460" rx="16" fill="url(#map-grid)" />
-            <text class="map-plan__level" x="28" y="36">NIVEL 1 · PLANO ILUSTRATIVO</text>
+              <div class="map-detail__identity">
+                <p class="app-overline">Zona seleccionada · {{ selectedZone().layout.overline }}</p>
+                <h2 id="map-detail-title" class="map-detail__name">{{ selectedZone().zone.name }}</h2>
+              </div>
 
-            <rect class="map-plan__corridor" x="78" y="164" width="44" height="36" rx="4" />
-            <rect class="map-plan__corridor" x="238" y="164" width="44" height="36" rx="4" />
-            <rect class="map-plan__corridor" x="154" y="296" width="52" height="46" rx="4" />
+              <span class="map-detail__badge">{{ selectedZone().statusLabel }}</span>
+            </header>
 
-            @for (item of mapZones(); track item.zone.id) {
-            <g
-              [class]="zoneClass(item)"
-              role="button"
-              tabindex="0"
-              [attr.aria-pressed]="isSelected(item.zone.id)"
-              [attr.aria-label]="item.ariaLabel"
-              (click)="selectZone(item.zone.id)"
-              (keydown.enter)="selectZone(item.zone.id)"
-              (keydown.space)="onZoneKeydown($event, item.zone.id)"
+            <dl class="map-detail__metrics">
+              <div class="map-detail__metric">
+                <dt>Personas</dt>
+                <dd>{{ selectedZone().zone.people }}</dd>
+              </div>
+              <div class="map-detail__metric">
+                <dt>Capacidad</dt>
+                <dd>{{ selectedZone().zone.capacity }}</dd>
+              </div>
+              <div class="map-detail__metric">
+                <dt>Ocupación</dt>
+                <dd>{{ selectedZone().occupancy }}%</dd>
+              </div>
+            </dl>
+
+            <div
+              class="app-progress map-detail__progress"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="selectedZone().occupancy"
+              [attr.aria-valuetext]="selectedZone().occupancy + '% · ' + selectedZone().statusLabel"
+              [attr.aria-label]="'Ocupación de ' + selectedZone().zone.name"
             >
-              <title>{{ item.zone.name }}. {{ item.occupancy }}% de ocupación. Estado {{ item.statusLabel }}.</title>
-              <rect
-                class="map-zone__shape"
-                [attr.x]="item.layout.x"
-                [attr.y]="item.layout.y"
-                [attr.width]="item.layout.width"
-                [attr.height]="item.layout.height"
-                rx="12"
-              />
-              <text
-                class="map-zone__overline"
-                [attr.x]="item.layout.labelX"
-                [attr.y]="item.layout.labelY - 22"
-                text-anchor="middle"
-              >
-                {{ item.layout.overline }}
-              </text>
-              <text
-                class="map-zone__name"
-                [attr.x]="item.layout.labelX"
-                [attr.y]="item.layout.labelY - 3"
-                text-anchor="middle"
-              >
-                {{ item.zone.name }}
-              </text>
-              <text
-                class="map-zone__value"
-                [attr.x]="item.layout.labelX"
-                [attr.y]="item.layout.labelY + 19"
-                text-anchor="middle"
-              >
-                {{ item.occupancy }}%
-              </text>
-              <text
-                class="map-zone__status"
-                [attr.x]="item.layout.labelX"
-                [attr.y]="item.layout.labelY + 37"
-                text-anchor="middle"
-              >
-                {{ item.statusLabel }}
-              </text>
-            </g>
-            }
+              <span class="app-progress__fill map-detail__progress-fill" [style.width.%]="selectedProgress()"></span>
+            </div>
 
-            <path
-              class="map-route"
-              d="M 100 170 L 100 288 L 180 288 L 180 352"
-              marker-mid="url(#map-route-arrow)"
-              marker-end="url(#map-route-arrow)"
-            />
-            <text class="map-plan__route-tag" x="180" y="184" text-anchor="middle">RUTA DEMO</text>
+            <p class="map-detail__note">Datos simulados · Toca otra zona del plano para actualizar esta tarjeta.</p>
+          </section>
 
-            <g class="map-sensor" transform="translate(140 58)" aria-hidden="true">
-              <rect class="map-sensor__box" width="26" height="17" rx="5" />
-              <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">IR</text>
-            </g>
-            <g class="map-sensor" transform="translate(296 58)" aria-hidden="true">
-              <rect class="map-sensor__box" width="26" height="17" rx="5" />
-              <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">US</text>
-            </g>
-            <g class="map-sensor" transform="translate(40 208)" aria-hidden="true">
-              <rect class="map-sensor__box" width="26" height="17" rx="5" />
-              <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">PIR</text>
-            </g>
-            <g class="map-sensor" transform="translate(236 352)" aria-hidden="true">
-              <rect class="map-sensor__box" width="26" height="17" rx="5" />
-              <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">LED</text>
-            </g>
-          </svg>
+          <section class="app-card map-legend" aria-labelledby="map-legend-title">
+            <div class="app-section-head">
+              <h2 id="map-legend-title" class="app-card-title">Leyenda del plano</h2>
+              <span class="app-badge">DEMO</span>
+            </div>
+
+            <ul class="map-legend__states" aria-label="Estados de ocupación">
+              <li>
+                <span class="map-legend__swatch map-legend__swatch--normal" aria-hidden="true"></span>
+                <span class="map-legend__text"><strong>Normal</strong><small>Verde</small></span>
+              </li>
+              <li>
+                <span class="map-legend__swatch map-legend__swatch--warning" aria-hidden="true"></span>
+                <span class="map-legend__text"><strong>Precaución</strong><small>Amarillo</small></span>
+              </li>
+              <li>
+                <span class="map-legend__swatch map-legend__swatch--critical" aria-hidden="true"></span>
+                <span class="map-legend__text"><strong>Crítico</strong><small>Rojo</small></span>
+              </li>
+              <li>
+                <span class="map-legend__swatch map-legend__swatch--tech" aria-hidden="true"></span>
+                <span class="map-legend__text"><strong>Elementos de monitoreo</strong><small>Cian</small></span>
+              </li>
+            </ul>
+
+            <hr class="app-divider" />
+
+            <p class="app-overline">Sensores ilustrativos</p>
+            <ul class="map-legend__sensors">
+              <li><span class="map-legend__sensor" aria-hidden="true">IR</span>Sensor infrarrojo</li>
+              <li><span class="map-legend__sensor" aria-hidden="true">US</span>Sensor ultrasónico</li>
+              <li><span class="map-legend__sensor" aria-hidden="true">PIR</span>Sensor de movimiento PIR</li>
+              <li><span class="map-legend__sensor" aria-hidden="true">LED</span>Matriz LED</li>
+            </ul>
+
+            <div class="map-legend__extras">
+              <span class="map-legend__route-line" aria-hidden="true"></span>
+              <span>Ruta demostrativa hacia el punto de encuentro</span>
+            </div>
+            <div class="map-legend__extras">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+              <span>Punto de encuentro · zona segura</span>
+            </div>
+          </section>
         </div>
-
-        <p class="map-plan__meta">
-          <span><strong>{{ totalPeople() }}</strong> personas estimadas</span>
-          <span class="map-plan__meta-dot" aria-hidden="true"></span>
-          <span><strong>{{ mapZones().length }}</strong> zonas monitoreadas</span>
-        </p>
-      </section>
-
-      <p class="map-route-note">
-        <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
-        <span>Ruta demostrativa — no verificada para evacuación</span>
-      </p>
-
-      <section [class]="detailClass()" aria-live="polite" aria-labelledby="map-detail-title">
-        <header class="map-detail__head">
-          <span class="map-detail__icon">
-            <ion-icon [name]="selectedZone().zone.icon" aria-hidden="true"></ion-icon>
-          </span>
-
-          <div class="map-detail__identity">
-            <p class="app-overline">Zona seleccionada · {{ selectedZone().layout.overline }}</p>
-            <h2 id="map-detail-title" class="map-detail__name">{{ selectedZone().zone.name }}</h2>
-          </div>
-
-          <span class="map-detail__badge">{{ selectedZone().statusLabel }}</span>
-        </header>
-
-        <dl class="map-detail__metrics">
-          <div class="map-detail__metric">
-            <dt>Personas</dt>
-            <dd>{{ selectedZone().zone.people }}</dd>
-          </div>
-          <div class="map-detail__metric">
-            <dt>Capacidad</dt>
-            <dd>{{ selectedZone().zone.capacity }}</dd>
-          </div>
-          <div class="map-detail__metric">
-            <dt>Ocupación</dt>
-            <dd>{{ selectedZone().occupancy }}%</dd>
-          </div>
-        </dl>
-
-        <div
-          class="map-detail__progress"
-          role="progressbar"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          [attr.aria-valuenow]="selectedZone().occupancy"
-          [attr.aria-label]="'Ocupación de ' + selectedZone().zone.name"
-        >
-          <span class="map-detail__progress-fill" [style.width.%]="selectedProgress()"></span>
-        </div>
-
-        <p class="map-detail__note">Datos simulados · Toca otra zona del plano para actualizar esta tarjeta.</p>
-      </section>
-
-      <section class="app-card map-legend" aria-labelledby="map-legend-title">
-        <div class="app-section-head">
-          <h2 id="map-legend-title" class="app-card-title">Leyenda del plano</h2>
-          <span class="app-badge">DEMO</span>
-        </div>
-
-        <ul class="map-legend__states" aria-label="Estados de ocupación">
-          <li>
-            <span class="map-legend__swatch map-legend__swatch--normal" aria-hidden="true"></span>
-            <span class="map-legend__text"><strong>Normal</strong><small>Verde</small></span>
-          </li>
-          <li>
-            <span class="map-legend__swatch map-legend__swatch--warning" aria-hidden="true"></span>
-            <span class="map-legend__text"><strong>Precaución</strong><small>Amarillo</small></span>
-          </li>
-          <li>
-            <span class="map-legend__swatch map-legend__swatch--critical" aria-hidden="true"></span>
-            <span class="map-legend__text"><strong>Crítico</strong><small>Rojo</small></span>
-          </li>
-          <li>
-            <span class="map-legend__swatch map-legend__swatch--tech" aria-hidden="true"></span>
-            <span class="map-legend__text"><strong>Elementos de monitoreo</strong><small>Cian</small></span>
-          </li>
-        </ul>
-
-        <hr class="app-divider" />
-
-        <p class="app-overline">Sensores ilustrativos</p>
-        <ul class="map-legend__sensors">
-          <li><span class="map-legend__sensor" aria-hidden="true">IR</span>Sensor infrarrojo</li>
-          <li><span class="map-legend__sensor" aria-hidden="true">US</span>Sensor ultrasónico</li>
-          <li><span class="map-legend__sensor" aria-hidden="true">PIR</span>Sensor de movimiento PIR</li>
-          <li><span class="map-legend__sensor" aria-hidden="true">LED</span>Matriz LED</li>
-        </ul>
-
-        <div class="map-legend__extras">
-          <span class="map-legend__route-line" aria-hidden="true"></span>
-          <span>Ruta demostrativa hacia el punto de encuentro</span>
-        </div>
-        <div class="map-legend__extras">
-          <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-          <span>Punto de encuentro · zona segura</span>
-        </div>
-      </section>
+      </div>
 
       <p class="map-disclaimer">
         <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>

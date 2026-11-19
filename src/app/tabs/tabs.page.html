@@ -1,3 +1,49 @@
+<nav class="app-rail" aria-label="Navegación principal">
+  <div class="app-rail__brand">
+    <span class="app-rail__mark"><ion-icon name="grid-outline" aria-hidden="true"></ion-icon></span>
+    <span class="app-rail__name">SENA CROWD <strong>INTELLIGENCE</strong></span>
+  </div>
+
+  <p class="app-rail__caption">Monitoreo inteligente</p>
+
+  <a class="app-rail__link" routerLink="/tabs/inicio" routerLinkActive="is-active">
+    <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+    <span>Inicio</span>
+  </a>
+
+  <a class="app-rail__link" routerLink="/tabs/zonas" routerLinkActive="is-active">
+    <ion-icon name="grid-outline" aria-hidden="true"></ion-icon>
+    <span>Zonas</span>
+  </a>
+
+  <a class="app-rail__link" routerLink="/tabs/mapa" routerLinkActive="is-active">
+    <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
+    <span>Mapa</span>
+  </a>
+
+  <a class="app-rail__link" routerLink="/tabs/alertas" routerLinkActive="is-active">
+    <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+    <span>Alertas</span>
+  </a>
+
+  <a class="app-rail__link" routerLink="/tabs/mas" routerLinkActive="is-active">
+    <ion-icon name="menu-outline" aria-hidden="true"></ion-icon>
+    <span>Más</span>
+  </a>
+
+  @if (canAccessAdmin()) {
+  <div class="app-rail__group">
+    <p class="app-rail__group-title">Herramientas</p>
+    <a class="app-rail__link app-rail__admin" routerLink="/tabs/mas/administracion" routerLinkActive="is-active">
+      <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+      <span>Administración</span>
+    </a>
+  </div>
+  }
+
+  <p class="app-rail__footer">Modo demostración</p>
+</nav>
+
 <ion-tabs>
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="inicio" href="/tabs/inicio">

@@ -53,6 +53,19 @@ describe('AsistentePage (Fase 3.7)', () => {
     expect(send.disabled).toBe(true);
   });
 
+  it('should keep the accessible chat, suggestions and composer structure', () => {
+    const chat = fixture.nativeElement.querySelector('.assistant__chat') as HTMLElement;
+    const suggestions = fixture.nativeElement.querySelector('.assistant__suggestions') as HTMLElement;
+    const input = fixture.nativeElement.querySelector('.assistant__input') as HTMLInputElement;
+    const send = fixture.nativeElement.querySelector('.assistant__send') as HTMLButtonElement;
+
+    expect(chat?.getAttribute('role')).toBe('log');
+    expect(chat?.getAttribute('aria-live')).toBe('polite');
+    expect(suggestions?.getAttribute('aria-labelledby')).toBe('assistant-suggestions-title');
+    expect(input?.getAttribute('aria-label')).toBe('Consulta para el asistente');
+    expect(send?.getAttribute('aria-label')).toBe('Enviar consulta');
+  });
+
   it('should reject empty/whitespace messages', () => {
     component.onDraftChange('   ');
     component.send();

@@ -1,5 +1,14 @@
+@use '../../../theme/breakpoints' as bp;
+
+/* ==========================================================================
+   Inicio · jerarquía de bienvenida, estado y composición responsive
+   ========================================================================== */
+
 .dash-header {
-  margin-bottom: var(--app-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  margin-bottom: var(--app-space-5);
 }
 
 .dash-header__top {
@@ -17,22 +26,22 @@
 }
 
 .dash-brand__mark {
-  width: 42px;
-  height: 42px;
-  font-size: 1.25rem;
+  width: 46px;
+  height: 46px;
+  font-size: 1.3rem;
 }
 
 .dash-brand__text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .dash-brand__name {
   margin: 0;
-  color: var(--app-text);
-  font-size: clamp(0.92rem, 3.6vw, 1.05rem);
+  color: var(--app-text-strong);
+  font-size: clamp(1rem, 3.6vw, 1.2rem);
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: 0.06em;
@@ -44,7 +53,7 @@
 }
 
 .dash-brand__line--accent {
-  background: linear-gradient(90deg, var(--app-blue), var(--app-cyan));
+  background: linear-gradient(90deg, var(--sena-brand-900), var(--sena-brand-500));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -53,8 +62,8 @@
 .dash-brand__sub {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.4;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.45;
 }
 
 .dash-notify {
@@ -68,33 +77,30 @@
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
   background: var(--app-surface);
-  color: var(--app-text-muted);
+  color: var(--sena-brand-900);
   font-size: 1.2rem;
   text-decoration: none;
   transition:
-    color 150ms ease,
-    border-color 150ms ease;
-}
-
-.dash-notify:hover {
-  border-color: rgba(0, 212, 255, 0.35);
-  color: var(--app-cyan);
+    color var(--app-motion-fast) ease,
+    border-color var(--app-motion-fast) ease,
+    background-color var(--app-motion-fast) ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .dash-notify:focus-visible {
-  outline: 2px solid var(--app-cyan);
-  outline-offset: 2px;
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
 }
 
 .dash-notify__dot {
   position: absolute;
   top: 9px;
   right: 10px;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border: 1.5px solid var(--app-surface);
   border-radius: 50%;
-  background: var(--app-yellow);
+  background: var(--sena-accent);
 }
 
 .dash-header__meta {
@@ -102,38 +108,51 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--app-space-2) var(--app-space-3);
-  margin-top: var(--app-space-4);
 }
 
 .dash-header__panel {
   color: var(--app-text-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 /* ==========================================================================
-   Estado general
+   Estado general: el acento sigue al estado ya disponible en el componente
    ========================================================================== */
 
 .dash-status {
+  --status-accent: var(--app-green);
+  --status-soft: var(--app-green-soft);
+  --status-border: rgba(30, 122, 76, 0.3);
+
   display: flex;
   flex-direction: column;
   gap: var(--app-space-4);
   margin-bottom: var(--app-space-5);
 }
 
+.dash-status--attention {
+  --status-accent: var(--app-red);
+  --status-soft: var(--app-red-soft);
+  --status-border: rgba(179, 38, 30, 0.3);
+}
+
 .dash-status__head {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .dash-status__state {
   display: flex;
   align-items: center;
   gap: var(--app-space-3);
+  padding: var(--app-space-3);
+  border: 1px solid var(--status-border);
+  border-radius: var(--app-radius-md);
+  background: var(--status-soft);
 }
 
 .dash-status__indicator {
@@ -143,32 +162,37 @@
   justify-content: center;
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  border: 1px solid var(--status-border);
   border-radius: 50%;
-  background: var(--app-green-soft);
-  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.06);
+  background: var(--app-surface);
 }
 
 .dash-status__dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--app-green);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.75);
+  background: var(--status-accent);
+  box-shadow: 0 0 0 5px var(--status-soft);
+}
+
+.dash-status__copy {
+  min-width: 0;
 }
 
 .dash-status__label {
   margin: 0;
-  color: var(--app-green);
-  font-size: 1.2rem;
+  color: var(--status-accent);
+  font-size: clamp(1.05rem, 3.4vw, 1.3rem);
   font-weight: 800;
-  letter-spacing: 0.01em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .dash-status__text {
-  margin: 0;
+  margin: 2px 0 0;
   color: var(--app-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--app-font-size-sm);
+  line-height: 1.45;
 }
 
 .dash-status .app-divider {
@@ -188,11 +212,13 @@
   align-items: center;
   gap: var(--app-space-2);
   color: var(--app-text-muted);
-  font-size: 0.72rem;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.4;
 }
 
 .dash-status__updated ion-icon {
-  font-size: 0.95rem;
+  flex: 0 0 auto;
+  font-size: 1rem;
 }
 
 /* ==========================================================================
@@ -207,8 +233,14 @@
 }
 
 /* ==========================================================================
-   Resumen de monitoreo
+   Resumen y acciones
    ========================================================================== */
+
+.dash-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-5);
+}
 
 .dash-summary {
   display: flex;
@@ -228,28 +260,38 @@
 }
 
 .dash-summary__stat {
+  min-width: 0;
   padding: var(--app-space-3);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--app-border-subtle);
   border-radius: var(--app-radius-md);
-  background: rgba(8, 17, 31, 0.45);
+  background: var(--app-bg-secondary);
 }
 
 .dash-summary__stat dt {
   color: var(--app-text-muted);
-  font-size: 0.68rem;
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
   letter-spacing: 0.06em;
+  line-height: 1.35;
   text-transform: uppercase;
 }
 
 .dash-summary__stat dd {
   margin: var(--app-space-1) 0 0;
-  color: var(--app-text);
+  color: var(--app-text-strong);
   font-size: 1.15rem;
   font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .dash-summary__ok {
   color: var(--app-green);
+}
+
+.dash-summary__stat dd.dash-summary__attention {
+  color: var(--app-red);
+  font-size: 0.95rem;
 }
 
 .dash-summary__alert {
@@ -257,7 +299,7 @@
   align-items: flex-start;
   gap: var(--app-space-3);
   padding: var(--app-space-3) var(--app-space-4);
-  border: 1px solid rgba(250, 204, 21, 0.28);
+  border: 1px solid rgba(138, 90, 0, 0.28);
   border-radius: var(--app-radius-md);
   background: var(--app-yellow-soft);
 }
@@ -268,23 +310,30 @@
   font-size: 1.15rem;
 }
 
+.dash-summary__alert-copy {
+  min-width: 0;
+}
+
 .dash-summary__alert-title {
   margin: 0;
   color: var(--app-yellow);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--app-font-size-sm);
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .dash-summary__alert-text {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   color: var(--app-text-muted);
-  font-size: 0.75rem;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
 }
 
 .dash-summary__note {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.7rem;
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -294,16 +343,13 @@
 }
 
 /* ==========================================================================
-   Control de alarma (Fase 4.6)
+   Control de alarma (buzzer simulado)
    ========================================================================== */
 
 .alarm-control {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-4);
-  /* 20 px por encima y por debajo: separa "Resumen de monitoreo" del control
-     sin acumular un margen adicional en .dash-summary. */
-  margin-block: var(--app-space-5);
 }
 
 .alarm-control .app-section-head {
@@ -322,9 +368,9 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(239, 68, 68, 0.32);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(179, 38, 30, 0.3);
   border-radius: var(--app-radius-md);
   background: var(--app-red-soft);
   color: var(--app-red);
@@ -345,43 +391,42 @@
   align-items: center;
   gap: var(--app-space-2) var(--app-space-3);
   padding: var(--app-space-3);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--app-border-subtle);
   border-radius: var(--app-radius-md);
-  background: rgba(8, 17, 31, 0.45);
+  background: var(--app-bg-secondary);
 }
 
 .alarm-control__dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--app-text-muted);
-  box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.08);
+  background: var(--app-text-soft);
+  box-shadow: 0 0 0 5px rgba(90, 99, 92, 0.1);
 }
 
 .alarm-control__dot--on {
   background: var(--app-red);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 0 5px var(--app-red-soft);
 }
 
 .alarm-control__status {
-  color: var(--app-text);
-  font-size: 0.9rem;
-  font-weight: 700;
+  color: var(--app-text-strong);
+  font-size: var(--app-font-size-sm);
+  font-weight: 800;
 }
 
 .alarm-control__simulated {
-  margin-left: auto;
   color: var(--app-text-muted);
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .alarm-control__text {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: 0.76rem;
+  font-size: var(--app-font-size-sm);
 }
 
 .alarm-control__actions {
@@ -397,8 +442,10 @@
   padding: var(--app-space-3);
   border: 1px dashed var(--app-border);
   border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
   color: var(--app-text-muted);
-  font-size: 0.74rem;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
 }
 
 .alarm-control__notice {
@@ -406,20 +453,20 @@
   align-items: flex-start;
   gap: var(--app-space-3);
   padding: var(--app-space-3) var(--app-space-4);
-  border: 1px solid rgba(0, 212, 255, 0.24);
+  border: 1px solid rgba(30, 122, 76, 0.28);
   border-radius: var(--app-radius-md);
   background: var(--app-cyan-soft);
 }
 
 .alarm-control__notice[data-scenario='B'],
 .alarm-control__notice[data-scenario='D'] {
-  border-color: rgba(250, 204, 21, 0.3);
+  border-color: rgba(138, 90, 0, 0.3);
   background: var(--app-yellow-soft);
 }
 
 .alarm-control__notice ion-icon {
   flex: 0 0 auto;
-  color: var(--app-cyan);
+  color: var(--sena-brand-500);
   font-size: 1.1rem;
 }
 
@@ -434,21 +481,22 @@
 
 .alarm-control__notice-message {
   margin: 0;
-  color: var(--app-text);
-  font-size: 0.78rem;
+  color: var(--app-text-strong);
+  font-size: var(--app-font-size-sm);
   line-height: 1.5;
 }
 
-.alarm-control__notice-zone {
+.alarm-control__notice-zone,
+.alarm-control__notice-led {
   margin: var(--app-space-2) 0 0;
   color: var(--app-text-muted);
-  font-size: 0.7rem;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
 }
 
 .alarm-control__notice-led {
-  margin: var(--app-space-2) 0 0;
   color: var(--app-green);
-  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -462,7 +510,8 @@
   gap: var(--app-space-2);
   margin-top: var(--app-space-6);
   color: var(--app-text-muted);
-  font-size: 0.68rem;
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -474,10 +523,47 @@
   background: var(--app-border);
 }
 
+@media (hover: hover) {
+  .dash-notify:hover {
+    border-color: rgba(57, 168, 107, 0.45);
+    background: var(--app-cyan-soft);
+    color: var(--sena-brand-900);
+  }
+}
+
+@include bp.sm-up {
+  .dash-header__meta {
+    justify-content: flex-end;
+  }
+
+  .dash-status__state {
+    padding: var(--app-space-4);
+  }
+}
+
+@include bp.lg-up {
+  .dash-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dash-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: start;
+    gap: var(--app-space-5);
+  }
+}
+
+@include bp.xl-up {
+  .dash-content {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
+}
+
 @media (max-width: 359px) {
   .dash-brand__mark {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
 
   .dash-summary__stats {
@@ -490,6 +576,11 @@
 
   .alarm-control__simulated {
     width: 100%;
-    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-notify {
+    transition: none;
   }
 }

@@ -52,6 +52,17 @@ describe('ZonasPage', () => {
     expect(component.totalZones()).toBe(monitoring.monitoredZones());
   });
 
+  it('should keep the occupancy summary and the zone grid containers', () => {
+    const summary = fixture.nativeElement.querySelector('.zonas-summary') as HTMLElement;
+    const list = fixture.nativeElement.querySelector('.zonas-list') as HTMLElement;
+
+    expect(summary.textContent).toContain('107');
+    expect(summary.textContent).toContain('Personas estimadas');
+    expect(summary.textContent).toContain('Zonas monitoreadas');
+    expect(summary.querySelector('.zonas-summary__divider')).toBeTruthy();
+    expect(list.querySelectorAll('app-zone-card')).toHaveLength(4);
+  });
+
   it('should render four zone cards with the derived percentages and statuses', () => {
     const cards = fixture.nativeElement.querySelectorAll('app-zone-card') as NodeListOf<HTMLElement>;
     const texts = Array.from(cards).map((card) => card.textContent?.replace(/\s+/g, ' ').trim() ?? '');

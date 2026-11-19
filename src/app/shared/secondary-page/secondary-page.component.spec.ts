@@ -44,6 +44,14 @@ describe('SecondaryPageComponent', () => {
     expect(back.querySelector('ion-icon')?.getAttribute('name')).toBe('arrow-back-outline');
   });
 
+  it('should keep the back icon decorative while the label remains readable', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const back = element.querySelector('a.secondary-page__back') as HTMLAnchorElement;
+
+    expect(back.querySelector('ion-icon')?.getAttribute('aria-hidden')).toBe('true');
+    expect(back.querySelector('span')?.textContent).toContain('Volver a Más');
+  });
+
   it('should render the shared secondary header', () => {
     const element = fixture.nativeElement as HTMLElement;
     const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();

@@ -1,9 +1,15 @@
+@use '../../../theme/breakpoints' as bp;
+
+:host {
+  display: block;
+}
+
 .feature-intro {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--app-space-3);
-  margin-bottom: var(--app-space-6);
+  margin-bottom: clamp(var(--app-space-5), 3vw, var(--app-space-8));
 }
 
 .feature-intro__top {
@@ -26,15 +32,18 @@
 }
 
 .feature-intro__title {
-  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  line-height: 1.12;
   text-wrap: balance;
 }
 
 .feature-intro__text {
-  max-width: 40ch;
+  max-width: 46ch;
+  font-size: var(--app-font-size-sm);
+  line-height: 1.6;
 }
 
-@media (max-width: 359px) {
+@include bp.xs-only {
   .feature-intro__top {
     gap: var(--app-space-2);
   }

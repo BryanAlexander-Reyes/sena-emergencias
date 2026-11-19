@@ -27,14 +27,15 @@
 </dl>
 
 <div
-  class="zone-card__progress"
+  class="app-progress zone-card__progress"
   role="progressbar"
   aria-valuemin="0"
   aria-valuemax="100"
   [attr.aria-valuenow]="occupancy()"
+  [attr.aria-valuetext]="occupancy() + '% · ' + statusLabel()"
   [attr.aria-label]="'Ocupación de ' + zone().name"
 >
-  <span class="zone-card__progress-fill" [style.width.%]="progressWidth()"></span>
+  <span class="app-progress__fill zone-card__progress-fill" [style.width.%]="progressWidth()"></span>
 </div>
 
 <div class="zone-card__controls" tabindex="-1" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">

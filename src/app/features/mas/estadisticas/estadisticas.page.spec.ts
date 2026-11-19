@@ -65,6 +65,18 @@ describe('EstadisticasPage (Fase 3.5)', () => {
     expect(pageText()).toContain('Cafetería');
   });
 
+  it('should keep the accessible metric, zone and event structures', () => {
+    const metrics = fixture.nativeElement.querySelector('.stats-grid') as HTMLElement;
+    const sections = Array.from(fixture.nativeElement.querySelectorAll('.stats-section')) as HTMLElement[];
+    const empty = fixture.nativeElement.querySelector('.stats-empty') as HTMLElement;
+    const zones = Array.from(fixture.nativeElement.querySelectorAll('.stats-zone')) as HTMLElement[];
+
+    expect(metrics?.getAttribute('aria-label')).toBe('Indicadores de la sesión');
+    expect(sections).toHaveLength(3);
+    expect(zones.every((zone) => zone.hasAttribute('data-status'))).toBe(true);
+    expect(empty?.textContent).toContain('Aún no hay cambios registrados en esta sesión');
+  });
+
   it('should record confirmed occupancy changes and update reactive stats', () => {
     const monitoring = TestBed.inject(MonitoringStateService);
     TestBed.inject(AlertsStateService);

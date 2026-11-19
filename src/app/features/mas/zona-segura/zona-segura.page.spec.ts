@@ -56,6 +56,17 @@ describe('ZonaSeguraPage', () => {
     expect(progress.getAttribute('aria-valuenow')).toBe('12');
   });
 
+  it('should keep the accessible occupancy card structure', () => {
+    const card = fixture.nativeElement.querySelector('.safe-card') as HTMLElement;
+    const foot = card?.querySelector('.safe-card__foot');
+    const note = fixture.nativeElement.querySelector('.safe-note') as HTMLElement;
+
+    expect(card?.getAttribute('aria-labelledby')).toBe('safe-card-title');
+    expect(card?.querySelector('.safe-card__progress')?.getAttribute('role')).toBe('progressbar');
+    expect(foot).toBeTruthy();
+    expect(note?.getAttribute('aria-labelledby')).toBe('safe-note-title');
+  });
+
   it('should link back to the Más menu', () => {
     const back = fixture.nativeElement.querySelector('a.secondary-page__back') as HTMLAnchorElement;
 
