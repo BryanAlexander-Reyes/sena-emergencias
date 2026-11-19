@@ -31,7 +31,7 @@ async function openAcceso(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/tabs\/mas$/);
   await page.getByRole('link', { name: /Cambiar perfil/ }).click();
   await expect(page).toHaveURL(/\/acceso$/);
-  await expect(page.locator('button.acceso-option')).toHaveCount(4);
+  await expect(page.locator('button.acceso-option')).toHaveCount(3);
 }
 
 async function selectProfile(page: Page, label: RegExp, credentials?: DemoCredentials): Promise<void> {
@@ -121,15 +121,6 @@ test('el control aparece en Inicio y solo Alertas muestra el estado en modo lect
     await expect(page.locator(`app-${tab} .alarm-control`)).toHaveCount(0);
     await expect(page.locator(`app-${tab} .alarm-control__button`)).toHaveCount(0);
   }
-});
-
-test('Visitante ve el estado de la alarma pero no puede operarla', async ({ page }) => {
-  await page.goto('/');
-
-  await expect(page.locator(STATUS)).toHaveText('Alarma apagada');
-  await expect(page.locator(BUTTON)).toHaveCount(0);
-  await expect(page.locator(NOTE)).toHaveText('Solo Administradores e Instructores pueden controlar la alarma.');
-  await expect(page.locator(NOTICE)).toHaveAttribute('data-scenario', 'B');
 });
 
 test('Aprendiz ve el estado pero no puede operar el buzzer', async ({ page }) => {
@@ -258,7 +249,7 @@ test('las pestañas, pantallas y línea base del simulador siguen funcionando', 
     await expect(page).toHaveURL(new RegExp(`/tabs/${tab}$`));
     await expect(page.locator(`app-${tab} h1`)).toContainText(title);
     await expect(page.locator('ion-tab-button.tab-selected')).toHaveAttribute('tab', tab);
-    // El perfil inicial es Visitante: ninguna pantalla ofrece control de buzzer.
+    // El perfil inicial es Aprendiz: ninguna pantalla ofrece control de buzzer.
     await expect(page.locator(BUTTON)).toHaveCount(0);
   }
 

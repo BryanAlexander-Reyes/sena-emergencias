@@ -1,4 +1,4 @@
-export type DemoProfileId = 'administrador' | 'instructor' | 'aprendiz' | 'visitante';
+export type DemoProfileId = 'administrador' | 'instructor' | 'aprendiz';
 
 export interface DemoProfile {
   readonly id: DemoProfileId;
@@ -8,13 +8,13 @@ export interface DemoProfile {
   readonly administrative: boolean;
 }
 
-export const VISITOR_PROFILE_ID: DemoProfileId = 'visitante';
+export const DEFAULT_PROFILE_ID: DemoProfileId = 'aprendiz';
 
-export const VISITOR_PROFILE: DemoProfile = {
-  id: 'visitante',
-  label: 'Visitante',
-  description: 'Consulta libre de la información general del prototipo.',
-  icon: 'person-outline',
+export const DEFAULT_PROFILE: DemoProfile = {
+  id: 'aprendiz',
+  label: 'Aprendiz de demostración',
+  description: 'Exploración guiada del monitoreo y del mapa del prototipo.',
+  icon: 'book-outline',
   administrative: false,
 };
 
@@ -33,14 +33,7 @@ export const DEMO_PROFILES: readonly DemoProfile[] = [
     icon: 'school-outline',
     administrative: false,
   },
-  {
-    id: 'aprendiz',
-    label: 'Aprendiz de demostración',
-    description: 'Exploración guiada del monitoreo y del mapa del prototipo.',
-    icon: 'book-outline',
-    administrative: false,
-  },
-  VISITOR_PROFILE,
+  DEFAULT_PROFILE,
 ];
 
 const PROFILES_BY_ID: ReadonlyMap<DemoProfileId, DemoProfile> = new Map(

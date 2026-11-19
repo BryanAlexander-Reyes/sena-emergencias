@@ -9,9 +9,23 @@ import { SimulationHistoryService } from '../services/simulation-history.service
 
 import { DemoPermissionsService } from './demo-permissions.service';
 import { DemoSessionService } from './demo-session.service';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from './testing/verified-session-test.util';
 
 describe('Integración Fase 4.3 — permisos por perfil', () => {
-  beforeEach(() => {
+  let verified: VerifiedTestIdentities;
+
+  const activate = (session: DemoSessionService, profileId: 'administrador' | 'instructor' | 'aprendiz'): void => {
+    if (profileId === 'administrador') {
+      session.publishVerifiedIdentity(verified.administrador);
+    } else if (profileId === 'instructor') {
+      session.publishVerifiedIdentity(verified.instructor);
+    } else {
+      session.selectProfile('aprendiz');
+    }
+  };
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     TestBed.inject(DemoPermissionsService);
     TestBed.inject(DemoSessionService);
@@ -35,14 +49,14 @@ describe('Integración Fase 4.3 — permisos por perfil', () => {
     const alertsSnapshot = JSON.stringify(alerts.alerts());
     const sensorsSnapshot = JSON.stringify(sensors.sensors());
 
-    for (const profileId of ['administrador', 'instructor', 'aprendiz', 'visitante'] as const) {
-      session.selectProfile(profileId);
+    for (const profileId of ['administrador', 'instructor', 'aprendiz'] as const) {
+      activate(session, profileId);
       TestBed.flushEffects();
       expect(permissions.can('occupancy:update')).toBe(profileId === 'administrador');
       expect(permissions.can('alerts:review')).toBe(profileId === 'administrador');
     }
 
-    session.selectProfile('administrador');
+    activate(session, 'administrador');
     session.closeSession();
     TestBed.flushEffects();
 
@@ -65,8 +79,8 @@ describe('Integración Fase 4.3 — permisos por perfil', () => {
     const alerts = TestBed.inject(AlertsStateService);
     const automaticCafeteriaId = autoOccupancyAlertId('cafeteria');
 
-    for (const profileId of ['administrador', 'visitante', 'instructor', 'administrador'] as const) {
-      session.selectProfile(profileId);
+    for (const profileId of ['administrador', 'aprendiz', 'instructor', 'administrador'] as const) {
+      activate(session, profileId);
       TestBed.flushEffects();
     }
 

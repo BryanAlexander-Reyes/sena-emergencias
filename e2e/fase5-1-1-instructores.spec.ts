@@ -3,7 +3,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 const ADMIN_LABEL = /Administrador de demostraci\u00f3n/;
 const INSTRUCTOR_LABEL = /Instructor de demostraci\u00f3n/;
 const LEARNER_LABEL = /Aprendiz de demostraci\u00f3n/;
-const VISITOR_LABEL = /Visitante/;
 
 const ADMIN_LINK = 'app-nav-card a[href="/tabs/mas/administracion"]';
 const ALARM_BUTTON = '.alarm-control__button';
@@ -22,7 +21,7 @@ async function goToAcceso(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/tabs\/mas$/);
   await page.getByRole('link', { name: /Cambiar perfil/ }).click();
   await expect(page).toHaveURL(/\/acceso$/);
-  await expect(page.locator('button.acceso-option')).toHaveCount(4);
+  await expect(page.locator('button.acceso-option')).toHaveCount(3);
 }
 
 async function chooseProfile(page: Page, label: RegExp): Promise<void> {
@@ -266,20 +265,10 @@ test('9. un Instructor desactivado no puede iniciar sesión', async ({ page }) =
   await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);
 });
 
-test('10. Aprendiz y Visitante conservan sus restricciones', async ({ page }) => {
+test('10. Aprendiz conserva sus restricciones', async ({ page }) => {
   await page.goto('/');
   await goToAcceso(page);
   await chooseProfile(page, LEARNER_LABEL);
-  await page.locator('.acceso-continue').click();
-  await expect(page).toHaveURL(/\/tabs\/inicio$/);
-  await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);
-
-  await page.locator('ion-tab-button[tab="mas"]').click();
-  await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
-  await expect(page.locator('.instructor-management')).toHaveCount(0);
-
-  await goToAcceso(page);
-  await chooseProfile(page, VISITOR_LABEL);
   await page.locator('.acceso-continue').click();
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
   await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);

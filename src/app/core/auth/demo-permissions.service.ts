@@ -38,16 +38,29 @@ const PERMISSIONS_BY_PROFILE: Readonly<Record<DemoProfileId, readonly DemoPermis
   administrador: ADMINISTRATOR_PERMISSIONS,
   instructor: INSTRUCTOR_PERMISSIONS,
   aprendiz: READ_ONLY_PERMISSIONS,
-  visitante: READ_ONLY_PERMISSIONS,
 };
 
 @Injectable({ providedIn: 'root' })
 export class DemoPermissionsService {
   private readonly session = inject(DemoSessionService);
 
-  readonly granted = computed<readonly DemoPermission[]>(
-    () => PERMISSIONS_BY_PROFILE[this.session.profileId()] ?? READ_ONLY_PERMISSIONS,
-  );
+  /**
+   * Fase 5.3.4.D: el perfil por sí solo no basta. Se exige estado `lista`,
+   * identidad publicada y coherencia entre el rol del snapshot y el de la
+   * cuenta validada. Durante restauración/renovación o tras cierre no hay
+   * privilegios, aunque quede un rol visual pendiente.
+   */
+  readonly granted = computed<readonly DemoPermission[]>(() => {
+    const status = this.session.status();
+    const role = this.session.profileId();
+    const account = this.session.authenticatedAccount();
+
+    if (status !== 'lista' || account === null || account.role !== role) {
+      return READ_ONLY_PERMISSIONS;
+    }
+
+    return PERMISSIONS_BY_PROFILE[role] ?? READ_ONLY_PERMISSIONS;
+  });
 
   can(permission: DemoPermission): boolean {
     return this.granted().includes(permission);

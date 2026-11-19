@@ -2,9 +2,17 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
+import type { AuthenticatedAccount } from '../../core/auth/auth-domain.types';
+import { AUTH_FACADE, type AuthFacade } from '../../core/auth/auth-facade.contract';
+import { DemoAuthService } from '../../core/auth/demo-auth.service';
 import { DEMO_CREDENTIALS } from '../../core/auth/demo-credentials';
 import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
+import { SUPABASE_LOGIN_ERROR } from '../../core/auth/supabase-auth.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
 
 import { AccesoPage } from './acceso.page';
 
@@ -14,6 +22,11 @@ describe('AccesoPage', () => {
   let session: DemoSessionService;
   let permissions: DemoPermissionsService;
   let router: Router;
+  let verified: VerifiedTestIdentities;
+
+  const signIn = vi.fn<AuthFacade['signIn']>();
+  const signOut = vi.fn<AuthFacade['signOut']>();
+  const authFacade: AuthFacade = { signIn, signOut };
 
   const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
   const options = (): HTMLButtonElement[] =>
@@ -32,22 +45,40 @@ describe('AccesoPage', () => {
     input?.dispatchEvent(new CustomEvent('ionInput', { detail: { value }, bubbles: true }));
   };
 
-  const submitLogin = (username: string, password: string): void => {
+  const submitLogin = async (username: string, password: string): Promise<void> => {
     typeInto('.acceso-login__username', username);
     typeInto('.acceso-login__password', password);
     query('.acceso-login__submit')?.click();
+    await fixture.whenStable();
     fixture.detectChanges();
   };
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    signIn.mockReset();
+    signOut.mockReset();
+
     await TestBed.configureTestingModule({
       imports: [AccesoPage],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: AUTH_FACADE, useValue: authFacade }],
     }).compileComponents();
 
     session = TestBed.inject(DemoSessionService);
     permissions = TestBed.inject(DemoPermissionsService);
     router = TestBed.inject(Router);
+
+    signIn.mockImplementation(async (credentials, requestedRole) => {
+      const account: AuthenticatedAccount = {
+        id: `AUTH-${requestedRole}`,
+        nombre: credentials.username,
+        role: requestedRole,
+      };
+
+      session.publishVerifiedIdentity(verified[requestedRole]);
+
+      return account;
+    });
+
     fixture = TestBed.createComponent(AccesoPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -69,11 +100,11 @@ describe('AccesoPage', () => {
     expect(header?.querySelector('ion-icon')?.getAttribute('name')).toBe('key-outline');
   });
 
-  it('should display the simulation warning without asking for personal data', () => {
+  it('should explain that only privileged profiles require verification', () => {
     const content = pageText();
 
     expect(content).toContain(
-      'Este acceso simula perfiles y permisos. No verifica identidades ni se conecta a un servidor',
+      'Aprendiz es público. Administrador e Instructor requieren credenciales verificadas por Supabase Auth.',
     );
     expect(content).not.toContain('contraseña');
     expect(content).not.toContain('correo electrónico');
@@ -81,26 +112,24 @@ describe('AccesoPage', () => {
     expect(query('.acceso-login')).toBeNull();
   });
 
-  it('should expose the four demo profiles with their descriptions and icons', () => {
+  it('should expose the three demo profiles with their descriptions and icons', () => {
     const cards = options();
     const icons = cards.map((card) => card.querySelector('ion-icon')?.getAttribute('name'));
 
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(3);
     expect(cards[0].textContent).toContain('Administrador de demostración');
     expect(cards[0].textContent).toContain('Supervisión general de zonas, alertas y estadísticas simuladas.');
     expect(cards[1].textContent).toContain('Instructor de demostración');
     expect(cards[1].textContent).toContain('Seguimiento de la ocupación, el mapa y las alertas de la sesión.');
     expect(cards[2].textContent).toContain('Aprendiz de demostración');
     expect(cards[2].textContent).toContain('Exploración guiada del monitoreo y del mapa del prototipo.');
-    expect(cards[3].textContent).toContain('Visitante');
-    expect(cards[3].textContent).toContain('Consulta libre de la información general del prototipo.');
-    expect(icons).toEqual(['shield-checkmark-outline', 'school-outline', 'book-outline', 'person-outline']);
+    expect(icons).toEqual(['shield-checkmark-outline', 'school-outline', 'book-outline']);
   });
 
-  it('should start on the visitor profile without confirmation or continue action', () => {
-    expect(session.profileId()).toBe('visitante');
+  it('should start on the learner profile without confirmation or continue action', () => {
+    expect(session.profileId()).toBe('aprendiz');
     expect(pageText()).toContain('Perfil activo en la sesión');
-    expect(pageText()).toContain('Visitante');
+    expect(pageText()).toContain('Aprendiz de demostración');
     expect(query('.acceso-confirmation')).toBeNull();
     expect(query('.acceso-continue')).toBeNull();
   });
@@ -110,39 +139,36 @@ describe('AccesoPage', () => {
     fixture.detectChanges();
 
     expect(session.selectedProfileId()).toBe('administrador');
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(session.isAdministrative()).toBe(false);
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
     expect(options()[0].getAttribute('aria-pressed')).toBe('true');
     expect(query('.acceso-confirmation')?.textContent).toContain('Administrador de demostración');
     expect(pageText()).toContain('Perfil seleccionado');
-    expect(query('.acceso-current')?.textContent).toContain('Visitante');
+    expect(query('.acceso-current')?.textContent).toContain('Aprendiz de demostración');
 
     const continueButton = query('.acceso-continue');
     expect(continueButton?.textContent?.trim()).toBe('Continuar al inicio');
     expect(continueButton?.getAttribute('href')).toBeNull();
   });
 
-  it('should select the instructor and learner profiles and return to visitor', () => {
+  it('should select the instructor as pending and the learner directly', () => {
     options()[1].click();
     fixture.detectChanges();
     expect(session.selectedProfileId()).toBe('instructor');
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(session.isAdministrative()).toBe(false);
     expect(pageText()).toContain('Instructor de demostración');
+    expect(query('.acceso-login')).toBeNull();
 
     options()[2].click();
     fixture.detectChanges();
+    expect(session.selectedProfileId()).toBe('aprendiz');
     expect(session.profileId()).toBe('aprendiz');
-    expect(pageText()).toContain('Aprendiz de demostración');
-    expect(query('.acceso-login')).toBeNull();
-
-    options()[3].click();
-    fixture.detectChanges();
-    expect(session.profileId()).toBe('visitante');
     expect(session.isActive()).toBe(false);
-    expect(query('.acceso-confirmation')?.textContent).toContain('Visitante');
+    expect(query('.acceso-confirmation')?.textContent).toContain('Aprendiz de demostración');
+    expect(query('.acceso-login')).toBeNull();
   });
 
   it('should keep the back link to the dashboard', () => {
@@ -164,88 +190,136 @@ describe('AccesoPage', () => {
     expect(query('.acceso-options')).toBeNull();
     expect(query('.acceso-continue')).toBeNull();
     expect(query('#acceso-login-title')?.textContent?.trim()).toBe('Administrador de demostración');
-    expect(pageText()).toContain('Inicio de sesión simulado');
-    expect(pageText()).toContain('Modo demostración');
+    expect(pageText()).toContain('Inicio de sesión');
+    expect(pageText()).toContain('Acceso verificado');
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('should authenticate the administrator through the form and navigate to Inicio', () => {
+  it('should authenticate the administrator through the form and navigate to Inicio', async () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     options()[0].click();
     fixture.detectChanges();
     openLogin();
-    submitLogin('admin_demo', 'Admin1234!');
+    await submitLogin('admin_demo', 'Admin1234!');
 
+    expect(signIn).toHaveBeenCalledWith({ username: 'admin_demo', password: 'Admin1234!' }, 'administrador');
     expect(session.profileId()).toBe('administrador');
     expect(permissions.can('admin:access')).toBe(true);
     expect(query('.acceso-login__error')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/tabs/inicio']);
   });
 
-  it('should authenticate the instructor through the form and grant only alarm control', () => {
+  it('should authenticate the instructor through the form and grant only alarm control', async () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     options()[1].click();
     fixture.detectChanges();
     openLogin();
-    submitLogin('instructor_demo', 'Instructor1234!');
+    await submitLogin('instructor_demo', 'Instructor1234!');
 
+    expect(signIn).toHaveBeenCalledWith({ username: 'instructor_demo', password: 'Instructor1234!' }, 'instructor');
     expect(session.profileId()).toBe('instructor');
     expect(permissions.can('alarm:control')).toBe(true);
     expect(permissions.can('admin:access')).toBe(false);
     expect(navigate).toHaveBeenCalledWith(['/tabs/inicio']);
   });
 
-  it('should reject incorrect credentials and stay on the form without privileges', () => {
+  it('should reject incorrect credentials and stay on the form without privileges', async () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    signIn.mockRejectedValueOnce(new Error(SUPABASE_LOGIN_ERROR));
 
     options()[0].click();
     fixture.detectChanges();
     openLogin();
-    submitLogin('admin_demo', 'contraseña-mala');
+    await submitLogin('admin_demo', 'contraseña-mala');
 
     expect(query('.acceso-login')).not.toBeNull();
-    expect(query('.acceso-login__error')?.textContent).toContain(
-      'Credenciales incorrectas. Verifica el perfil seleccionado.',
-    );
-    expect(session.profileId()).toBe('visitante');
+    expect(query('.acceso-login__error')?.textContent).toContain(SUPABASE_LOGIN_ERROR);
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
     expect(permissions.can('admin:access')).toBe(false);
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('should not activate a privileged profile with credentials of the other profile', () => {
+  it('should not activate a privileged profile with credentials of the other profile', async () => {
+    signIn.mockRejectedValueOnce(new Error(SUPABASE_LOGIN_ERROR));
+
     options()[0].click();
     fixture.detectChanges();
     openLogin();
-    submitLogin('instructor_demo', 'Instructor1234!');
+    await submitLogin('instructor_demo', 'Instructor1234!');
 
+    expect(signIn).toHaveBeenCalledWith({ username: 'instructor_demo', password: 'Instructor1234!' }, 'administrador');
     expect(query('.acceso-login__error')).not.toBeNull();
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
   });
 
-  it('should allow direct access for Aprendiz and Visitante without showing the form', () => {
+  it('should not fall back to demo credentials when Supabase rejects the login', async () => {
+    const demoAuthenticate = vi.spyOn(DemoAuthService.prototype, 'authenticate');
+    signIn.mockRejectedValueOnce(new Error(SUPABASE_LOGIN_ERROR));
+
+    options()[0].click();
+    fixture.detectChanges();
+    openLogin();
+    await submitLogin('admin_demo', 'Admin1234!');
+
+    expect(signIn).toHaveBeenCalledTimes(1);
+    expect(demoAuthenticate).not.toHaveBeenCalled();
+    expect(query('.acceso-login__error')?.textContent).toContain(SUPABASE_LOGIN_ERROR);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(permissions.can('admin:access')).toBe(false);
+    demoAuthenticate.mockRestore();
+  });
+
+  it('should block duplicate login submissions while a request is in progress', async () => {
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    let resolveLogin: (account: AuthenticatedAccount) => void = () => undefined;
+
+    signIn.mockImplementationOnce(
+      () =>
+        new Promise<AuthenticatedAccount>((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+
+    options()[0].click();
+    fixture.detectChanges();
+    openLogin();
+    typeInto('.acceso-login__username', 'admin_demo');
+    typeInto('.acceso-login__password', 'Admin1234!');
+
+    const submit = query<HTMLButtonElement>('.acceso-login__submit');
+    submit?.click();
+    submit?.click();
+    fixture.detectChanges();
+
+    expect(signIn).toHaveBeenCalledTimes(1);
+    expect(component.isSubmitting()).toBe(true);
+    expect(submit?.disabled).toBe(true);
+    expect(navigate).not.toHaveBeenCalled();
+
+    resolveLogin({ id: 'AUTH-administrador', nombre: 'admin_demo', role: 'administrador' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.isSubmitting()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith(['/tabs/inicio']);
+  });
+
+  it('should allow direct access for Aprendiz without showing the form', async () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     options()[2].click();
     fixture.detectChanges();
     query('.acceso-continue')?.click();
     fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(session.profileId()).toBe('aprendiz');
-    expect(query('.acceso-login')).toBeNull();
-    expect(navigate).toHaveBeenCalledWith(['/tabs/inicio']);
-
-    navigate.mockClear();
-    options()[3].click();
-    fixture.detectChanges();
-    query('.acceso-continue')?.click();
-    fixture.detectChanges();
-
-    expect(session.profileId()).toBe('visitante');
+    expect(signIn).not.toHaveBeenCalled();
     expect(query('.acceso-login')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/tabs/inicio']);
   });
@@ -261,9 +335,12 @@ describe('AccesoPage', () => {
     expect(query('.acceso-login')).toBeNull();
     expect(query('.acceso-options')).not.toBeNull();
     expect(query('.acceso-confirmation')).toBeNull();
-    expect(session.selectedProfileId()).toBe('visitante');
-    expect(session.profileId()).toBe('visitante');
+    expect(session.selectedProfileId()).toBe('aprendiz');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('admin:access')).toBe(false);
+    expect(signIn).not.toHaveBeenCalled();
+    // Volver en el formulario no es un cierre de sesión.
+    expect(signOut).not.toHaveBeenCalled();
   });
 
   it('should keep the password hidden and never render the test passwords', () => {

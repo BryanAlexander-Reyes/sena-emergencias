@@ -4,57 +4,57 @@
   [title]="canAccess() ? 'Administración' : 'Acceso restringido'"
   [description]="
     canAccess()
-      ? 'Usuarios y roles ficticios del prototipo'
+      ? 'Usuarios y roles registrados en el servidor'
       : 'Tu perfil ya no tiene permiso para ver el panel administrativo'
   "
-  badge="Modo demostración"
-  footerLabel="Fase 4.4 · Administración"
-  footerVersion="v0.4"
+  badge="Datos reales"
+  footerLabel="Fase 5.4 · Administración"
+  footerVersion="v0.5"
 >
   @if (canAccess()) {
   <section class="app-card admin-session" aria-labelledby="admin-session-title">
     <p id="admin-session-title" class="app-overline">Sesión activa</p>
     <div class="admin-session__identity">
       <span class="admin-session__icon">
-        <ion-icon [name]="activeProfile().icon" aria-hidden="true"></ion-icon>
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
       </span>
       <div>
         <span class="admin-session__label">Perfil con acceso</span>
-        <strong class="admin-session__value">{{ activeProfile().label }}</strong>
-        <span class="admin-session__hint">{{ activeProfile().description }}</span>
+        <strong class="admin-session__value">{{ roleLabel('administrador') }}</strong>
+        <span class="admin-session__hint">Permisos administrativos verificados en el servidor.</span>
       </div>
     </div>
   </section>
 
-  <section class="admin-summary" aria-label="Resumen de usuarios ficticios">
+  <section class="admin-summary" aria-label="Resumen de usuarios registrados">
     <article class="app-card admin-summary__card">
-      <span class="admin-summary__value">{{ totalUsers }}</span>
-      <span class="admin-summary__label">Usuarios ficticios</span>
+      <span class="admin-summary__value">{{ totalUsers() }}</span>
+      <span class="admin-summary__label">Usuarios registrados</span>
     </article>
     <article class="app-card admin-summary__card">
-      <span class="admin-summary__value">{{ roleSummaries.length }}</span>
+      <span class="admin-summary__value">{{ activeUsers() }}</span>
+      <span class="admin-summary__label">Activos</span>
+    </article>
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ inactiveUsers() }}</span>
+      <span class="admin-summary__label">Inactivos</span>
+    </article>
+    <article class="app-card admin-summary__card">
+      <span class="admin-summary__value">{{ roleSummaries().length }}</span>
       <span class="admin-summary__label">Roles definidos</span>
-    </article>
-    <article class="app-card admin-summary__card">
-      <span class="admin-summary__value">{{ activeUsers }}</span>
-      <span class="admin-summary__label">Activos (demo)</span>
-    </article>
-    <article class="app-card admin-summary__card">
-      <span class="admin-summary__value">{{ readOnlyUsers }}</span>
-      <span class="admin-summary__label">Solo lectura</span>
     </article>
   </section>
 
   <section class="app-card admin-roles" aria-labelledby="admin-roles-title">
     <div class="app-section-head">
       <p id="admin-roles-title" class="app-overline">Resumen de roles</p>
-      <span class="app-badge">Demostración</span>
+      <span class="app-badge">Servidor</span>
     </div>
     <div class="admin-roles__list">
-      @for (summary of roleSummaries; track summary.role) {
+      @for (summary of roleSummaries(); track summary.role) {
       <div class="admin-roles__item">
         <span class="admin-roles__label">{{ summary.label }}</span>
-        <span class="admin-roles__count">{{ summary.count }} usuario</span>
+        <span class="admin-roles__count">{{ summary.count }} {{ summary.count === 1 ? 'usuario' : 'usuarios' }}</span>
       </div>
       }
     </div>
@@ -62,8 +62,8 @@
 
   <section class="app-card admin-users" aria-labelledby="admin-users-title">
     <div class="app-section-head">
-      <p id="admin-users-title" class="app-overline">Usuarios ficticios</p>
-      <span class="app-badge">{{ filteredUsers().length }} de {{ totalUsers }}</span>
+      <p id="admin-users-title" class="app-overline">Usuarios registrados</p>
+      <span class="app-badge">{{ filteredUsers().length }} de {{ totalUsers() }}</span>
     </div>
 
     <div class="admin-users__filters" role="group" aria-label="Filtrar usuarios por rol">
@@ -96,40 +96,87 @@
       }
     </div>
 
-    @if (filteredUsers().length > 0) {
+    @if (statusUpdateSuccess()) {
+    <p class="admin-users__success" role="status">{{ statusUpdateSuccess() }}</p>
+    } @if (updatingUserId()) {
+    <p class="admin-users__loading" role="status">{{ statusUpdatingMessage }}</p>
+    } @if (usersLoading()) {
+    <p class="admin-users__loading" role="status">{{ listLoadingMessage }}</p>
+    } @else if (usersError()) {
+    <div class="admin-users__error" role="alert">
+      <p class="admin-users__error-text">{{ usersError() }}</p>
+      <ion-button class="admin-users__retry" type="button" (click)="loadUsers()">Reintentar</ion-button>
+    </div>
+    } @else if (filteredUsers().length > 0) {
     <div class="admin-users__list">
       @for (user of filteredUsers(); track user.id) {
-      <article class="admin-user" [attr.data-role]="user.role">
+      <article class="admin-user" [attr.data-role]="user.rol">
         <header class="admin-user__head">
           <span class="admin-user__avatar">
-            <ion-icon [name]="iconForRole(user.role)" aria-hidden="true"></ion-icon>
+            <ion-icon [name]="iconForRole(user.rol)" aria-hidden="true"></ion-icon>
           </span>
           <div class="admin-user__identity">
-            <h3 class="admin-user__name">{{ user.name }}</h3>
-            <p class="admin-user__id">Identificador ficticio · {{ user.id }}</p>
+            <h3 class="admin-user__name">{{ user.nombre }}</h3>
+            <p class="admin-user__id">ID · {{ user.id }}</p>
           </div>
-          <span class="admin-user__status" [attr.data-status]="user.status"> {{ statusLabel(user.status) }} </span>
+          <span class="admin-user__status" [attr.data-status]="user.activo ? 'activo' : 'inactivo'">
+            {{ statusLabel(user.activo) }}
+          </span>
         </header>
 
         <dl class="admin-user__data">
           <div class="admin-user__data-item">
             <dt>Rol</dt>
-            <dd>{{ roleLabel(user.role) }}</dd>
+            <dd>{{ roleLabel(user.rol) }}</dd>
           </div>
           <div class="admin-user__data-item">
             <dt>Estado</dt>
-            <dd>{{ statusLabel(user.status) }}</dd>
-          </div>
-          <div class="admin-user__data-item">
-            <dt>Alcance</dt>
-            <dd>{{ user.scope }}</dd>
+            <dd>{{ statusLabel(user.activo) }}</dd>
           </div>
         </dl>
+
+        @if (canManageInstructors() && user.rol === 'instructor') {
+        <div class="admin-user__actions" [attr.aria-busy]="updatingUserId() === user.id">
+          @if (user.activo) {
+          <ion-button
+            class="instructor-item__deactivate"
+            type="button"
+            fill="outline"
+            [disabled]="updatingUserId() !== null"
+            (click)="confirmStatusChange(user, false)"
+          >
+            @if (updatingUserId() === user.id) { Desactivando… } @else { Desactivar }
+          </ion-button>
+          } @else {
+          <ion-button
+            class="instructor-item__reactivate"
+            type="button"
+            fill="outline"
+            [disabled]="updatingUserId() !== null"
+            (click)="confirmStatusChange(user, true)"
+          >
+            @if (updatingUserId() === user.id) { Reactivando… } @else { Reactivar }
+          </ion-button>
+          } @if (failedStatusUserId() === user.id && statusUpdateError()) {
+          <div class="admin-user__action-error" role="alert">
+            <p>{{ statusUpdateError() }}</p>
+            <ion-button
+              class="instructor-item__retry"
+              type="button"
+              fill="clear"
+              [disabled]="updatingUserId() !== null"
+              (click)="retryStatusChange(user)"
+              >Reintentar</ion-button
+            >
+          </div>
+          }
+        </div>
+        }
       </article>
       }
     </div>
     } @else {
-    <p class="admin-users__empty" role="status">No hay usuarios ficticios para los filtros seleccionados.</p>
+    <p class="admin-users__empty" role="status">{{ emptyUsersMessage() }}</p>
     }
   </section>
 
@@ -141,10 +188,16 @@
     </div>
 
     <p class="instructor-management__intro">
-      Registra cuentas de Instructor para la demostración. Los datos viven solo en memoria y desaparecen al recargar.
+      Registra cuentas de Instructor en el servidor. La operación no modifica tu sesión ni crea Administradores. Para
+      desactivar o reactivar una cuenta usa las acciones del listado; cada cambio se confirma antes de enviarse.
     </p>
 
-    <form class="instructor-form" (submit)="registerInstructor($event)" novalidate>
+    <form
+      class="instructor-form"
+      (submit)="registerInstructor($event)"
+      [attr.aria-busy]="registeringInstructor()"
+      novalidate
+    >
       <ion-input
         class="instructor-form__username"
         type="text"
@@ -196,59 +249,10 @@
       <p class="instructor-form__success" role="status">{{ registrationSuccess() }}</p>
       }
 
-      <ion-button class="app-button instructor-form__submit" type="submit"> Registrar instructor </ion-button>
+      <ion-button class="app-button instructor-form__submit" type="submit" [disabled]="registeringInstructor()">
+        @if (registeringInstructor()) { Creando instructor… } @else { Registrar instructor }
+      </ion-button>
     </form>
-
-    <div class="instructor-list">
-      <div class="app-section-head">
-        <p id="instructor-list-title" class="app-overline">Instructores registrados</p>
-        <span class="app-badge">{{ instructorAccounts().length }} cuentas</span>
-      </div>
-
-      @for (account of instructorAccounts(); track account.id) {
-      <article class="instructor-item" [attr.data-account-id]="account.id">
-        <div class="instructor-item__head">
-          <span class="instructor-item__avatar">
-            <ion-icon name="school-outline" aria-hidden="true"></ion-icon>
-          </span>
-          <div class="instructor-item__identity">
-            <h3 class="instructor-item__username">{{ account.username }}</h3>
-            <p class="instructor-item__id">Identificador temporal · {{ account.id }}</p>
-          </div>
-          <span class="instructor-item__status" [attr.data-status]="account.status">
-            {{ account.status === 'activo' ? 'Activo' : 'Inactivo' }}
-          </span>
-        </div>
-
-        <dl class="instructor-item__data">
-          <div class="instructor-item__data-item">
-            <dt>Rol</dt>
-            <dd>{{ account.role }}</dd>
-          </div>
-          <div class="instructor-item__data-item">
-            <dt>Estado</dt>
-            <dd class="instructor-item__state">{{ account.status === 'activo' ? 'Activo' : 'Inactivo' }}</dd>
-          </div>
-          <div class="instructor-item__data-item">
-            <dt>Acción</dt>
-            @if (account.status === 'activo') {
-            <dd>
-              <ion-button class="instructor-item__deactivate" type="button" (click)="deactivateInstructor(account)">
-                Desactivar
-              </ion-button>
-            </dd>
-            } @else {
-            <dd class="instructor-item__no-action">Sin acceso</dd>
-            }
-          </div>
-        </dl>
-      </article>
-      } @if (deactivationError()) {
-      <p class="instructor-list__error" role="alert">{{ deactivationError() }}</p>
-      } @if (deactivationNotice()) {
-      <p class="instructor-list__notice" role="status">{{ deactivationNotice() }}</p>
-      }
-    </div>
   </section>
   }
 
@@ -257,15 +261,15 @@
       <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
     </span>
     <div>
-      <h2 id="admin-scope-title" class="admin-scope__title">Alcance del prototipo</h2>
+      <h2 id="admin-scope-title" class="admin-scope__title">Alcance del panel</h2>
       <p class="admin-scope__text">
-        Este panel consulta registros ficticios y permite registrar y desactivar cuentas de Instructor únicamente en
-        memoria. Registrar no cambia la sesión del Administrador; no crea Administradores, no edita roles, no elimina
-        registros y no se conecta a bases de datos, servidores ni proveedores de identidad.
+        Este panel consulta los registros reales de cuentas del servidor. El alta de Instructores y el cambio de estado
+        se envían a funciones seguras; no cambian la sesión del Administrador, no crea Administradores, no editan roles
+        y no eliminan registros.
       </p>
       <p class="admin-scope__text">
-        Las credenciales se validan dentro del servicio de autenticación simulado y no se guardan en el navegador. No
-        constituyen seguridad real: las cuentas temporales desaparecen al recargar la aplicación.
+        El listado solo cambia cuando el servidor confirma la operación. El formulario no guarda contraseñas ni tokens
+        en el navegador; la autorización se comprueba en el servidor en cada solicitud.
       </p>
     </div>
   </section>

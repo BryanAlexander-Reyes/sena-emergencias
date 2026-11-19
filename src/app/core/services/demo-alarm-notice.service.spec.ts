@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { DemoSessionService } from '../auth/demo-session.service';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from '../auth/testing/verified-session-test.util';
 
 import { buildAlarmNotice, DemoAlarmNoticeService } from './demo-alarm-notice.service';
 import { DemoAlarmStateService } from './demo-alarm-state.service';
@@ -11,8 +12,10 @@ describe('DemoAlarmNoticeService (Fase 4.6)', () => {
   let alarm: DemoAlarmStateService;
   let session: DemoSessionService;
   let monitoring: MonitoringStateService;
+  let verified: VerifiedTestIdentities;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     noticeService = TestBed.inject(DemoAlarmNoticeService);
     alarm = TestBed.inject(DemoAlarmStateService);
@@ -57,7 +60,7 @@ describe('DemoAlarmNoticeService (Fase 4.6)', () => {
   });
 
   it('caso C: sin aglomeración y alarma encendida manualmente', () => {
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     removeAgglomeration();
     alarm.turnOn();
 
@@ -68,7 +71,7 @@ describe('DemoAlarmNoticeService (Fase 4.6)', () => {
   });
 
   it('caso D: con aglomeración y alarma encendida', () => {
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     alarm.turnOn();
 
     expect(noticeService.notice()).toEqual({
@@ -81,7 +84,7 @@ describe('DemoAlarmNoticeService (Fase 4.6)', () => {
   it('deriva el mensaje de forma reactiva al cambiar sólo el estado de la alarma', () => {
     expect(noticeService.notice().scenario).toBe('B');
 
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     alarm.turnOn();
     expect(noticeService.notice().scenario).toBe('D');
 
@@ -92,7 +95,7 @@ describe('DemoAlarmNoticeService (Fase 4.6)', () => {
   it('no muestra instrucciones LED sin confirmación de ruta segura', () => {
     expect(noticeService.ledInstruction()).toBeNull();
 
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     alarm.turnOn();
 
     expect(noticeService.ledInstruction()).toBeNull();

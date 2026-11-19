@@ -7,13 +7,27 @@ import { OccupancyAlertEngineService } from '../services/occupancy-alert-engine.
 import { SimulatedSensorsService } from '../services/simulated-sensors.service';
 import { SimulationHistoryService } from '../services/simulation-history.service';
 
-import { DEMO_PROFILES, VISITOR_PROFILE, VISITOR_PROFILE_ID, type DemoProfileId } from './demo-profiles';
+import { DEFAULT_PROFILE, DEFAULT_PROFILE_ID, DEMO_PROFILES, type DemoProfileId } from './demo-profiles';
 import { DemoSessionService } from './demo-session.service';
+import type { SessionFacade } from './session-facade.contract';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from './testing/verified-session-test.util';
 
 describe('DemoSessionService', () => {
   let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
 
-  beforeEach(() => {
+  const activate = (profileId: DemoProfileId): boolean => {
+    if (profileId === 'administrador') {
+      return session.publishVerifiedIdentity(verified.administrador);
+    }
+    if (profileId === 'instructor') {
+      return session.publishVerifiedIdentity(verified.instructor);
+    }
+    return session.selectProfile('aprendiz');
+  };
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     session = TestBed.inject(DemoSessionService);
   });
@@ -22,31 +36,83 @@ describe('DemoSessionService', () => {
     expect(TestBed.inject(DemoSessionService)).toBe(session);
   });
 
-  it('should start with the visitor profile and an inactive session', () => {
-    expect(session.profileId()).toBe(VISITOR_PROFILE_ID);
-    expect(session.profile()).toBe(VISITOR_PROFILE);
+  it('cumple SessionFacade sin perder las signals existentes', async () => {
+    const facade: SessionFacade = session;
+
+    expect(facade).toBe(session);
+    // Arranca en `inicializando`: ningún consumidor debe ver privilegios aún.
+    expect(facade.snapshot).toEqual({ status: 'inicializando', role: DEFAULT_PROFILE_ID, account: null });
+
+    const ready = facade.whenReady();
+    activate('administrador');
+
+    expect(facade.snapshot).toEqual({
+      status: 'lista',
+      role: 'administrador',
+      account: verified.administrador.account,
+    });
+    expect(session.state().profileId).toBe('administrador');
+    expect(await ready).toEqual(facade.snapshot);
+    expect(await facade.whenReady()).toEqual(facade.snapshot);
+  });
+
+  it('expone transiciones explícitas de inicialización y revalidación', async () => {
+    activate('administrador');
+
+    session.suspendForValidation();
+
+    expect(session.status()).toBe('inicializando');
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.authenticatedAccount()).toBeNull();
+
+    session.finishInitialization();
+
+    expect(session.status()).toBe('lista');
+    expect((await session.whenReady()).status).toBe('lista');
+  });
+
+  it('mantiene el acceso directo de Aprendiz y hace clear equivalente a closeSession', () => {
+    const facade: SessionFacade = session;
+
+    activate('administrador');
+    facade.selectPublicRole('aprendiz');
+
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.selectedProfileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.authenticatedAccount()).toBeNull();
+
+    activate('instructor');
+    facade.clear();
+
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(facade.snapshot.role).toBe(DEFAULT_PROFILE_ID);
+    expect(facade.snapshot.account).toBeNull();
+  });
+
+  it('should start with the learner profile and an inactive session', () => {
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.profile()).toBe(DEFAULT_PROFILE);
     expect(session.isActive()).toBe(false);
     expect(session.isAdministrative()).toBe(false);
     expect(session.state()).toEqual({
-      profileId: VISITOR_PROFILE_ID,
-      profile: VISITOR_PROFILE,
+      profileId: DEFAULT_PROFILE_ID,
+      profile: DEFAULT_PROFILE,
       isActive: false,
       isAdministrative: false,
     });
   });
 
-  it('should expose the four demo profiles in the approved order', () => {
+  it('should expose the three demo profiles in the approved order', () => {
     expect(DEMO_PROFILES.map((profile) => profile.label)).toEqual([
       'Administrador de demostración',
       'Instructor de demostración',
       'Aprendiz de demostración',
-      'Visitante',
     ]);
   });
 
-  it('should select every profile and keep its reactive state in sync', () => {
+  it('actualiza el estado reactivo con identidades verificadas y acceso público', () => {
     for (const profile of DEMO_PROFILES) {
-      session.selectProfile(profile.id);
+      expect(activate(profile.id)).toBe(true);
 
       expect(session.profileId()).toBe(profile.id);
       expect(session.profile()).toBe(profile);
@@ -56,36 +122,34 @@ describe('DemoSessionService', () => {
   });
 
   it('should flag only the administrator profile as administrative', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     expect(session.isAdministrative()).toBe(true);
     expect(session.isActive()).toBe(true);
     expect(session.state().isAdministrative).toBe(true);
 
-    session.selectProfile('instructor');
+    activate('instructor');
     expect(session.isAdministrative()).toBe(false);
 
-    session.selectProfile('aprendiz');
-    expect(session.isAdministrative()).toBe(false);
-
-    session.selectProfile('visitante');
+    activate('aprendiz');
     expect(session.isAdministrative()).toBe(false);
     expect(session.isActive()).toBe(false);
   });
 
-  it('should return to the visitor profile when the demo session is closed', () => {
-    session.selectProfile('administrador');
+  it('should return to the learner profile when the demo session is closed', () => {
+    activate('administrador');
     expect(session.isActive()).toBe(true);
 
     session.closeSession();
 
-    expect(session.profileId()).toBe(VISITOR_PROFILE_ID);
-    expect(session.profile()).toBe(VISITOR_PROFILE);
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.profile()).toBe(DEFAULT_PROFILE);
     expect(session.isActive()).toBe(false);
     expect(session.isAdministrative()).toBe(false);
+    expect(session.authenticatedAccount()).toBeNull();
   });
 
-  it('should return to the visitor profile when the application state is recreated', () => {
-    session.selectProfile('administrador');
+  it('should return to the learner profile when the application state is recreated', () => {
+    activate('administrador');
     expect(session.profileId()).toBe('administrador');
 
     TestBed.resetTestingModule();
@@ -93,14 +157,39 @@ describe('DemoSessionService', () => {
     const reloadedSession = TestBed.inject(DemoSessionService);
 
     expect(reloadedSession).not.toBe(session);
-    expect(reloadedSession.profileId()).toBe(VISITOR_PROFILE_ID);
+    expect(reloadedSession.profileId()).toBe(DEFAULT_PROFILE_ID);
     expect(reloadedSession.isActive()).toBe(false);
   });
 
   it('should ignore repeated or unknown profile identifiers', () => {
-    expect(session.selectProfile('visitante')).toBe(false);
+    expect(session.selectProfile('aprendiz')).toBe(false);
     expect(session.selectProfile('desconocido' as DemoProfileId)).toBe(false);
-    expect(session.profile()).toBe(VISITOR_PROFILE);
+    expect(session.profile()).toBe(DEFAULT_PROFILE);
+  });
+
+  it('rechaza activaciones heredadas de roles privilegiados', () => {
+    expect(session.activateProfile('administrador')).toBe(false);
+    expect(session.activateProfile('instructor')).toBe(false);
+    expect(session.selectProfile('administrador')).toBe(false);
+    expect(session.selectProfile('instructor')).toBe(false);
+
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.authenticatedAccount()).toBeNull();
+    expect(session.isAdministrative()).toBe(false);
+  });
+
+  it('no acepta una identidad plana ni un objeto falso como publicación verificada', () => {
+    expect(
+      session.setAuthenticatedAccount({ id: 'ADM-FALSO', nombre: 'admin', role: 'administrador' }),
+    ).toBeUndefined();
+    expect(
+      session.publishVerifiedIdentity({
+        account: { id: 'ADM-FALSO', nombre: 'admin', role: 'administrador' },
+      } as never),
+    ).toBe(false);
+
+    expect(session.profileId()).toBe(DEFAULT_PROFILE_ID);
+    expect(session.authenticatedAccount()).toBeNull();
   });
 
   it('should leave occupancy, alerts, history, sensors and assistant state untouched', () => {
@@ -125,7 +214,7 @@ describe('DemoSessionService', () => {
     const messagesBefore = assistant.messages();
 
     for (const profile of DEMO_PROFILES) {
-      session.selectProfile(profile.id);
+      activate(profile.id);
     }
     session.closeSession();
     TestBed.flushEffects();

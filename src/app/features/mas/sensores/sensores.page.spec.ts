@@ -4,6 +4,10 @@ import { provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 
 import { DemoSessionService } from '../../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../../core/auth/testing/verified-session-test.util';
 import { AlertsStateService } from '../../../core/services/alerts-state.service';
 import { MonitoringStateService } from '../../../core/services/monitoring-state.service';
 import { SimulatedSensorsService } from '../../../core/services/simulated-sensors.service';
@@ -13,16 +17,18 @@ import { SensoresPage } from './sensores.page';
 describe('SensoresPage (Fase 3.6)', () => {
   let component: SensoresPage;
   let fixture: ComponentFixture<SensoresPage>;
+  let verified: VerifiedTestIdentities;
 
   const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     await TestBed.configureTestingModule({
       imports: [SensoresPage],
       providers: [provideRouter([])],
     }).compileComponents();
 
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     fixture = TestBed.createComponent(SensoresPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -112,7 +118,7 @@ describe('SensoresPage (Fase 3.6)', () => {
     const sensors = TestBed.inject(SimulatedSensorsService);
     const snapshot = JSON.stringify(sensors.sensors());
 
-    TestBed.inject(DemoSessionService).selectProfile('instructor');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.instructor);
     fixture.detectChanges();
 
     expect(component.canControlSensors()).toBe(false);
@@ -198,7 +204,7 @@ describe('SensoresPage (Fase 3.6)', () => {
     const destructive = buttons?.find((button) => button.role === 'destructive');
     expect(destructive?.handler).toBeTypeOf('function');
 
-    TestBed.inject(DemoSessionService).selectProfile('visitante');
+    TestBed.inject(DemoSessionService).selectProfile('aprendiz');
     destructive?.handler?.();
 
     expect(JSON.stringify(sensors.sensors())).toBe(snapshot);

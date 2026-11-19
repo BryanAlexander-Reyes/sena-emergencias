@@ -4,6 +4,10 @@ import { provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 
 import { DemoSessionService } from '../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
 import { countActiveAlerts, getActiveCriticalAlert } from '../../core/data/demo-alerts';
 import { DEMO_ZONES } from '../../core/data/demo-monitoring';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
@@ -14,8 +18,10 @@ import { InicioPage } from './inicio.page';
 describe('InicioPage', () => {
   let component: InicioPage;
   let fixture: ComponentFixture<InicioPage>;
+  let verified: VerifiedTestIdentities;
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     await TestBed.configureTestingModule({
       imports: [InicioPage],
       providers: [provideRouter([])],
@@ -110,7 +116,7 @@ describe('InicioPage', () => {
     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
     expect(note.textContent).toContain('Solo Administradores e Instructores pueden controlar la alarma.');
 
-    TestBed.inject(DemoSessionService).selectProfile('instructor');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.instructor);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(1);
@@ -120,7 +126,7 @@ describe('InicioPage', () => {
   it('refleja reactivamente los cambios de alarma en Inicio', () => {
     const session = TestBed.inject(DemoSessionService);
     const alarm = TestBed.inject(DemoAlarmStateService);
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.alarm-control__notice')?.getAttribute('data-scenario')).toBe('B');
@@ -138,7 +144,7 @@ describe('InicioPage', () => {
   });
 
   it('muestra el diálogo de encendido con los textos y botones esperados', async () => {
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     const { createSpy, buttons } = mockConfirmation();
 
     await component.confirmTurnOn();
@@ -150,7 +156,7 @@ describe('InicioPage', () => {
   });
 
   it('cancelar el diálogo no cambia el estado', async () => {
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     const alarm = TestBed.inject(DemoAlarmStateService);
     mockConfirmation();
 
@@ -160,7 +166,7 @@ describe('InicioPage', () => {
   });
 
   it('ejecuta el encendido y el apagado al confirmar', async () => {
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     const alarm = TestBed.inject(DemoAlarmStateService);
     const { buttons } = mockConfirmation();
 
@@ -179,18 +185,18 @@ describe('InicioPage', () => {
   it('revalúa el permiso si cambia el perfil durante la confirmación', async () => {
     const session = TestBed.inject(DemoSessionService);
     const alarm = TestBed.inject(DemoAlarmStateService);
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     const { buttons } = mockConfirmation();
 
     await component.confirmTurnOn();
-    session.selectProfile('visitante');
+    session.selectProfile('aprendiz');
     buttons().at(1)?.handler?.();
 
     expect(alarm.isOn()).toBe(false);
   });
 
   it('ignora pulsaciones rápidas mientras hay una confirmación abierta', async () => {
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     const alertController = TestBed.inject(AlertController);
     const alert = {
       present: vi.fn().mockResolvedValue(undefined),

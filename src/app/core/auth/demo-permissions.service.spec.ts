@@ -3,12 +3,25 @@ import { TestBed } from '@angular/core/testing';
 import { DemoPermissionsService, DEMO_PERMISSIONS } from './demo-permissions.service';
 import { DEMO_PROFILES } from './demo-profiles';
 import { DemoSessionService } from './demo-session.service';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from './testing/verified-session-test.util';
 
 describe('DemoPermissionsService', () => {
   let permissions: DemoPermissionsService;
   let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
 
-  beforeEach(() => {
+  const activate = (profileId: 'administrador' | 'instructor' | 'aprendiz'): void => {
+    if (profileId === 'administrador') {
+      session.publishVerifiedIdentity(verified.administrador);
+    } else if (profileId === 'instructor') {
+      session.publishVerifiedIdentity(verified.instructor);
+    } else {
+      session.selectProfile('aprendiz');
+    }
+  };
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     permissions = TestBed.inject(DemoPermissionsService);
     session = TestBed.inject(DemoSessionService);
@@ -18,16 +31,16 @@ describe('DemoPermissionsService', () => {
     expect(permissions).toBe(TestBed.inject(DemoPermissionsService));
   });
 
-  it('no concede permisos a visitante por defecto', () => {
-    expect(session.profile().id).toBe('visitante');
+  it('no concede permisos a aprendiz por defecto', () => {
+    expect(session.profile().id).toBe('aprendiz');
     expect(permissions.granted()).toEqual([]);
     for (const permission of DEMO_PERMISSIONS) {
       expect(permissions.can(permission)).toBe(false);
     }
   });
 
-  it('concede todos los permisos al administrador', () => {
-    session.selectProfile('administrador');
+  it('concede todos los permisos al administrador validado', () => {
+    activate('administrador');
     expect(permissions.granted()).toEqual(DEMO_PERMISSIONS);
     for (const permission of DEMO_PERMISSIONS) {
       expect(permissions.can(permission)).toBe(true);
@@ -36,7 +49,7 @@ describe('DemoPermissionsService', () => {
 
   it('no concede permisos de simulación a instructor ni aprendiz', () => {
     for (const profileId of ['instructor', 'aprendiz'] as const) {
-      session.selectProfile(profileId);
+      activate(profileId);
       expect(permissions.can('occupancy:update')).toBe(false);
       expect(permissions.can('occupancy:reset')).toBe(false);
       expect(permissions.can('sensors:control')).toBe(false);
@@ -45,42 +58,42 @@ describe('DemoPermissionsService', () => {
       expect(permissions.can('admin:access')).toBe(false);
     }
 
-    session.selectProfile('instructor');
+    activate('instructor');
     expect(permissions.granted()).toEqual(['alarm:control']);
 
-    session.selectProfile('aprendiz');
+    activate('aprendiz');
     expect(permissions.granted()).toEqual([]);
   });
 
-  it('reserva alarm:control para administrador e instructor', () => {
+  it('reserva alarm:control para administrador e instructor validados', () => {
     for (const profile of DEMO_PROFILES) {
-      session.selectProfile(profile.id);
+      activate(profile.id);
       expect(permissions.can('alarm:control')).toBe(profile.id === 'administrador' || profile.id === 'instructor');
     }
   });
 
   it('cubre todos los perfiles declarados en la política', () => {
     for (const profile of DEMO_PROFILES) {
-      session.selectProfile(profile.id);
+      activate(profile.id);
       expect(profile.id).toBe(session.profile().id);
       expect(permissions.granted()).toBeDefined();
     }
   });
 
-  it('reactiva inmediatamente los permisos al cambiar de perfil', () => {
-    session.selectProfile('administrador');
+  it('reactiva inmediatamente los permisos al publicar otra identidad validada', () => {
+    activate('administrador');
     expect(permissions.can('occupancy:update')).toBe(true);
 
-    session.selectProfile('instructor');
+    activate('instructor');
     expect(permissions.can('occupancy:update')).toBe(false);
     expect(permissions.granted()).toEqual(['alarm:control']);
 
-    session.selectProfile('administrador');
+    activate('administrador');
     expect(permissions.can('sensors:control')).toBe(true);
   });
 
   it('revoca los permisos al cerrar sesión', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     expect(permissions.can('alerts:review')).toBe(true);
 
     session.closeSession();
@@ -88,10 +101,32 @@ describe('DemoPermissionsService', () => {
     expect(permissions.granted()).toEqual([]);
   });
 
-  it('reserva admin:access exclusivamente para administrador', () => {
+  it('reserva admin:access exclusivamente para administrador validado', () => {
     for (const profile of DEMO_PROFILES) {
-      session.selectProfile(profile.id);
+      activate(profile.id);
       expect(permissions.can('admin:access')).toBe(profile.id === 'administrador');
     }
+  });
+
+  it('no concede privilegios durante inicialización ni revalidación', () => {
+    activate('administrador');
+    expect(permissions.can('admin:access')).toBe(true);
+
+    session.suspendForValidation();
+    expect(session.status()).toBe('inicializando');
+    expect(permissions.can('admin:access')).toBe(false);
+    expect(permissions.can('alarm:control')).toBe(false);
+
+    session.beginInitialization();
+    expect(permissions.granted()).toEqual([]);
+  });
+
+  it('ignora selecciones visuales y activaciones directas privilegiadas', () => {
+    expect(session.selectProfile('administrador')).toBe(false);
+    expect(session.activateProfile('instructor')).toBe(false);
+    expect(session.beginCredentialSelection('administrador')).toBe(true);
+
+    expect(session.status()).toBe('lista');
+    expect(permissions.granted()).toEqual([]);
   });
 });

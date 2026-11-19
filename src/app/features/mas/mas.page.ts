@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonIcon } from '@ionic/angular';
@@ -9,7 +9,6 @@ import {
   chatbubblesOutline,
   hardwareChipOutline,
   informationCircleOutline,
-  personOutline,
   schoolOutline,
   settingsOutline,
   shieldCheckmarkOutline,
@@ -17,6 +16,7 @@ import {
 } from 'ionicons/icons';
 
 import { ADMIN_ACCESS_DENIED_PARAM, ADMIN_ACCESS_DENIED_VALUE } from '../../core/auth/admin-access.guard';
+import { AUTH_FACADE, type AuthFacade } from '../../core/auth/auth-facade.contract';
 import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
 import { FeatureIntroComponent } from '../../shared/feature-intro/feature-intro.component';
@@ -39,6 +39,7 @@ interface MasMenuItem {
 })
 export class MasPage {
   readonly session = inject(DemoSessionService);
+  private readonly auth: AuthFacade = inject(AUTH_FACADE);
   private readonly permissions = inject(DemoPermissionsService);
   private readonly route = inject(ActivatedRoute);
   private readonly queryParams = toSignal(this.route.queryParamMap, {
@@ -54,7 +55,7 @@ export class MasPage {
   private readonly adminMenuItem: MasMenuItem = {
     id: 'administracion',
     title: 'Administración',
-    description: 'Usuarios y roles ficticios',
+    description: 'Usuarios y roles registrados',
     icon: 'shield-checkmark-outline',
     accent: 'green',
     link: '/tabs/mas/administracion',
@@ -114,7 +115,6 @@ export class MasPage {
       chatbubblesOutline,
       hardwareChipOutline,
       informationCircleOutline,
-      personOutline,
       schoolOutline,
       settingsOutline,
       shieldCheckmarkOutline,
@@ -122,7 +122,26 @@ export class MasPage {
     });
   }
 
-  closeSession(): void {
-    this.session.closeSession();
+  readonly isSigningOut = signal(false);
+
+  /**
+   * Cierre real: limpieza local inmediata y cierre Supabase vía `AuthFacade`.
+   * El estado vuelve a Aprendiz aunque falle el cierre remoto.
+   */
+  async closeSession(): Promise<void> {
+    if (this.isSigningOut()) {
+      return;
+    }
+
+    this.isSigningOut.set(true);
+    this.session.clear();
+
+    try {
+      await this.auth.signOut();
+    } catch {
+      // El cierre remoto falló: el estado local ya volvió a Aprendiz.
+    } finally {
+      this.isSigningOut.set(false);
+    }
   }
 }

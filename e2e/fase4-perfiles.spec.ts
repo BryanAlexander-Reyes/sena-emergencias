@@ -23,7 +23,7 @@ async function openAcceso(page: Page): Promise<void> {
   await openMas(page);
   await page.getByRole('link', { name: /Cambiar perfil/ }).click();
   await expect(page).toHaveURL(/\/acceso$/);
-  await expect(page.locator('button.acceso-option')).toHaveCount(4);
+  await expect(page.locator('button.acceso-option')).toHaveCount(3);
 }
 
 async function selectProfile(page: Page, label: RegExp, credentials?: DemoCredentials): Promise<void> {
@@ -55,7 +55,7 @@ async function leaveAdmin(page: Page): Promise<void> {
   await expect(page.locator('app-mas h1')).toBeVisible();
 }
 
-test('inicia como visitante sin opciones administrativas', async ({ page }) => {
+test('inicia como aprendiz sin opciones administrativas', async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
@@ -63,7 +63,7 @@ test('inicia como visitante sin opciones administrativas', async ({ page }) => {
 
   await openMas(page);
 
-  await expect(page.locator('.mas-profile__value')).toHaveText('Visitante');
+  await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
   await expect(page.locator('app-nav-card')).toHaveCount(5);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });
@@ -94,14 +94,9 @@ test('muestra usuarios ficticios en el panel de administración', async ({ page 
   await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
   await openAdmin(page);
 
-  await expect(page.locator('.admin-summary__value')).toHaveText(['4', '4', '3', '1']);
-  await expect(page.locator('.admin-user')).toHaveCount(4);
-  await expect(page.locator('.admin-user__id')).toContainText([
-    /USR-DMO-001/,
-    /USR-DMO-002/,
-    /USR-DMO-003/,
-    /USR-DMO-004/,
-  ]);
+  await expect(page.locator('.admin-summary__value')).toHaveText(['3', '3', '3', '0']);
+  await expect(page.locator('.admin-user')).toHaveCount(3);
+  await expect(page.locator('.admin-user__id')).toContainText([/USR-DMO-001/, /USR-DMO-002/, /USR-DMO-003/]);
 });
 
 test('cambia de administrador a instructor y retira las opciones administrativas', async ({ page }) => {
@@ -147,7 +142,7 @@ test('no recupera administración con Atrás después de perder el permiso', asy
   await expect(page.locator('.mas-denied')).toBeVisible();
 });
 
-test('vuelve al perfil visitante después de recargar', async ({ page }) => {
+test('vuelve al perfil aprendiz después de recargar', async ({ page }) => {
   await page.goto('/');
   await openAcceso(page);
   await selectProfile(page, ADMIN_LABEL, ADMIN_CREDENTIALS);
@@ -158,7 +153,7 @@ test('vuelve al perfil visitante después de recargar', async ({ page }) => {
 
   await page.reload();
 
-  await expect(page.locator('.mas-profile__value')).toHaveText('Visitante');
+  await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
   await expect(page.locator('app-nav-card')).toHaveCount(5);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });

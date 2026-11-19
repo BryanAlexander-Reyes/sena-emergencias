@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { DemoSessionService } from '../auth/demo-session.service';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from '../auth/testing/verified-session-test.util';
 
 import { AlertsStateService } from './alerts-state.service';
 import { DemoAlarmStateService } from './demo-alarm-state.service';
@@ -16,8 +17,20 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   let alerts: AlertsStateService;
   let history: SimulationHistoryService;
   let sensors: SimulatedSensorsService;
+  let verified: VerifiedTestIdentities;
 
-  beforeEach(() => {
+  const activate = (profileId: 'administrador' | 'instructor' | 'aprendiz'): void => {
+    if (profileId === 'administrador') {
+      session.publishVerifiedIdentity(verified.administrador);
+    } else if (profileId === 'instructor') {
+      session.publishVerifiedIdentity(verified.instructor);
+    } else {
+      session.selectProfile('aprendiz');
+    }
+  };
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     alarm = TestBed.inject(DemoAlarmStateService);
     session = TestBed.inject(DemoSessionService);
@@ -46,7 +59,7 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('permite al administrador encender y apagar', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
 
     expect(alarm.canControl()).toBe(true);
     expect(alarm.turnOn()).toBe(true);
@@ -58,7 +71,7 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('permite al instructor encender y apagar', () => {
-    session.selectProfile('instructor');
+    activate('instructor');
 
     expect(alarm.canControl()).toBe(true);
     expect(alarm.turnOn()).toBe(true);
@@ -69,33 +82,20 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('no permite al aprendiz encender ni apagar', () => {
-    session.selectProfile('aprendiz');
+    activate('aprendiz');
     expect(alarm.turnOn()).toBe(false);
     expect(alarm.turnOff()).toBe(false);
     expect(alarm.status()).toBe('off');
 
-    session.selectProfile('administrador');
+    activate('administrador');
     alarm.turnOn();
-    session.selectProfile('aprendiz');
-    expect(alarm.turnOff()).toBe(false);
-    expect(alarm.status()).toBe('on');
-  });
-
-  it('no permite al visitante encender ni apagar', () => {
-    session.selectProfile('visitante');
-    expect(alarm.turnOn()).toBe(false);
-    expect(alarm.turnOff()).toBe(false);
-    expect(alarm.status()).toBe('off');
-
-    session.selectProfile('administrador');
-    alarm.turnOn();
-    session.closeSession();
+    activate('aprendiz');
     expect(alarm.turnOff()).toBe(false);
     expect(alarm.status()).toBe('on');
   });
 
   it('permite encender la alarma sin aglomeración', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     removeAgglomeration();
 
     expect(monitoring.snapshots().some((snapshot) => snapshot.status === 'critical')).toBe(false);
@@ -115,7 +115,7 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('desaparecer la aglomeración no apaga la alarma', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     expect(alarm.turnOn()).toBe(true);
 
     removeAgglomeration();
@@ -125,32 +125,32 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('cambiar de perfil no altera el estado de la alarma', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     alarm.turnOn();
 
-    session.selectProfile('visitante');
+    activate('instructor');
     expect(alarm.isOn()).toBe(true);
 
-    session.selectProfile('aprendiz');
+    activate('aprendiz');
     expect(alarm.isOn()).toBe(true);
 
-    session.selectProfile('instructor');
+    activate('administrador');
     expect(alarm.isOn()).toBe(true);
     expect(alarm.turnOff()).toBe(true);
   });
 
   it('revalida el permiso en el punto de ejecución, no solo en el botón', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     alarm.turnOn();
 
-    session.selectProfile('visitante');
+    activate('aprendiz');
 
     expect(alarm.turnOff()).toBe(false);
     expect(alarm.status()).toBe('on');
   });
 
   it('rechaza un cambio incoherente cuando el estado ya varió', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     alarm.turnOn();
 
     expect(alarm.turnOff('off')).toBe(false);
@@ -162,7 +162,7 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('no modifica zonas, conteos, sensores ni historial al operar la alarma', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     const zonesSnapshot = JSON.stringify(monitoring.zones());
     const alertsSnapshot = JSON.stringify(alerts.alerts());
     const sensorsSnapshot = JSON.stringify(sensors.sensors());
@@ -183,11 +183,11 @@ describe('DemoAlarmStateService (Fase 4.6)', () => {
   });
 
   it('no genera alertas duplicadas al operar la alarma y cambiar de perfil', () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     alarm.turnOn();
 
-    for (const profileId of ['instructor', 'visitante', 'aprendiz', 'administrador'] as const) {
-      session.selectProfile(profileId);
+    for (const profileId of ['instructor', 'aprendiz', 'administrador'] as const) {
+      activate(profileId);
       TestBed.flushEffects();
     }
 

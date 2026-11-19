@@ -19,35 +19,39 @@ import { DEMO_CREDENTIALS } from './demo-credentials';
 import { DemoPermissionsService } from './demo-permissions.service';
 import { DEMO_PROFILES, type DemoProfileId } from './demo-profiles';
 import { DemoSessionService } from './demo-session.service';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from './testing/verified-session-test.util';
 
-describe('DemoAuthService (Fase 5.1)', () => {
+describe('DemoAuthService aislado de autenticación privilegiada (Fase 5.3.4.D)', () => {
   let auth: DemoAuthService;
   let session: DemoSessionService;
   let permissions: DemoPermissionsService;
+  let verified: VerifiedTestIdentities;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     auth = TestBed.inject(DemoAuthService);
     session = TestBed.inject(DemoSessionService);
     permissions = TestBed.inject(DemoPermissionsService);
   });
 
-  it('autentica al administrador con sus credenciales ficticias correctas', () => {
+  it('valida credenciales ficticias sin publicar sesión ni permisos', () => {
     const result = auth.authenticate('admin_demo', 'Admin1234!', 'administrador');
 
     expect(result).toEqual({ ok: true, profileId: 'administrador' });
-    expect(session.profileId()).toBe('administrador');
-    expect(session.selectedProfileId()).toBe('administrador');
-    expect(permissions.can('admin:access')).toBe(true);
-    expect(permissions.can('alarm:control')).toBe(true);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(session.selectedProfileId()).toBe('aprendiz');
+    expect(session.authenticatedAccount()).toBeNull();
+    expect(permissions.can('admin:access')).toBe(false);
+    expect(permissions.can('alarm:control')).toBe(false);
   });
 
-  it('autentica al instructor con sus credenciales ficticias correctas', () => {
+  it('valida credenciales de instructor sin conceder control de alarma', () => {
     const result = auth.authenticate('instructor_demo', 'Instructor1234!', 'instructor');
 
     expect(result).toEqual({ ok: true, profileId: 'instructor' });
-    expect(session.profileId()).toBe('instructor');
-    expect(permissions.can('alarm:control')).toBe(true);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(permissions.can('alarm:control')).toBe(false);
     expect(permissions.can('admin:access')).toBe(false);
   });
 
@@ -55,7 +59,7 @@ describe('DemoAuthService (Fase 5.1)', () => {
     const result = auth.authenticate('admin_demo', 'Admin1234', 'administrador');
 
     expect(result).toEqual({ ok: false, error: DEMO_LOGIN_ERROR });
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
   });
@@ -64,16 +68,16 @@ describe('DemoAuthService (Fase 5.1)', () => {
     const result = auth.authenticate('usuario_inexistente', 'Admin1234!', 'administrador');
 
     expect(result.ok).toBe(false);
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
   });
 
   it('rechaza credenciales válidas cuando el perfil solicitado es distinto', () => {
     expect(auth.authenticate('instructor_demo', 'Instructor1234!', 'administrador').ok).toBe(false);
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('admin:access')).toBe(false);
 
     expect(auth.authenticate('admin_demo', 'Admin1234!', 'instructor').ok).toBe(false);
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
   });
 
@@ -86,59 +90,55 @@ describe('DemoAuthService (Fase 5.1)', () => {
     expect(permissions.can('admin:access')).toBe(false);
   });
 
-  it('permite el acceso directo de Visitante sin credenciales', () => {
-    expect(DEMO_CREDENTIALS.some((credential) => credential.profileId === 'visitante')).toBe(false);
-    expect(session.activateProfile('visitante')).toBe(true);
-
-    expect(session.profileId()).toBe('visitante');
-    expect(session.isActive()).toBe(false);
-    expect(permissions.can('alarm:control')).toBe(false);
-  });
-
-  it('no concede permisos privilegiados antes del inicio de sesión', () => {
+  it('no concede permisos privilegiados antes de publicar una identidad validada', () => {
     expect(session.beginCredentialSelection('administrador')).toBe(true);
     expect(session.selectedProfileId()).toBe('administrador');
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(session.isAdministrative()).toBe(false);
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
 
     expect(session.beginCredentialSelection('instructor')).toBe(true);
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
   });
 
-  it('revoca los permisos al cambiar de perfil antes de autenticar de nuevo', () => {
-    expect(auth.authenticate('admin_demo', 'Admin1234!', 'administrador').ok).toBe(true);
+  it('revoca los permisos al cambiar de perfil antes de publicar otra identidad', () => {
+    session.publishVerifiedIdentity(verified.administrador);
     expect(permissions.can('admin:access')).toBe(true);
 
     session.beginCredentialSelection('instructor');
 
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
 
-    expect(auth.authenticate('instructor_demo', 'Instructor1234!', 'instructor').ok).toBe(true);
+    session.publishVerifiedIdentity(verified.instructor);
     expect(permissions.can('alarm:control')).toBe(true);
     expect(permissions.can('admin:access')).toBe(false);
   });
 
-  it('mantiene el permiso alarm:control únicamente para administrador e instructor', () => {
+  it('mantiene el permiso alarm:control únicamente para administrador e instructor validados', () => {
     const esperado: Readonly<Record<DemoProfileId, boolean>> = {
       administrador: true,
       instructor: true,
       aprendiz: false,
-      visitante: false,
     };
 
     for (const profile of DEMO_PROFILES) {
-      session.activateProfile(profile.id);
+      if (profile.id === 'administrador') {
+        session.publishVerifiedIdentity(verified.administrador);
+      } else if (profile.id === 'instructor') {
+        session.publishVerifiedIdentity(verified.instructor);
+      } else {
+        session.selectProfile('aprendiz');
+      }
       expect(permissions.can('alarm:control')).toBe(esperado[profile.id]);
     }
   });
 
   it('no almacena usuario ni contraseña en el estado de sesión', () => {
-    expect(auth.authenticate('admin_demo', 'Admin1234!', 'administrador').ok).toBe(true);
+    session.publishVerifiedIdentity(verified.administrador);
 
     const snapshot = JSON.stringify(session.state());
     expect(Object.keys(session.state())).toEqual(['profileId', 'profile', 'isActive', 'isAdministrative']);
@@ -155,10 +155,16 @@ describe('DemoAuthService (Fase 5.1)', () => {
 
     session.closeSession();
 
-    expect(session.selectedProfileId()).toBe('visitante');
-    expect(session.profileId()).toBe('visitante');
+    expect(session.selectedProfileId()).toBe('aprendiz');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
-    expect(auth.authenticate('', '', 'visitante').ok).toBe(false);
+    expect(auth.authenticate('', '', 'aprendiz').ok).toBe(false);
+  });
+
+  it('ya no expone AuthFacade: el acceso privilegiado pertenece a Supabase Auth', () => {
+    expect('signIn' in auth).toBe(false);
+    expect('signOut' in auth).toBe(false);
+    expect('authenticate' in auth).toBe(true);
   });
 });
 
@@ -168,6 +174,7 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
   let auth: DemoAuthService;
   let session: DemoSessionService;
   let permissions: DemoPermissionsService;
+  let verified: VerifiedTestIdentities;
 
   function register(
     username = 'instructor_registrado',
@@ -185,42 +192,35 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
     return result;
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     TestBed.configureTestingModule({});
     auth = TestBed.inject(DemoAuthService);
     session = TestBed.inject(DemoSessionService);
     permissions = TestBed.inject(DemoPermissionsService);
-    expect(auth.authenticate('admin_demo', 'Admin1234!', 'administrador').ok).toBe(true);
+    session.publishVerifiedIdentity(verified.administrador);
   });
 
-  it('1. el administrador autenticado puede registrar un instructor', () => {
+  it('1. el administrador validado puede registrar un instructor', () => {
     const result = expectOk(register());
 
     expect(result.message).toBe(DEMO_INSTRUCTOR_SUCCESS);
     expect(auth.instructorAccounts()).toHaveLength(2);
   });
 
-  it('2. un instructor autenticado no puede registrar cuentas', () => {
-    session.activateProfile('instructor');
+  it('2. un instructor validado no puede registrar cuentas', () => {
+    session.publishVerifiedIdentity(verified.instructor);
 
     expect(permissions.can('instructors:manage')).toBe(false);
     expect(register('instructor_no_autorizado')).toEqual({ ok: false, error: DEMO_INSTRUCTOR_PERMISSION_ERROR });
     expect(auth.instructorAccounts()).toHaveLength(1);
   });
 
-  it('3. un aprendiz autenticado no puede registrar cuentas', () => {
-    session.activateProfile('aprendiz');
+  it('3. un aprendiz no puede registrar cuentas', () => {
+    session.selectProfile('aprendiz');
 
     expect(permissions.can('instructors:manage')).toBe(false);
     expect(register('instructor_no_aprendiz')).toEqual({ ok: false, error: DEMO_INSTRUCTOR_PERMISSION_ERROR });
-    expect(auth.instructorAccounts()).toHaveLength(1);
-  });
-
-  it('4. un visitante no puede registrar cuentas', () => {
-    session.activateProfile('visitante');
-
-    expect(permissions.can('instructors:manage')).toBe(false);
-    expect(register('instructor_no_visitante')).toEqual({ ok: false, error: DEMO_INSTRUCTOR_PERMISSION_ERROR });
     expect(auth.instructorAccounts()).toHaveLength(1);
   });
 
@@ -301,7 +301,7 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
     expect(permissions.can('admin:access')).toBe(true);
   });
 
-  it('13. un instructor recién registrado puede iniciar sesión', () => {
+  it('13. una cuenta registrada valida credenciales y Supabase publica el rol Instructor', () => {
     const result = expectOk(register('instructor_nuevo_login'));
 
     session.beginCredentialSelection('instructor');
@@ -309,6 +309,8 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
       ok: true,
       profileId: 'instructor',
     });
+    session.publishVerifiedIdentity(verified.instructor);
+
     expect(session.profileId()).toBe('instructor');
     expect(permissions.can('alarm:control')).toBe(true);
     expect(permissions.can('admin:access')).toBe(false);
@@ -323,7 +325,7 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
       ok: false,
       error: DEMO_LOGIN_ERROR,
     });
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
     expect(permissions.can('admin:access')).toBe(false);
   });
@@ -337,7 +339,7 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
       ok: false,
       error: DEMO_INACTIVE_INSTRUCTOR_ERROR,
     });
-    expect(session.profileId()).toBe('visitante');
+    expect(session.profileId()).toBe('aprendiz');
     expect(permissions.can('alarm:control')).toBe(false);
   });
 
@@ -375,17 +377,15 @@ describe('DemoAuthService (Fase 5.1.1 · gestión de instructores)', () => {
     }
   });
 
-  it('20. conserva alarm:control para instructores autenticados y lo retira al cambiar de perfil', () => {
+  it('20. conserva alarm:control para instructores validados y lo retira al cambiar de perfil', () => {
     const result = expectOk(register('instructor_buzzer'));
 
     session.beginCredentialSelection('instructor');
     expect(auth.authenticate(result.account.username, NEW_PASSWORD, 'instructor').ok).toBe(true);
+    session.publishVerifiedIdentity(verified.instructor);
     expect(permissions.can('alarm:control')).toBe(true);
 
     session.selectProfile('aprendiz');
-    expect(permissions.can('alarm:control')).toBe(false);
-
-    session.selectProfile('visitante');
     expect(permissions.can('alarm:control')).toBe(false);
   });
 

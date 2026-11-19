@@ -82,13 +82,14 @@ const INITIAL_ACCOUNTS: readonly DemoStoredAccount[] = DEMO_CREDENTIALS.map((cre
 /**
  * Autenticación SIMULADA de la Fase 5.1 ampliada en la Fase 5.1.1.
  *
- * No es seguridad real: compara valores quemados en el cliente y solo activa
- * el perfil en la sesión cuando coinciden usuario, contraseña y perfil
- * solicitado. Las cuentas de Instructores registrados viven únicamente en una
- * signal de memoria: desaparecen al recargar. No emite tokens, no consulta
- * APIs, no persiste en localStorage/sessionStorage/IndexedDB, no escribe
- * contraseñas en logs ni las expone en el listado público. Debe seguir siendo
- * solo una demostración académica; nunca debe proteger hardware ni datos reales.
+ * No es seguridad real: compara valores quemados en el cliente. Fase 5.3.4.D:
+ * ya NO publica sesión, identidad ni permisos; solo valida credenciales ficticias
+ * para la gestión demo de instructores pendiente de migración. Las cuentas de
+ * Instructores registrados viven únicamente en una signal de memoria:
+ * desaparecen al recargar. No emite tokens, no consulta APIs, no persiste en
+ * localStorage/sessionStorage/IndexedDB, no escribe contraseñas en logs ni las
+ * expone en el listado público. Debe seguir siendo solo una demostración
+ * académica; nunca debe proteger hardware ni datos reales.
  */
 @Injectable({ providedIn: 'root' })
 export class DemoAuthService {
@@ -123,7 +124,12 @@ export class DemoAuthService {
       return { ok: false, error: DEMO_LOGIN_ERROR };
     }
 
-    this.session.activateProfile(account.profileId, account.id);
+    if (account.profileId !== 'administrador' && account.profileId !== 'instructor') {
+      return { ok: false, error: DEMO_LOGIN_ERROR };
+    }
+
+    // Las credenciales demo NO publican identidad: solo Supabase Auth, tras
+    // validar los claims del JWT, puede activar Administrador o Instructor.
     return { ok: true, profileId: account.profileId };
   }
 

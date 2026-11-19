@@ -2,6 +2,10 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { DemoSessionService } from '../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
 import { DEMO_ALERTS } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
@@ -11,6 +15,7 @@ import { AlertasPage } from './alertas.page';
 describe('AlertasPage', () => {
   let component: AlertasPage;
   let fixture: ComponentFixture<AlertasPage>;
+  let verified: VerifiedTestIdentities;
 
   const cards = (): HTMLElement[] =>
     Array.from(fixture.nativeElement.querySelectorAll('app-alert-card')) as HTMLElement[];
@@ -31,11 +36,12 @@ describe('AlertasPage', () => {
   const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     await TestBed.configureTestingModule({
       imports: [AlertasPage],
     }).compileComponents();
 
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     fixture = TestBed.createComponent(AlertasPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -283,8 +289,14 @@ describe('AlertasPage', () => {
     const initialIds = alertsState.alerts().map((alert) => alert.id);
 
     alarm.turnOn();
-    for (const profileId of ['visitante', 'aprendiz', 'instructor', 'administrador'] as const) {
-      session.selectProfile(profileId);
+    for (const profileId of ['aprendiz', 'instructor', 'administrador'] as const) {
+      if (profileId === 'administrador') {
+        session.publishVerifiedIdentity(verified.administrador);
+      } else if (profileId === 'instructor') {
+        session.publishVerifiedIdentity(verified.instructor);
+      } else {
+        session.selectProfile('aprendiz');
+      }
       fixture.detectChanges();
     }
 

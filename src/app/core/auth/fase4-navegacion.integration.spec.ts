@@ -5,7 +5,10 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../app.routes';
 
 import { ADMIN_ACCESS_DENIED_QUERY_PARAMS } from './admin-access.guard';
+import { AUTH_FACADE, type AuthFacade } from './auth-facade.contract';
 import { DemoSessionService } from './demo-session.service';
+import { INSTRUCTOR_ACCOUNT_REPOSITORY } from './instructor-account-repository.contract';
+import { verifiedTestIdentities, type VerifiedTestIdentities } from './testing/verified-session-test.util';
 
 vi.setConfig({ testTimeout: 20000 });
 
@@ -13,12 +16,32 @@ describe('Integración Fase 4.5 — navegación y permisos administrativos', () 
   let harness: RouterTestingHarness;
   let session: DemoSessionService;
   let router: Router;
+  let verified: VerifiedTestIdentities;
 
   const deniedUrl = '/tabs/mas?acceso=denegado';
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    const authFacade: AuthFacade = {
+      signIn: vi.fn<AuthFacade['signIn']>(),
+      signOut: vi.fn<AuthFacade['signOut']>(async () => undefined),
+    };
+
+    const instructorAccount = { id: 'ins-simulado', nombre: 'instructor_simulado', activo: true };
+
     await TestBed.configureTestingModule({
-      providers: [provideRouter(routes)],
+      providers: [
+        provideRouter(routes),
+        { provide: AUTH_FACADE, useValue: authFacade },
+        {
+          provide: INSTRUCTOR_ACCOUNT_REPOSITORY,
+          useValue: {
+            create: vi.fn().mockResolvedValue(instructorAccount),
+            list: vi.fn().mockResolvedValue([]),
+            setActive: vi.fn().mockResolvedValue(instructorAccount),
+          },
+        },
+      ],
     }).compileComponents();
 
     session = TestBed.inject(DemoSessionService);
@@ -31,10 +54,20 @@ describe('Integración Fase 4.5 — navegación y permisos administrativos', () 
     harness.detectChanges();
   };
 
-  it.each(['instructor', 'aprendiz', 'visitante'] as const)(
+  const activate = (profileId: 'administrador' | 'instructor' | 'aprendiz'): void => {
+    if (profileId === 'administrador') {
+      session.publishVerifiedIdentity(verified.administrador);
+    } else if (profileId === 'instructor') {
+      session.publishVerifiedIdentity(verified.instructor);
+    } else {
+      session.selectProfile('aprendiz');
+    }
+  };
+
+  it.each(['instructor', 'aprendiz'] as const)(
     'deniega la URL directa de administración para %s',
     async (profileId) => {
-      session.selectProfile(profileId);
+      activate(profileId);
       harness = await RouterTestingHarness.create();
 
       await navigateToAdmin();
@@ -46,7 +79,7 @@ describe('Integración Fase 4.5 — navegación y permisos administrativos', () 
   );
 
   it('permite la URL directa de administración al perfil administrador', async () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     harness = await RouterTestingHarness.create();
 
     await navigateToAdmin();
@@ -57,13 +90,13 @@ describe('Integración Fase 4.5 — navegación y permisos administrativos', () 
   });
 
   it('retira la vista administrativa cacheada al perder el permiso', async () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     harness = await RouterTestingHarness.create();
     await navigateToAdmin();
 
     expect(harness.routeNativeElement?.querySelector('.admin-users')).toBeTruthy();
 
-    session.selectProfile('visitante');
+    activate('aprendiz');
     TestBed.flushEffects();
     await harness.fixture.whenStable();
     harness.detectChanges();
@@ -74,11 +107,11 @@ describe('Integración Fase 4.5 — navegación y permisos administrativos', () 
   });
 
   it('no recupera contenido administrativo con la navegación Atrás', async () => {
-    session.selectProfile('administrador');
+    activate('administrador');
     harness = await RouterTestingHarness.create();
     await navigateToAdmin();
 
-    session.selectProfile('visitante');
+    activate('aprendiz');
     TestBed.flushEffects();
     await harness.fixture.whenStable();
     harness.detectChanges();

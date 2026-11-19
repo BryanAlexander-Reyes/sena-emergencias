@@ -4,21 +4,36 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 
 import { ADMIN_ACCESS_DENIED_PARAM, ADMIN_ACCESS_DENIED_VALUE } from '../../core/auth/admin-access.guard';
+import { AUTH_FACADE, type AuthFacade } from '../../core/auth/auth-facade.contract';
 import { DemoSessionService } from '../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
 
 import { MasPage } from './mas.page';
+
+const signOut = vi.fn<AuthFacade['signOut']>();
+const authFacade: AuthFacade = {
+  signIn: vi.fn<AuthFacade['signIn']>(),
+  signOut,
+};
 
 describe('MasPage', () => {
   let component: MasPage;
   let fixture: ComponentFixture<MasPage>;
   let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
 
   const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    signOut.mockReset();
+
     await TestBed.configureTestingModule({
       imports: [MasPage],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: AUTH_FACADE, useValue: authFacade }],
     }).compileComponents();
 
     session = TestBed.inject(DemoSessionService);
@@ -101,21 +116,21 @@ describe('MasPage', () => {
     ]);
   });
 
-  it('should show the visitor profile and the demo mode indicator by default', () => {
+  it('should show the learner profile and the demo mode indicator by default', () => {
     const section = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
     const changeLink = section.querySelector('.mas-profile__action') as HTMLAnchorElement;
 
     expect(section.textContent).toContain('Perfil de demostración');
     expect(section.textContent).toContain('Modo demostración');
     expect(section.textContent).toContain('Perfil activo');
-    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Visitante');
+    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Aprendiz de demostración');
     expect(section.textContent).toContain('Cambiar perfil');
     expect(changeLink.getAttribute('href')).toBe('/acceso');
     expect(section.textContent).not.toContain('Salir del perfil');
   });
 
   it('should render the active profile and allow leaving it', () => {
-    session.selectProfile('instructor');
+    session.publishVerifiedIdentity(verified.instructor);
     fixture.detectChanges();
 
     const section = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
@@ -130,8 +145,8 @@ describe('MasPage', () => {
     exitButton.click();
     fixture.detectChanges();
 
-    expect(session.profileId()).toBe('visitante');
-    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Visitante');
+    expect(session.profileId()).toBe('aprendiz');
+    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Aprendiz de demostración');
     expect(section.textContent).not.toContain('Salir del perfil');
   });
 
@@ -144,15 +159,15 @@ describe('MasPage', () => {
     expect(component.menu()).toHaveLength(5);
     expect(links()).not.toContain('/tabs/mas/administracion');
 
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     fixture.detectChanges();
 
     expect(component.menu()).toHaveLength(6);
     expect(pageText()).toContain('Administración');
-    expect(pageText()).toContain('Usuarios y roles ficticios');
+    expect(pageText()).toContain('Usuarios y roles registrados');
     expect(links().at(-1)).toBe('/tabs/mas/administracion');
 
-    session.selectProfile('visitante');
+    session.selectProfile('aprendiz');
     fixture.detectChanges();
 
     expect(component.menu()).toHaveLength(5);
@@ -166,7 +181,7 @@ describe('MasPage', () => {
     expect(changeLink.getAttribute('href')).toBe('/acceso');
     expect(section.textContent).toContain('Cambiar perfil');
 
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     fixture.detectChanges();
 
     expect(section.textContent).toContain('Salir del perfil');
@@ -178,19 +193,82 @@ describe('MasPage', () => {
     expect(content).toContain('Fase 2.7 · Menú Más');
     expect(content).toContain('v0.7');
   });
+
+  const exitButton = (): HTMLElement =>
+    Array.from(fixture.nativeElement.querySelectorAll('.mas-profile ion-button') as HTMLElement[]).find((button) =>
+      (button.textContent ?? '').includes('Salir del perfil'),
+    ) as HTMLElement;
+
+  it('cierra la sesión remota a través de AuthFacade al salir del perfil', async () => {
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    exitButton().click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(component.isSigningOut()).toBe(false);
+  });
+
+  it('vuelve a Aprendiz aunque falle el cierre remoto', async () => {
+    signOut.mockRejectedValueOnce(new Error('fallo remoto simulado'));
+    session.publishVerifiedIdentity(verified.instructor);
+    fixture.detectChanges();
+
+    exitButton().click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(session.authenticatedAccount()).toBeNull();
+    expect(component.isSigningOut()).toBe(false);
+  });
+
+  it('ignora clics duplicados mientras se cierra la sesión', async () => {
+    let resolveSignOut: () => void = () => undefined;
+    signOut.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSignOut = resolve;
+        }),
+    );
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    const button = exitButton();
+    button.click();
+    button.click();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(component.isSigningOut()).toBe(true);
+
+    resolveSignOut();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.isSigningOut()).toBe(false);
+  });
 });
 
 describe('MasPage acceso denegado', () => {
   let fixture: ComponentFixture<MasPage>;
   let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
 
   const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    signOut.mockReset();
+
     await TestBed.configureTestingModule({
       imports: [MasPage],
       providers: [
         provideRouter([]),
+        { provide: AUTH_FACADE, useValue: authFacade },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -220,7 +298,7 @@ describe('MasPage acceso denegado', () => {
   it('should hide the denial notice when the administrator profile is selected', () => {
     expect(fixture.nativeElement.querySelector('.mas-denied')).toBeTruthy();
 
-    session.selectProfile('administrador');
+    session.publishVerifiedIdentity(verified.administrador);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.mas-denied')).toBeNull();

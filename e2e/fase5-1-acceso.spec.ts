@@ -3,7 +3,6 @@ import { expect, test, type Page } from '@playwright/test';
 const ADMIN_LABEL = /Administrador de demostraci\u00f3n/;
 const INSTRUCTOR_LABEL = /Instructor de demostraci\u00f3n/;
 const LEARNER_LABEL = /Aprendiz de demostraci\u00f3n/;
-const VISITOR_LABEL = /Visitante/;
 const ADMIN_LINK = 'app-nav-card a[href="/tabs/mas/administracion"]';
 const ALARM_BUTTON = '.alarm-control__button';
 const LOGIN_ERROR = 'Credenciales incorrectas. Verifica el perfil seleccionado.';
@@ -22,7 +21,7 @@ async function openAcceso(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/tabs\/mas$/);
   await page.getByRole('link', { name: /Cambiar perfil/ }).click();
   await expect(page).toHaveURL(/\/acceso$/);
-  await expect(page.locator('button.acceso-option')).toHaveCount(4);
+  await expect(page.locator('button.acceso-option')).toHaveCount(3);
 }
 
 async function chooseProfile(page: Page, label: RegExp): Promise<void> {
@@ -55,7 +54,7 @@ test('navega desde Más hasta el formulario sin salir de /acceso', async ({ page
 
   await expect(page.getByRole('button', { name: ADMIN_LABEL })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.acceso-confirmation')).toContainText('Administrador de demostración');
-  await expect(page.locator('.acceso-current')).toContainText('Visitante');
+  await expect(page.locator('.acceso-current')).toContainText('Aprendiz de demostración');
   await expect(page.locator('.acceso-login')).toHaveCount(0);
 
   await showLogin(page);
@@ -137,7 +136,7 @@ test('seleccionar un perfil privilegiado no concede permisos antes del login', a
   await expect(page.locator('.alarm-control__note')).toBeVisible();
 
   await page.locator('ion-tab-button[tab="mas"]').click();
-  await expect(page.locator('.mas-profile__value')).toHaveText('Visitante');
+  await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });
 
@@ -150,25 +149,17 @@ test('Volver desde el formulario revoca la selección sin autenticar', async ({ 
 
   await expect(page).toHaveURL(/\/acceso$/);
   await expect(page.locator('.acceso-login')).toHaveCount(0);
-  await expect(page.locator('button.acceso-option')).toHaveCount(4);
+  await expect(page.locator('button.acceso-option')).toHaveCount(3);
   await expect(page.locator('.acceso-confirmation')).toHaveCount(0);
-  await expect(page.locator('.acceso-current')).toContainText('Visitante');
+  await expect(page.locator('.acceso-current')).toContainText('Aprendiz de demostración');
 
   await page.locator('.acceso-back').click();
   await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);
 });
 
-test('Aprendiz y Visitante acceden directamente sin formulario', async ({ page }) => {
+test('Aprendiz accede directamente sin formulario', async ({ page }) => {
   await openAcceso(page);
   await chooseProfile(page, LEARNER_LABEL);
-  await page.locator('.acceso-continue').click();
-
-  await expect(page).toHaveURL(/\/tabs\/inicio$/);
-  await expect(page.locator('.acceso-login')).toHaveCount(0);
-  await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);
-
-  await openAcceso(page);
-  await chooseProfile(page, VISITOR_LABEL);
   await page.locator('.acceso-continue').click();
 
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
@@ -247,7 +238,7 @@ test('conserva las rutas y el guard de administración existentes', async ({ pag
   await expect(page.locator('app-admin h1')).toHaveText('Administración');
 });
 
-test('la sesión vuelve a Visitante al recargar después del login', async ({ page }) => {
+test('la sesión vuelve a Aprendiz al recargar después del login', async ({ page }) => {
   await openAcceso(page);
   await chooseProfile(page, ADMIN_LABEL);
   await loginAs(page, 'administrador');
@@ -257,6 +248,6 @@ test('la sesión vuelve a Visitante al recargar después del login', async ({ pa
   await expect(page.locator(ALARM_BUTTON)).toHaveCount(0);
 
   await page.locator('ion-tab-button[tab="mas"]').click();
-  await expect(page.locator('.mas-profile__value')).toHaveText('Visitante');
+  await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });

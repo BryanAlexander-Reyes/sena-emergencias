@@ -1,4 +1,4 @@
-export type DemoAdminRole = 'administrador' | 'instructor' | 'aprendiz' | 'visitante';
+export type DemoAdminRole = 'administrador' | 'instructor' | 'aprendiz';
 export type DemoAdminUserStatus = 'activo' | 'solo-lectura';
 
 export interface DemoAdminUser {
@@ -9,13 +9,12 @@ export interface DemoAdminUser {
   readonly scope: string;
 }
 
-export const DEMO_ADMIN_ROLES: readonly DemoAdminRole[] = ['administrador', 'instructor', 'aprendiz', 'visitante'];
+export const DEMO_ADMIN_ROLES: readonly DemoAdminRole[] = ['administrador', 'instructor', 'aprendiz'];
 
 export const DEMO_ADMIN_ROLE_LABELS: Readonly<Record<DemoAdminRole, string>> = {
   administrador: 'Administrador',
   instructor: 'Instructor',
   aprendiz: 'Aprendiz',
-  visitante: 'Visitante',
 };
 
 export const DEMO_ADMIN_STATUS_LABELS: Readonly<Record<DemoAdminUserStatus, string>> = {
@@ -44,12 +43,5 @@ export const DEMO_ADMIN_USERS: readonly DemoAdminUser[] = [
     role: 'aprendiz',
     status: 'activo',
     scope: 'Exploración guiada del monitoreo',
-  },
-  {
-    id: 'USR-DMO-004',
-    name: 'Visitante Demo',
-    role: 'visitante',
-    status: 'solo-lectura',
-    scope: 'Consulta de información general',
   },
 ];

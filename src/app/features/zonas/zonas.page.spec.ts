@@ -3,6 +3,10 @@ import { TestBed } from '@angular/core/testing';
 import { AlertController } from '@ionic/angular';
 
 import { DemoSessionService } from '../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
 import { DEMO_ZONES, getZoneOccupancy } from '../../core/data/demo-monitoring';
 import { MonitoringStateService } from '../../core/services/monitoring-state.service';
 
@@ -11,13 +15,15 @@ import { ZonasPage } from './zonas.page';
 describe('ZonasPage', () => {
   let component: ZonasPage;
   let fixture: ComponentFixture<ZonasPage>;
+  let verified: VerifiedTestIdentities;
 
   beforeEach(async () => {
+    verified = await verifiedTestIdentities();
     await TestBed.configureTestingModule({
       imports: [ZonasPage],
     }).compileComponents();
 
-    TestBed.inject(DemoSessionService).selectProfile('administrador');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
     fixture = TestBed.createComponent(ZonasPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -81,7 +87,7 @@ describe('ZonasPage', () => {
     const zone = DEMO_ZONES[0];
     const people = monitoring.zoneById(zone.id)?.people;
 
-    TestBed.inject(DemoSessionService).selectProfile('instructor');
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.instructor);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.zonas-simulation__reset')).toBeNull();
@@ -161,7 +167,7 @@ describe('ZonasPage', () => {
     const destructive = buttons?.find((button) => button.role === 'destructive');
     expect(destructive?.handler).toBeTypeOf('function');
 
-    TestBed.inject(DemoSessionService).selectProfile('visitante');
+    TestBed.inject(DemoSessionService).selectProfile('aprendiz');
     destructive?.handler?.();
 
     expect(monitoring.zoneById(zoneId)?.people).toBe(people);

@@ -56,7 +56,12 @@
             Cambiar perfil
           </ion-button>
           @if (session.isActive()) {
-          <ion-button class="app-button app-button--ghost mas-profile__action" type="button" (click)="closeSession()">
+          <ion-button
+            class="app-button app-button--ghost mas-profile__action"
+            type="button"
+            [disabled]="isSigningOut()"
+            (click)="closeSession()"
+          >
             Salir del perfil
           </ion-button>
           }
