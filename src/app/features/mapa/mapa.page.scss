@@ -161,11 +161,6 @@
   filter: drop-shadow(0 0 5px rgba(var(--zone-rgb), 0.32));
 }
 
-.map-zone--normal {
-  --zone-color: var(--app-green);
-  --zone-rgb: 30, 122, 76;
-}
-
 .map-zone--warning {
   --zone-color: var(--app-yellow);
   --zone-rgb: 233, 180, 76;
@@ -314,11 +309,6 @@
   inset: 0 auto 0 0;
   width: 4px;
   background: var(--detail-color);
-}
-
-.map-detail--normal {
-  --detail-color: var(--app-green);
-  --detail-rgb: 30, 122, 76;
 }
 
 .map-detail--warning {

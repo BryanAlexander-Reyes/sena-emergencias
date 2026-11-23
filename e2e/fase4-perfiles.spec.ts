@@ -64,7 +64,7 @@ test('inicia como aprendiz sin opciones administrativas', async ({ page }) => {
   await openMas(page);
 
   await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(5);
+  await expect(page.locator('app-nav-card')).toHaveCount(6);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });
 
@@ -84,7 +84,7 @@ test('navega a Acceso y selecciona el perfil administrador', async ({ page }) =>
   await expect(page).toHaveURL(/\/tabs\/inicio$/);
   await openMas(page);
   await expect(page.locator('.mas-profile__value')).toHaveText('Administrador de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(6);
+  await expect(page.locator('app-nav-card')).toHaveCount(7);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(1);
 });
 
@@ -110,7 +110,7 @@ test('cambia de administrador a instructor y retira las opciones administrativas
   await openMas(page);
 
   await expect(page.locator('.mas-profile__value')).toHaveText('Instructor de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(5);
+  await expect(page.locator('app-nav-card')).toHaveCount(6);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });
 
@@ -154,7 +154,7 @@ test('vuelve al perfil aprendiz después de recargar', async ({ page }) => {
   await page.reload();
 
   await expect(page.locator('.mas-profile__value')).toHaveText('Aprendiz de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(5);
+  await expect(page.locator('app-nav-card')).toHaveCount(6);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 });
 

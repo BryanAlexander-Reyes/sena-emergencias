@@ -56,6 +56,7 @@ describe('DemoPermissionsService', () => {
       expect(permissions.can('sensors:reset')).toBe(false);
       expect(permissions.can('alerts:review')).toBe(false);
       expect(permissions.can('admin:access')).toBe(false);
+      expect(permissions.can('zones:manage')).toBe(false);
     }
 
     activate('instructor');
@@ -108,6 +109,13 @@ describe('DemoPermissionsService', () => {
     }
   });
 
+  it('reserva zones:manage exclusivamente para administrador validado', () => {
+    for (const profile of DEMO_PROFILES) {
+      activate(profile.id);
+      expect(permissions.can('zones:manage')).toBe(profile.id === 'administrador');
+    }
+  });
+
   it('no concede privilegios durante inicialización ni revalidación', () => {
     activate('administrador');
     expect(permissions.can('admin:access')).toBe(true);
@@ -116,6 +124,7 @@ describe('DemoPermissionsService', () => {
     expect(session.status()).toBe('inicializando');
     expect(permissions.can('admin:access')).toBe(false);
     expect(permissions.can('alarm:control')).toBe(false);
+    expect(permissions.can('zones:manage')).toBe(false);
 
     session.beginInitialization();
     expect(permissions.granted()).toEqual([]);

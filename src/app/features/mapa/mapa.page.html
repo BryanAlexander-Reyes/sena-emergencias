@@ -6,7 +6,16 @@
         eyebrow="Mapa"
         title="Mapa de monitoreo"
         description="Visualización de zonas y ocupación"
-        badge="MODO DEMOSTRACIÓN"
+        [badge]="
+          zoneConfigMode() === 'remote' ? 'ZONAS REMOTAS · OCUPACIÓN SIMULADA' : 'ZONAS LOCALES · OCUPACIÓN SIMULADA'
+        "
+      />
+
+      <app-zone-config-status
+        [remote]="zoneConfigMode() === 'remote'"
+        [status]="zoneConfigStatus()"
+        [message]="zoneConfigError()?.message ?? null"
+        (retry)="retryZoneConfigs()"
       />
 
       <div class="map-layout">
@@ -133,6 +142,12 @@
                   <text class="map-sensor__label" x="13" y="11.5" text-anchor="middle">LED</text>
                 </g>
               </svg>
+              @if (!hasMapZones()) {
+              <p class="map-plan__meta" role="status">
+                <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                No hay zonas disponibles para mostrar en el plano.
+              </p>
+              }
             </div>
 
             <p class="map-plan__meta">
@@ -149,32 +164,33 @@
         </div>
 
         <div class="map-layout__aside">
+          @if (selectedZone(); as selected) {
           <section [class]="detailClass()" aria-live="polite" aria-labelledby="map-detail-title">
             <header class="map-detail__head">
               <span class="map-detail__icon">
-                <ion-icon [name]="selectedZone().zone.icon" aria-hidden="true"></ion-icon>
+                <ion-icon [name]="selected.zone.icon" aria-hidden="true"></ion-icon>
               </span>
 
               <div class="map-detail__identity">
-                <p class="app-overline">Zona seleccionada · {{ selectedZone().layout.overline }}</p>
-                <h2 id="map-detail-title" class="map-detail__name">{{ selectedZone().zone.name }}</h2>
+                <p class="app-overline">Zona seleccionada · {{ selected.layout.overline }}</p>
+                <h2 id="map-detail-title" class="map-detail__name">{{ selected.zone.name }}</h2>
               </div>
 
-              <span class="map-detail__badge">{{ selectedZone().statusLabel }}</span>
+              <span class="map-detail__badge">{{ selected.statusLabel }}</span>
             </header>
 
             <dl class="map-detail__metrics">
               <div class="map-detail__metric">
                 <dt>Personas</dt>
-                <dd>{{ selectedZone().zone.people }}</dd>
+                <dd>{{ selected.zone.people }}</dd>
               </div>
               <div class="map-detail__metric">
                 <dt>Capacidad</dt>
-                <dd>{{ selectedZone().zone.capacity }}</dd>
+                <dd>{{ selected.zone.capacity }}</dd>
               </div>
               <div class="map-detail__metric">
                 <dt>Ocupación</dt>
-                <dd>{{ selectedZone().occupancy }}%</dd>
+                <dd>{{ selected.occupancy }}%</dd>
               </div>
             </dl>
 
@@ -183,20 +199,42 @@
               role="progressbar"
               aria-valuemin="0"
               aria-valuemax="100"
-              [attr.aria-valuenow]="selectedZone().occupancy"
-              [attr.aria-valuetext]="selectedZone().occupancy + '% · ' + selectedZone().statusLabel"
-              [attr.aria-label]="'Ocupación de ' + selectedZone().zone.name"
+              [attr.aria-valuenow]="selected.occupancy"
+              [attr.aria-valuetext]="selected.occupancy + '% · ' + selected.statusLabel"
+              [attr.aria-label]="'Ocupación de ' + selected.zone.name"
             >
               <span class="app-progress__fill map-detail__progress-fill" [style.width.%]="selectedProgress()"></span>
             </div>
 
-            <p class="map-detail__note">Datos simulados · Toca otra zona del plano para actualizar esta tarjeta.</p>
+            <p class="map-detail__note">Ocupación simulada · Toca otra zona del plano para actualizar esta tarjeta.</p>
           </section>
+          } @else {
+          <section
+            class="app-card map-detail map-detail--empty"
+            style="--detail-color: var(--app-text-muted); --detail-rgb: 120, 130, 125"
+            role="status"
+            aria-live="polite"
+            aria-labelledby="map-detail-title"
+          >
+            <header class="map-detail__head">
+              <span class="map-detail__icon">
+                <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+              </span>
+              <div class="map-detail__identity">
+                <p class="app-overline">Zona seleccionada</p>
+                <h2 id="map-detail-title" class="map-detail__name">Sin zonas para mostrar</h2>
+              </div>
+            </header>
+            <p class="map-detail__note">
+              No hay zonas con geometría válida en el plano. Cuando estén disponibles aparecerán aquí.
+            </p>
+          </section>
+          }
 
           <section class="app-card map-legend" aria-labelledby="map-legend-title">
             <div class="app-section-head">
               <h2 id="map-legend-title" class="app-card-title">Leyenda del plano</h2>
-              <span class="app-badge">DEMO</span>
+              <span class="app-badge">OCUPACIÓN SIMULADA</span>
             </div>
 
             <ul class="map-legend__states" aria-label="Estados de ocupación">

@@ -59,14 +59,16 @@
   font-weight: 700;
 }
 
-.admin-summary {
+.admin-summary,
+.zone-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--app-space-3);
   margin-bottom: var(--app-space-5);
 }
 
-.admin-summary__card {
+.admin-summary__card,
+.zone-summary__card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -90,15 +92,17 @@
   color: rgba(255, 255, 255, 0.82);
 }
 
-.admin-summary__value {
+.admin-summary__value,
+.zone-summary__value {
   color: var(--sena-brand-900);
-  font-size: clamp(1.4rem, 3.6vw, 1.8rem);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
-.admin-summary__label {
+.admin-summary__label,
+.zone-summary__label {
   color: var(--app-text-muted);
   font-size: 0.66rem;
   font-weight: 700;
@@ -109,6 +113,8 @@
 
 .admin-roles,
 .admin-users,
+.zone-management,
+.zone-form-card,
 .instructor-management,
 .admin-scope,
 .admin-denied {
@@ -185,13 +191,15 @@
   color: var(--color-on-brand);
 }
 
-.admin-users__list {
+.admin-users__list,
+.zone-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--app-space-3);
 }
 
-.admin-user {
+.admin-user,
+.admin-zone {
   position: relative;
   min-width: 0;
   overflow: hidden;
@@ -213,7 +221,8 @@
   }
 }
 
-.admin-user__head {
+.admin-user__head,
+.admin-zone__head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -234,12 +243,14 @@
   font-size: 1.15rem;
 }
 
-.admin-user__identity {
+.admin-user__identity,
+.admin-zone__identity {
   flex: 1 1 140px;
   min-width: 0;
 }
 
-.admin-user__name {
+.admin-user__name,
+.admin-zone__name {
   margin: 0;
   color: var(--app-text-strong);
   font-size: 0.96rem;
@@ -247,7 +258,8 @@
   overflow-wrap: anywhere;
 }
 
-.admin-user__id {
+.admin-user__id,
+.admin-zone__id {
   margin: 2px 0 0;
   color: var(--app-text-muted);
   font-size: 0.68rem;
@@ -255,7 +267,8 @@
   overflow-wrap: anywhere;
 }
 
-.admin-user__status {
+.admin-user__status,
+.admin-zone__status {
   flex: 0 0 auto;
   padding: 0.3rem 0.65rem;
   border: 1px solid rgba(30, 122, 76, 0.34);
@@ -266,20 +279,23 @@
   font-weight: 700;
 }
 
-.admin-user__status[data-status='inactivo'] {
+.admin-user__status[data-status='inactivo'],
+.admin-zone__status[data-status='inactivo'] {
   border-color: rgba(233, 180, 76, 0.55);
   background: var(--app-yellow-soft);
   color: var(--color-warning);
 }
 
-.admin-user__data {
+.admin-user__data,
+.admin-zone__data {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--app-space-3);
   margin: var(--app-space-4) 0 0;
 }
 
-.admin-user__data-item {
+.admin-user__data-item,
+.admin-zone__data-item {
   min-width: 0;
   padding: var(--app-space-2) var(--app-space-3);
   border: 1px solid var(--app-border);
@@ -287,7 +303,8 @@
   background: var(--sena-surface-raised);
 }
 
-.admin-user__data-item dt {
+.admin-user__data-item dt,
+.admin-zone__data-item dt {
   color: var(--app-text-muted);
   font-size: 0.6rem;
   font-weight: 700;
@@ -295,7 +312,8 @@
   text-transform: uppercase;
 }
 
-.admin-user__data-item dd {
+.admin-user__data-item dd,
+.admin-zone__data-item dd {
   margin: 3px 0 0;
   color: var(--app-text);
   font-size: 0.78rem;
@@ -305,7 +323,9 @@
 }
 
 .admin-users__empty,
-.admin-users__loading {
+.admin-users__loading,
+.zone-list__empty,
+.zone-list__loading {
   margin: 0;
   padding: var(--app-space-4);
   border: 1px dashed var(--app-border);
@@ -341,7 +361,9 @@
   }
 }
 
-.admin-users__success {
+.admin-users__success,
+.zone-status__success,
+.zone-form__success {
   margin: 0 0 var(--app-space-3);
   padding: var(--app-space-3);
   border: 1px solid rgba(30, 122, 76, 0.34);
@@ -354,7 +376,8 @@
   line-height: 1.5;
 }
 
-.admin-user__actions {
+.admin-user__actions,
+.admin-zone__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -364,7 +387,8 @@
   border-top: 1px solid var(--app-border);
 }
 
-.admin-user__actions ion-button {
+.admin-user__actions ion-button,
+.admin-zone__actions ion-button {
   --background: transparent;
   --border-color: rgba(57, 168, 107, 0.55);
   --color: var(--sena-brand-900);
@@ -375,7 +399,8 @@
   font-size: 0.74rem;
 }
 
-.admin-user__action-error {
+.admin-user__action-error,
+.admin-zone__action-error {
   display: flex;
   flex: 1 1 100%;
   flex-wrap: wrap;
@@ -387,7 +412,8 @@
   background: var(--app-yellow-soft);
 }
 
-.admin-user__action-error p {
+.admin-user__action-error p,
+.admin-zone__action-error p {
   flex: 1 1 auto;
   margin: 0;
   color: var(--color-warning);
@@ -396,7 +422,8 @@
   line-height: 1.45;
 }
 
-.admin-user__action-error ion-button {
+.admin-user__action-error ion-button,
+.zone-item__retry {
   --color: var(--color-warning);
   --padding-start: var(--app-space-3);
   --padding-end: var(--app-space-3);
@@ -406,7 +433,8 @@
   font-weight: 700;
 }
 
-.admin-users__error {
+.admin-users__error,
+.zone-list__error {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -418,7 +446,8 @@
   background: var(--app-yellow-soft);
 }
 
-.admin-users__error-text {
+.admin-users__error-text,
+.zone-list__error-text {
   margin: 0;
   color: var(--color-warning);
   font-size: 0.8rem;
@@ -426,7 +455,8 @@
   line-height: 1.5;
 }
 
-.admin-users__retry {
+.admin-users__retry,
+.zone-list__retry {
   --padding-start: var(--app-space-3);
   --padding-end: var(--app-space-3);
   min-height: 44px;
@@ -448,7 +478,8 @@
   overflow-wrap: anywhere;
 }
 
-.instructor-form {
+.instructor-form,
+.zone-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--app-space-4);
@@ -469,7 +500,9 @@
 }
 
 .instructor-form__error,
-.instructor-form__success {
+.instructor-form__success,
+.zone-form__error,
+.zone-form__success {
   grid-column: 1 / -1;
   margin: 0;
   padding: var(--app-space-3);
@@ -492,7 +525,8 @@
   color: var(--color-success);
 }
 
-.instructor-form__submit {
+.instructor-form__submit,
+.zone-form__submit {
   grid-column: 1 / -1;
   justify-self: start;
 }
@@ -540,6 +574,45 @@
   color: var(--color-warning);
 }
 
+/* ==========================================================================
+   ZONAS.6 · Gestión administrativa de zonas (reutiliza estilos de usuarios)
+   ========================================================================== */
+
+.zone-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.zone-form__input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 var(--app-space-3);
+  border: 1px solid rgba(21, 61, 50, 0.18);
+  border-radius: var(--app-radius-md);
+  background: var(--sena-surface-raised);
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.zone-form__input:focus-visible {
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
+}
+
+.zone-form__flags,
+.zone-form__geometry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-3);
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  grid-column: 1 / -1;
+}
 @include bp.sm-up {
   .admin-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -549,12 +622,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-users__list {
+  .admin-users__list,
+.zone-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .instructor-form {
+  .instructor-form,
+  .zone-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .zone-form__field--wide {
+    grid-column: 1 / -1;
   }
 }
 
@@ -569,7 +648,8 @@
     grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
   }
 
-  .admin-users__list {
+  .admin-users__list,
+  .zone-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -578,21 +658,26 @@
   .admin-session,
   .admin-summary__card,
   .admin-user,
+  .admin-zone,
   .admin-users__error,
   .instructor-management,
+  .zone-management,
+  .zone-form-card,
   .admin-scope,
   .admin-denied {
     padding: var(--app-space-3);
   }
 
-  .admin-user__data {
+  .admin-user__data,
+  .admin-zone__data {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .admin-users__filter,
-  .admin-user {
+  .admin-user,
+.admin-zone {
     transition: none;
   }
 

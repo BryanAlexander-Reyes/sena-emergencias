@@ -18,17 +18,31 @@ import {
   verifiedTestIdentities,
   type VerifiedTestIdentities,
 } from '../../core/auth/testing/verified-session-test.util';
+import type { ZoneConfig } from '../../core/data/zone-config.types';
+import { zoneAdminFormFromConfig, type ZoneAdminFormValue } from '../../core/data/zones-admin.input';
+import { ZONES_ADMIN_REPOSITORY } from '../../core/data/zones-admin.repository.contract';
+import {
+  ZONES_ADMIN_REPOSITORY_MESSAGES,
+  ZonesAdminRepositoryError,
+} from '../../core/data/zones-admin.repository.errors';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { DemoAssistantService } from '../../core/services/demo-assistant.service';
 import { MonitoringStateService } from '../../core/services/monitoring-state.service';
 import { SimulatedSensorsService } from '../../core/services/simulated-sensors.service';
 import { SimulationHistoryService } from '../../core/services/simulation-history.service';
+import { ZoneConfigStateService } from '../../core/services/zone-config-state.service';
 
 import {
   INSTRUCTOR_CREATED_SUCCESS,
   INSTRUCTOR_DEACTIVATED_SUCCESS,
   INSTRUCTOR_MANAGE_PERMISSION_ERROR,
   INSTRUCTOR_REACTIVATED_SUCCESS,
+  ZONE_ACTIVATED_SUCCESS,
+  ZONE_CREATED_SUCCESS,
+  ZONE_DEACTIVATED_SUCCESS,
+  ZONE_UPDATED_SUCCESS,
+  ZONES_ADMIN_PERMISSION_ERROR,
+  ZONES_LOADING_MESSAGE,
   AdminPage,
 } from './admin.page';
 
@@ -77,9 +91,78 @@ const VALID_INPUT = {
   password: 'clave-simulada-123',
 } as const;
 
+const ZONES: readonly ZoneConfig[] = [
+  {
+    id: 'cafeteria',
+    codigo: 'A',
+    nombre: 'Cafetería',
+    capacidad: 50,
+    icono: 'cafe-outline',
+    tipo: 'cafeteria',
+    segura: false,
+    activo: true,
+    publico: true,
+    map: { x: 28, y: 52, width: 144, height: 112, labelX: 100, labelY: 108 },
+  },
+  {
+    id: 'biblioteca',
+    codigo: 'B',
+    nombre: 'Biblioteca',
+    capacidad: 60,
+    icono: 'book-outline',
+    tipo: 'biblioteca',
+    segura: false,
+    activo: true,
+    publico: true,
+    map: { x: 188, y: 52, width: 144, height: 112, labelX: 260, labelY: 108 },
+  },
+  {
+    id: 'pasillo-principal',
+    codigo: 'C',
+    nombre: 'Pasillo principal',
+    capacidad: 50,
+    icono: 'walk-outline',
+    tipo: 'pasillo',
+    segura: false,
+    activo: true,
+    publico: true,
+    map: { x: 28, y: 200, width: 304, height: 96, labelX: 180, labelY: 238 },
+  },
+  {
+    id: 'zona-segura',
+    codigo: 'Zona segura',
+    nombre: 'Punto de encuentro',
+    capacidad: 100,
+    icono: 'shield-checkmark-outline',
+    tipo: 'punto-encuentro',
+    segura: true,
+    activo: true,
+    publico: true,
+    map: { x: 88, y: 342, width: 184, height: 100, labelX: 180, labelY: 392 },
+  },
+];
+
+const NEW_ZONE: ZoneConfig = {
+  id: 'sala-nueva',
+  codigo: 'N1',
+  nombre: 'Sala nueva',
+  capacidad: 40,
+  icono: 'book-outline',
+  tipo: 'biblioteca',
+  segura: false,
+  activo: true,
+  publico: true,
+  map: { x: 12, y: 24, width: 100, height: 80, labelX: 62, labelY: 64 },
+};
+
 type CreateInstructorMock = Mock<(input: CreateInstructorInput) => Promise<InstructorAccount>>;
 type ListUsersMock = Mock<() => Promise<readonly AdminUserAccount[]>>;
 type SetActiveMock = Mock<(id: string, activo: boolean) => Promise<InstructorAccount>>;
+type ListZonesMock = Mock<() => Promise<readonly ZoneConfig[]>>;
+type CreateZoneMock = Mock<(input: ZoneConfig) => Promise<ZoneConfig>>;
+type UpdateZoneMock = Mock<(id: string, input: ZoneConfig) => Promise<ZoneConfig>>;
+type SetZoneActiveMock = Mock<(id: string, activo: boolean) => Promise<ZoneConfig>>;
+type RefreshZonesMock = Mock<() => Promise<void>>;
 type AlertButtonLike = { readonly text?: string; readonly role?: string; readonly handler?: () => void };
 
 describe('AdminPage', () => {
@@ -89,6 +172,11 @@ describe('AdminPage', () => {
   let listUsers: ListUsersMock;
   let createInstructor: CreateInstructorMock;
   let setActive: SetActiveMock;
+  let listZones: ListZonesMock;
+  let createZone: CreateZoneMock;
+  let updateZone: UpdateZoneMock;
+  let setZoneActive: SetZoneActiveMock;
+  let refreshZones: RefreshZonesMock;
   let alertCreate: Mock;
   let dismissRole: string;
 
@@ -105,7 +193,10 @@ describe('AdminPage', () => {
     dismissRole = role;
   }
 
-  async function setUp(listImpl: () => Promise<readonly AdminUserAccount[]> = async () => REAL_USERS): Promise<void> {
+  async function setUp(
+    listImpl: () => Promise<readonly AdminUserAccount[]> = async () => REAL_USERS,
+    zonesImpl: () => Promise<readonly ZoneConfig[]> = async () => ZONES,
+  ): Promise<void> {
     listUsers = vi.fn(listImpl);
     createInstructor = vi
       .fn<(input: CreateInstructorInput) => Promise<InstructorAccount>>()
@@ -113,6 +204,15 @@ describe('AdminPage', () => {
     setActive = vi
       .fn<(id: string, activo: boolean) => Promise<InstructorAccount>>()
       .mockResolvedValue(STATUS_UPDATED_ACCOUNT);
+    listZones = vi.fn(zonesImpl);
+    createZone = vi.fn(async (input: ZoneConfig) => ({ ...input }));
+    updateZone = vi.fn(async (id: string, input: ZoneConfig) => ({ ...input, id }));
+    setZoneActive = vi.fn(async (id: string, activo: boolean) => {
+      const zone = ZONES.find((item) => item.id === id) ?? NEW_ZONE;
+
+      return { ...zone, activo };
+    });
+    refreshZones = vi.fn(async () => undefined);
     dismissRole = 'confirm';
 
     await TestBed.configureTestingModule({
@@ -127,8 +227,21 @@ describe('AdminPage', () => {
             setActive,
           },
         },
+        {
+          provide: ZONES_ADMIN_REPOSITORY,
+          useValue: {
+            listAll: listZones,
+            create: createZone,
+            update: updateZone,
+            setActive: setZoneActive,
+          },
+        },
       ],
     }).compileComponents();
+
+    // Se espía el store real: un objeto parcial rompería los computed de
+    // MonitoringStateService, que también consume `mode()` y `activeConfigs()`.
+    refreshZones = vi.spyOn(TestBed.inject(ZoneConfigStateService), 'refreshAfterWrite').mockResolvedValue(undefined);
 
     alertCreate = vi.spyOn(TestBed.inject(AlertController), 'create').mockImplementation(async () => {
       return {
@@ -154,6 +267,11 @@ describe('AdminPage', () => {
 
   function fillValidInstructorForm(): void {
     fillInstructorForm(VALID_INPUT.nombre, VALID_INPUT.password, VALID_INPUT.password);
+  }
+
+  function setZoneForm(config: ZoneConfig, overrides: Partial<ZoneAdminFormValue> = {}): void {
+    fixture.componentInstance.zoneForm.set({ ...zoneAdminFormFromConfig(config), ...overrides });
+    fixture.detectChanges();
   }
 
   function expectFieldsPreserved(): void {
@@ -960,6 +1078,381 @@ describe('AdminPage', () => {
       expect(history.isEmpty()).toBe(true);
       expect(sensors.totalDevices()).toBe(6);
       expect(assistant.messages()).toHaveLength(1);
+    });
+  });
+
+  describe('gestión de zonas (ZONAS.6)', () => {
+    it('carga y conserva las cuatro zonas del servidor con su resumen', async () => {
+      await setUp();
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(listZones).toHaveBeenCalledTimes(1);
+      expect(listZones).toHaveBeenCalledWith();
+      expect(page.canManageZones()).toBe(true);
+      expect(page.zones()).toEqual(ZONES);
+      expect(page.zones().map((zone) => zone.id)).toEqual([
+        'cafeteria',
+        'biblioteca',
+        'pasillo-principal',
+        'zona-segura',
+      ]);
+      expect(page.activeZonesCount()).toBe(4);
+      expect(page.inactiveZonesCount()).toBe(0);
+      expect(page.safeZoneName()).toBe('Punto de encuentro');
+
+      const cards = Array.from(queryAll('.admin-zone'));
+      expect(cards).toHaveLength(4);
+      expect(cards.map((card) => card.getAttribute('data-zone-id'))).toEqual([
+        'cafeteria',
+        'biblioteca',
+        'pasillo-principal',
+        'zona-segura',
+      ]);
+      expect(pageText()).toContain('Gestión de zonas');
+      expect(pageText()).toContain('Cafetería');
+      expect(pageText()).toContain('Punto de encuentro');
+    });
+
+    it('refleja estados activos e inactivos en el listado', async () => {
+      const mixed: readonly ZoneConfig[] = ZONES.map((zone, index) =>
+        index === 1 ? { ...zone, activo: false } : zone,
+      );
+      await setUp(
+        async () => REAL_USERS,
+        async () => mixed,
+      );
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(page.activeZonesCount()).toBe(3);
+      expect(page.inactiveZonesCount()).toBe(1);
+      expect(Array.from(queryAll('.admin-zone__status')).map((item) => item.textContent?.trim())).toEqual([
+        'Activa',
+        'Inactiva',
+        'Activa',
+        'Activa',
+      ]);
+      expect(query('.admin-zone[data-zone-id="biblioteca"] .zone-item__activate')).not.toBeNull();
+    });
+
+    it('muestra el estado de carga mientras consulta las zonas', async () => {
+      let resolveZones: ((zones: readonly ZoneConfig[]) => void) | undefined;
+      await setUp(
+        async () => REAL_USERS,
+        () =>
+          new Promise<readonly ZoneConfig[]>((resolve) => {
+            resolveZones = resolve;
+          }),
+      );
+
+      expect(fixture.componentInstance.zonesLoading()).toBe(true);
+      expect(pageText()).toContain(ZONES_LOADING_MESSAGE);
+      expect(queryAll('.admin-zone')).toHaveLength(0);
+
+      resolveZones?.(ZONES);
+      await settle();
+
+      expect(fixture.componentInstance.zonesLoading()).toBe(false);
+      expect(queryAll('.admin-zone')).toHaveLength(4);
+    });
+
+    it('muestra un error de carga y permite reintentar sin inventar zonas', async () => {
+      await setUp(
+        async () => REAL_USERS,
+        async () => {
+          throw new ZonesAdminRepositoryError('FORBIDDEN');
+        },
+      );
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(page.zones()).toEqual([]);
+      expect(page.zonesError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.FORBIDDEN);
+      expect(pageText()).toContain(ZONES_ADMIN_REPOSITORY_MESSAGES.FORBIDDEN);
+      expect(query('.zone-list__retry')).not.toBeNull();
+    });
+
+    it('crea una zona válida, refresca la store y recarga el listado', async () => {
+      await setUp();
+      await settle();
+      setZoneForm(NEW_ZONE);
+
+      await fixture.componentInstance.saveZone();
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(createZone).toHaveBeenCalledTimes(1);
+      expect(createZone).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'sala-nueva', nombre: 'Sala nueva', capacidad: 40 }),
+      );
+      expect(updateZone).not.toHaveBeenCalled();
+      expect(page.zoneFormSuccess()).toBe(ZONE_CREATED_SUCCESS);
+      expect(page.zoneFormError()).toBeNull();
+      expect(page.savingZone()).toBe(false);
+      expect(page.editingZoneId()).toBeNull();
+      expect(page.zoneForm().id).toBe('');
+      expect(refreshZones).toHaveBeenCalledTimes(1);
+      expect(listZones).toHaveBeenCalledTimes(2);
+      expect(pageText()).toContain(ZONE_CREATED_SUCCESS);
+    });
+
+    it('edita una zona conservando el identificador sin crear otra', async () => {
+      await setUp();
+      await settle();
+      const zone = ZONES[0];
+      fixture.componentInstance.startEditZone(zone);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.editingZoneId()).toBe('cafeteria');
+      expect(fixture.componentInstance.zoneForm().id).toBe('cafeteria');
+      expect((query('.zone-form__id') as HTMLInputElement | null)?.disabled).toBe(true);
+
+      setZoneForm(zone, { nombre: 'Cafetería actualizada' });
+      await fixture.componentInstance.saveZone();
+      await settle();
+
+      expect(updateZone).toHaveBeenCalledTimes(1);
+      expect(updateZone).toHaveBeenCalledWith(
+        'cafeteria',
+        expect.objectContaining({ id: 'cafeteria', nombre: 'Cafetería actualizada' }),
+      );
+      expect(createZone).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.zoneFormSuccess()).toBe(ZONE_UPDATED_SUCCESS);
+      expect(refreshZones).toHaveBeenCalledTimes(1);
+    });
+
+    it('impide cambiar el identificador desde el formulario de edición', async () => {
+      await setUp();
+      await settle();
+      fixture.componentInstance.startEditZone(ZONES[0]);
+
+      fixture.componentInstance.onZoneTextInput('id', {
+        detail: { value: 'otro-id' },
+      } as CustomEvent<{ value?: string | null }>);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.zoneForm().id).toBe('cafeteria');
+    });
+
+    it('rechaza un identificador duplicado antes de enviar nada', async () => {
+      await setUp();
+      await settle();
+      setZoneForm(NEW_ZONE, { id: 'cafeteria' });
+
+      await fixture.componentInstance.saveZone();
+      fixture.detectChanges();
+
+      expect(createZone).not.toHaveBeenCalled();
+      expect(updateZone).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.zoneFormError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.DUPLICATE_ID);
+      expect(fixture.componentInstance.savingZone()).toBe(false);
+      expect(refreshZones).not.toHaveBeenCalled();
+      expect(pageText()).toContain(ZONES_ADMIN_REPOSITORY_MESSAGES.DUPLICATE_ID);
+    });
+
+    it('rechaza una segunda zona segura antes de enviar nada', async () => {
+      await setUp();
+      await settle();
+      setZoneForm(NEW_ZONE, { segura: true });
+
+      await fixture.componentInstance.saveZone();
+      fixture.detectChanges();
+
+      expect(createZone).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.zoneFormError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.SAFE_ZONE_CONFLICT);
+    });
+
+    it('rechaza capacidad y geometría inválidas sin contactar al servidor', async () => {
+      await setUp();
+      await settle();
+      const page = fixture.componentInstance;
+
+      setZoneForm(NEW_ZONE, { capacidad: '0' });
+      await page.saveZone();
+      fixture.detectChanges();
+
+      expect(page.zoneFormError()).toBe('La capacidad de la zona debe ser un entero positivo.');
+      expect(createZone).not.toHaveBeenCalled();
+
+      setZoneForm(NEW_ZONE, { mapY: '' });
+      await page.saveZone();
+      fixture.detectChanges();
+
+      expect(page.zoneFormError()).toBe('La geometría del mapa debe estar completa o ausente.');
+      expect(createZone).not.toHaveBeenCalled();
+    });
+
+    it('muestra el error del repositorio al guardar sin refrescar la store', async () => {
+      await setUp();
+      await settle();
+      createZone.mockRejectedValueOnce(new ZonesAdminRepositoryError('FORBIDDEN'));
+      setZoneForm(NEW_ZONE);
+
+      await fixture.componentInstance.saveZone();
+      await settle();
+
+      expect(createZone).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.zoneFormError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.FORBIDDEN);
+      expect(fixture.componentInstance.zoneFormSuccess()).toBeNull();
+      expect(fixture.componentInstance.savingZone()).toBe(false);
+      expect(refreshZones).not.toHaveBeenCalled();
+      expect(pageText()).toContain(ZONES_ADMIN_REPOSITORY_MESSAGES.FORBIDDEN);
+    });
+
+    it('conserva el éxito de la escritura aunque falle la recarga posterior', async () => {
+      await setUp();
+      await settle();
+      listZones.mockImplementation(async () => {
+        throw new ZonesAdminRepositoryError('NETWORK');
+      });
+      setZoneForm(NEW_ZONE);
+
+      await fixture.componentInstance.saveZone();
+      await settle();
+
+      expect(createZone).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.zoneFormSuccess()).toBe(ZONE_CREATED_SUCCESS);
+      expect(fixture.componentInstance.zoneFormError()).toBeNull();
+      expect(fixture.componentInstance.zonesError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.NETWORK);
+      expect(listZones.mock.calls.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('bloquea el doble envío mientras se guarda una zona', async () => {
+      let resolveCreate: ((zone: ZoneConfig) => void) | undefined;
+      await setUp();
+      await settle();
+      createZone.mockImplementationOnce(
+        () =>
+          new Promise<ZoneConfig>((resolve) => {
+            resolveCreate = resolve;
+          }),
+      );
+      setZoneForm(NEW_ZONE);
+
+      const first = fixture.componentInstance.saveZone();
+      const second = fixture.componentInstance.saveZone();
+
+      expect(createZone).toHaveBeenCalledTimes(1);
+
+      resolveCreate?.(NEW_ZONE);
+      await Promise.all([first, second]);
+      await settle();
+
+      expect(fixture.componentInstance.zoneFormSuccess()).toBe(ZONE_CREATED_SUCCESS);
+    });
+
+    it('desactiva una zona tras confirmación y refresca las vistas', async () => {
+      await setUp();
+      await settle();
+
+      await fixture.componentInstance.confirmZoneStatusChange(ZONES[0], false);
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(alertCreate).toHaveBeenCalledTimes(1);
+      expect(setZoneActive).toHaveBeenCalledTimes(1);
+      expect(setZoneActive).toHaveBeenCalledWith('cafeteria', false);
+      expect(page.zoneStatusSuccess()).toBe(ZONE_DEACTIVATED_SUCCESS);
+      expect(page.zoneStatusError()).toBeNull();
+      expect(refreshZones).toHaveBeenCalledTimes(1);
+      expect(pageText()).toContain(ZONE_DEACTIVATED_SUCCESS);
+    });
+
+    it('activa una zona inactiva tras confirmación', async () => {
+      const inactive: ZoneConfig = { ...ZONES[1], activo: false };
+      await setUp(
+        async () => REAL_USERS,
+        async () => [inactive, ...ZONES.slice(2)],
+      );
+      await settle();
+
+      await fixture.componentInstance.confirmZoneStatusChange(inactive, true);
+      await settle();
+
+      expect(setZoneActive).toHaveBeenCalledWith('biblioteca', true);
+      expect(fixture.componentInstance.zoneStatusSuccess()).toBe(ZONE_ACTIVATED_SUCCESS);
+    });
+
+    it('no envía nada si se cancela la confirmación de estado', async () => {
+      await setUp();
+      await settle();
+      setDismissRole('cancel');
+
+      await fixture.componentInstance.confirmZoneStatusChange(ZONES[0], false);
+      await settle();
+
+      expect(alertCreate).toHaveBeenCalledTimes(1);
+      expect(setZoneActive).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.zoneStatusSuccess()).toBeNull();
+      expect(refreshZones).not.toHaveBeenCalled();
+    });
+
+    it('muestra el error de estado y repite la confirmación al reintentar', async () => {
+      await setUp();
+      await settle();
+      setZoneActive
+        .mockRejectedValueOnce(new ZonesAdminRepositoryError('NETWORK'))
+        .mockResolvedValueOnce({ ...ZONES[0], activo: false });
+
+      await fixture.componentInstance.confirmZoneStatusChange(ZONES[0], false);
+      await settle();
+
+      expect(fixture.componentInstance.zoneStatusError()).toBe(ZONES_ADMIN_REPOSITORY_MESSAGES.NETWORK);
+      expect(fixture.componentInstance.failedZoneStatusId()).toBe('cafeteria');
+      expect(query('.zone-item__retry')).not.toBeNull();
+
+      (query('.zone-item__retry') as HTMLButtonElement).click();
+      await settle();
+
+      expect(alertCreate).toHaveBeenCalledTimes(2);
+      expect(setZoneActive).toHaveBeenCalledTimes(2);
+      expect(fixture.componentInstance.zoneStatusSuccess()).toBe(ZONE_DEACTIVATED_SUCCESS);
+      expect(fixture.componentInstance.zoneStatusError()).toBeNull();
+      expect(refreshZones).toHaveBeenCalledTimes(1);
+    });
+
+    it('oculta la gestión de zonas y bloquea escrituras sin zones:manage', async () => {
+      await setUp();
+      await settle();
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      expect(publishVerifiedRole(session, 'instructor', verified)).toBe(true);
+      TestBed.flushEffects();
+      fixture.detectChanges();
+      await settle();
+
+      const page = fixture.componentInstance;
+
+      expect(page.canAccess()).toBe(false);
+      expect(page.canManageZones()).toBe(false);
+      expect(query('.zone-management')).toBeNull();
+      expect(query('.zone-form-card')).toBeNull();
+      expect(page.zones()).toEqual([]);
+
+      setZoneForm(NEW_ZONE);
+      await page.saveZone();
+      fixture.detectChanges();
+
+      expect(createZone).not.toHaveBeenCalled();
+      expect(updateZone).not.toHaveBeenCalled();
+      expect(page.zoneFormError()).toBe(ZONES_ADMIN_PERMISSION_ERROR);
+    });
+
+    it('no expone operaciones de borrado ni texto de eliminación', async () => {
+      await setUp();
+      await settle();
+
+      const page = fixture.componentInstance as unknown as Record<string, unknown>;
+
+      expect('deleteZone' in page).toBe(false);
+      expect('removeZone' in page).toBe(false);
+      expect(pageText().toLowerCase()).not.toContain('eliminar');
     });
   });
 });

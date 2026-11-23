@@ -11,7 +11,8 @@ export type DemoPermission =
   | 'alerts:review'
   | 'alarm:control'
   | 'admin:access'
-  | 'instructors:manage';
+  | 'instructors:manage'
+  | 'zones:manage';
 
 export const DEMO_PERMISSIONS: readonly DemoPermission[] = [
   'occupancy:update',
@@ -22,15 +23,16 @@ export const DEMO_PERMISSIONS: readonly DemoPermission[] = [
   'alarm:control',
   'admin:access',
   'instructors:manage',
+  'zones:manage',
 ];
 
 const ADMINISTRATOR_PERMISSIONS: readonly DemoPermission[] = DEMO_PERMISSIONS;
 const READ_ONLY_PERMISSIONS: readonly DemoPermission[] = [];
 
 /**
- * Fase 4.6 / 5.1.1: el Instructor controla únicamente la alarma simulada. No
- * recibe `admin:access`, `instructors:manage` ni permisos de ocupación,
- * sensores o revisión de alertas.
+ * Fase 4.6 / 5.1.1, ZONAS.2: el Instructor controla únicamente la alarma
+ * simulada. No recibe `admin:access`, `instructors:manage`, `zones:manage` ni
+ * permisos de ocupación, sensores o revisión de alertas.
  */
 const INSTRUCTOR_PERMISSIONS: readonly DemoPermission[] = ['alarm:control'];
 

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -17,6 +18,7 @@ import type { AlertSeverity, AlertStatus } from '../../core/data/demo-alerts';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { DemoAlarmNoticeService } from '../../core/services/demo-alarm-notice.service';
 import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
+import { NotificationStoreService } from '../../core/services/notification-store.service';
 import { AlertCardComponent } from '../../shared/alert-card/alert-card.component';
 import { FeatureIntroComponent } from '../../shared/feature-intro/feature-intro.component';
 
@@ -32,13 +34,14 @@ interface FilterOption<T extends string> {
   selector: 'app-alertas',
   templateUrl: 'alertas.page.html',
   styleUrls: ['alertas.page.scss'],
-  imports: [IonContent, IonIcon, AlertCardComponent, FeatureIntroComponent],
+  imports: [IonContent, IonIcon, AlertCardComponent, FeatureIntroComponent, DatePipe],
 })
 export class AlertasPage {
   private readonly alertsState = inject(AlertsStateService);
   private readonly permissions = inject(DemoPermissionsService);
   private readonly alarmState = inject(DemoAlarmStateService);
   private readonly alarmNoticeService = inject(DemoAlarmNoticeService);
+  private readonly notificationStore = inject(NotificationStoreService);
 
   readonly alarmOn = this.alarmState.isOn;
   readonly alarmLabel = this.alarmState.label;
@@ -49,6 +52,10 @@ export class AlertasPage {
   readonly activeAlerts = this.alertsState.activeAlerts;
   readonly reviewedAlerts = this.alertsState.reviewedAlerts;
   readonly totalAlerts = this.alertsState.totalAlerts;
+
+  readonly manualNotifications = this.notificationStore.notifications;
+  readonly manualNotificationUnreadCount = this.notificationStore.unreadCount;
+  readonly manualNotificationTotalCount = this.notificationStore.totalCount;
 
   readonly severityFilter = signal<SeverityFilter>('all');
   readonly statusFilter = signal<StatusFilter>('all');
@@ -109,5 +116,13 @@ export class AlertasPage {
     }
 
     this.alertsState.markReviewed(alertId);
+  }
+
+  markManualNotificationAsRead(eventId: string): void {
+    this.notificationStore.markAsRead(eventId);
+  }
+
+  markAllManualNotificationsAsRead(): void {
+    this.notificationStore.markAllAsRead();
   }
 }

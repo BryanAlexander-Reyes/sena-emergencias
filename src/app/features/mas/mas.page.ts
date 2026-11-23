@@ -1,20 +1,24 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { IonButton, IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   appsOutline,
   bookOutline,
   chatbubblesOutline,
+  downloadOutline,
   hardwareChipOutline,
   informationCircleOutline,
+  radioOutline,
   schoolOutline,
   settingsOutline,
   shieldCheckmarkOutline,
   statsChartOutline,
 } from 'ionicons/icons';
 
+import { APK_DOWNLOAD_URL } from '../../../environments/apk-download.config';
 import { ADMIN_ACCESS_DENIED_PARAM, ADMIN_ACCESS_DENIED_VALUE } from '../../core/auth/admin-access.guard';
 import { AUTH_FACADE, type AuthFacade } from '../../core/auth/auth-facade.contract';
 import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
@@ -87,6 +91,14 @@ export class MasPage {
       link: '/tabs/mas/sensores',
     },
     {
+      id: 'monitoreo-iot',
+      title: 'Monitoreo IoT',
+      description: 'Telemetría MQTT de los ESP32',
+      icon: 'radio-outline',
+      accent: 'cyan',
+      link: '/tabs/mas/monitoreo-iot',
+    },
+    {
       id: 'asistente',
       title: 'Asistente IA',
       description: 'Consultas sobre el monitoreo',
@@ -108,13 +120,21 @@ export class MasPage {
     this.permissions.can('admin:access') ? [...this.baseMenu, this.adminMenuItem] : this.baseMenu,
   );
 
+  /** Dentro de la APK la descarga no tiene sentido: solo se muestra en navegador. */
+  readonly isNativeApp = signal(Capacitor.isNativePlatform());
+
+  /** URL HTTPS de la APK oficial publicada; vacía = aún no disponible. */
+  readonly apkDownloadUrl = signal(APK_DOWNLOAD_URL);
+
   constructor() {
     addIcons({
       appsOutline,
       bookOutline,
       chatbubblesOutline,
+      downloadOutline,
       hardwareChipOutline,
       informationCircleOutline,
+      radioOutline,
       schoolOutline,
       settingsOutline,
       shieldCheckmarkOutline,

@@ -254,6 +254,364 @@
       </ion-button>
     </form>
   </section>
+  } @if (canManageZones()) {
+  <section class="app-card zone-management" aria-labelledby="zone-management-title" [attr.aria-busy]="zonesLoading()">
+    <div class="app-section-head">
+      <p id="zone-management-title" class="app-overline">Gestión de zonas</p>
+      <span class="app-badge">Solo administrador</span>
+    </div>
+
+    <p class="zone-management__intro">
+      Configura el catálogo remoto de zonas. Los cambios se envían con tu sesión autenticada; no se elimina ninguna zona
+      y el identificador se conserva al editar.
+    </p>
+
+    <div class="zone-summary" aria-label="Resumen de zonas configuradas">
+      <article class="app-card zone-summary__card">
+        <span class="zone-summary__value">{{ zones().length }}</span>
+        <span class="zone-summary__label">Zonas configuradas</span>
+      </article>
+      <article class="app-card zone-summary__card">
+        <span class="zone-summary__value">{{ activeZonesCount() }}</span>
+        <span class="zone-summary__label">Activas</span>
+      </article>
+      <article class="app-card zone-summary__card">
+        <span class="zone-summary__value">{{ inactiveZonesCount() }}</span>
+        <span class="zone-summary__label">Inactivas</span>
+      </article>
+    </div>
+
+    @if (zoneStatusSuccess()) {
+    <p class="zone-status__success" role="status">{{ zoneStatusSuccess() }}</p>
+    } @if (zonesLoading()) {
+    <p class="zone-list__loading" role="status">{{ zonesLoadingMessage }}</p>
+    } @else if (zonesError()) {
+    <div class="zone-list__error" role="alert">
+      <p class="zone-list__error-text">{{ zonesError() }}</p>
+      <ion-button class="zone-list__retry" type="button" (click)="loadZones()">Reintentar</ion-button>
+    </div>
+    } @else if (zones().length > 0) {
+    <div class="zone-list">
+      @for (zone of zones(); track zone.id) {
+      <article class="admin-zone" [attr.data-zone-id]="zone.id">
+        <header class="admin-zone__head">
+          <div class="admin-zone__identity">
+            <h3 class="admin-zone__name">{{ zone.nombre }}</h3>
+            <p class="admin-zone__id">ID · {{ zone.id }}</p>
+          </div>
+          <span class="admin-zone__status" [attr.data-status]="zone.activo ? 'activo' : 'inactivo'">
+            {{ zoneStatusLabel(zone.activo) }}
+          </span>
+        </header>
+
+        <dl class="admin-zone__data">
+          <div class="admin-zone__data-item">
+            <dt>Código</dt>
+            <dd>{{ zone.codigo }}</dd>
+          </div>
+          <div class="admin-zone__data-item">
+            <dt>Tipo</dt>
+            <dd>{{ zoneTypeLabel(zone.tipo) }}</dd>
+          </div>
+          <div class="admin-zone__data-item">
+            <dt>Capacidad</dt>
+            <dd>{{ zone.capacidad }}</dd>
+          </div>
+          <div class="admin-zone__data-item">
+            <dt>Geometría</dt>
+            <dd>{{ zoneGeometryLabel(zone) }}</dd>
+          </div>
+          <div class="admin-zone__data-item">
+            <dt>Zona segura</dt>
+            <dd>{{ zone.segura ? 'Sí' : 'No' }}</dd>
+          </div>
+          <div class="admin-zone__data-item">
+            <dt>Visible</dt>
+            <dd>{{ zone.publico ? 'Sí' : 'No' }}</dd>
+          </div>
+        </dl>
+
+        <div class="admin-zone__actions" [attr.aria-busy]="updatingZoneId() === zone.id">
+          <ion-button
+            class="zone-item__edit"
+            type="button"
+            fill="outline"
+            [disabled]="savingZone() || updatingZoneId() !== null"
+            (click)="startEditZone(zone)"
+          >
+            Editar
+          </ion-button>
+          @if (zone.activo) {
+          <ion-button
+            class="zone-item__deactivate"
+            type="button"
+            fill="outline"
+            [disabled]="savingZone() || updatingZoneId() !== null"
+            (click)="confirmZoneStatusChange(zone, false)"
+          >
+            @if (updatingZoneId() === zone.id) { Desactivando… } @else { Desactivar }
+          </ion-button>
+          } @else {
+          <ion-button
+            class="zone-item__activate"
+            type="button"
+            fill="outline"
+            [disabled]="savingZone() || updatingZoneId() !== null"
+            (click)="confirmZoneStatusChange(zone, true)"
+          >
+            @if (updatingZoneId() === zone.id) { Activando… } @else { Activar }
+          </ion-button>
+          } @if (failedZoneStatusId() === zone.id && zoneStatusError()) {
+          <div class="admin-zone__action-error" role="alert">
+            <p>{{ zoneStatusError() }}</p>
+            <ion-button
+              class="zone-item__retry"
+              type="button"
+              fill="clear"
+              [disabled]="updatingZoneId() !== null"
+              (click)="retryZoneStatusChange(zone)"
+              >Reintentar</ion-button
+            >
+          </div>
+          }
+        </div>
+      </article>
+      }
+    </div>
+    } @else {
+    <p class="zone-list__empty" role="status">{{ zonesEmptyMessage }}</p>
+    }
+  </section>
+
+  <section class="app-card zone-form-card" aria-labelledby="zone-form-title">
+    <div class="app-section-head">
+      <p id="zone-form-title" class="app-overline">{{ editingZoneId() === null ? 'Nueva zona' : 'Editar zona' }}</p>
+      <span class="app-badge">Configuración</span>
+    </div>
+
+    <p class="zone-form-card__intro">
+      La capacidad y las coordenadas se validan antes de enviar. La geometría debe estar completa o ausente; usa el
+      plano de referencia de 360 × 480 unidades.
+    </p>
+
+    <form class="zone-form" (submit)="saveZone($event)" [attr.aria-busy]="savingZone()" novalidate>
+      <label class="zone-form__field">
+        <span>Identificador</span>
+        <input
+          class="zone-form__input zone-form__id"
+          type="text"
+          name="zoneId"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          [value]="zoneForm().id"
+          [disabled]="editingZoneId() !== null || savingZone()"
+          (input)="onZoneTextInput('id', $event)"
+        />
+      </label>
+
+      <label class="zone-form__field">
+        <span>Código</span>
+        <input
+          class="zone-form__input zone-form__code"
+          type="text"
+          name="zoneCode"
+          autocomplete="off"
+          [value]="zoneForm().codigo"
+          [disabled]="savingZone()"
+          (input)="onZoneTextInput('codigo', $event)"
+        />
+      </label>
+
+      <label class="zone-form__field zone-form__field--wide">
+        <span>Nombre</span>
+        <input
+          class="zone-form__input zone-form__name"
+          type="text"
+          name="zoneName"
+          autocomplete="off"
+          [value]="zoneForm().nombre"
+          [disabled]="savingZone()"
+          (input)="onZoneTextInput('nombre', $event)"
+        />
+      </label>
+
+      <label class="zone-form__field">
+        <span>Capacidad</span>
+        <input
+          class="zone-form__input zone-form__capacity"
+          type="number"
+          name="zoneCapacity"
+          min="1"
+          step="1"
+          [value]="zoneForm().capacidad"
+          [disabled]="savingZone()"
+          (input)="onZoneTextInput('capacidad', $event)"
+        />
+      </label>
+
+      <label class="zone-form__field">
+        <span>Tipo</span>
+        <select
+          class="zone-form__input zone-form__type"
+          name="zoneType"
+          [disabled]="savingZone()"
+          (change)="onZoneTextInput('tipo', $event)"
+        >
+          @for (type of zoneTypes; track type) {
+          <option [value]="type" [selected]="zoneForm().tipo === type">{{ zoneTypeLabel(type) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="zone-form__field zone-form__field--wide">
+        <span>Icono</span>
+        <input
+          class="zone-form__input zone-form__icon"
+          type="text"
+          name="zoneIcon"
+          list="zone-icon-options"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="zoneForm().icono"
+          [disabled]="savingZone()"
+          (input)="onZoneTextInput('icono', $event)"
+        />
+        <datalist id="zone-icon-options">
+          @for (icon of zoneIcons; track icon) {
+          <option [value]="icon"></option>
+          }
+        </datalist>
+      </label>
+
+      <fieldset class="zone-form__flags">
+        <legend>Opciones</legend>
+        <label class="zone-form__checkbox">
+          <input
+            class="zone-form__safe"
+            type="checkbox"
+            [checked]="zoneForm().segura"
+            [disabled]="savingZone()"
+            (change)="onZoneBooleanInput('segura', $event)"
+          />
+          Zona segura
+        </label>
+        <label class="zone-form__checkbox">
+          <input
+            class="zone-form__active"
+            type="checkbox"
+            [checked]="zoneForm().activo"
+            [disabled]="savingZone()"
+            (change)="onZoneBooleanInput('activo', $event)"
+          />
+          Activa
+        </label>
+        <label class="zone-form__checkbox">
+          <input
+            class="zone-form__public"
+            type="checkbox"
+            [checked]="zoneForm().publico"
+            [disabled]="savingZone()"
+            (change)="onZoneBooleanInput('publico', $event)"
+          />
+          Visible en el mapa público
+        </label>
+      </fieldset>
+
+      <fieldset class="zone-form__geometry">
+        <legend>Geometría del mapa (opcional)</legend>
+        <label class="zone-form__field">
+          <span>X</span>
+          <input
+            class="zone-form__input zone-form__map-x"
+            type="number"
+            step="any"
+            [value]="zoneForm().mapX"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('mapX', $event)"
+          />
+        </label>
+        <label class="zone-form__field">
+          <span>Y</span>
+          <input
+            class="zone-form__input zone-form__map-y"
+            type="number"
+            step="any"
+            [value]="zoneForm().mapY"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('mapY', $event)"
+          />
+        </label>
+        <label class="zone-form__field">
+          <span>Ancho</span>
+          <input
+            class="zone-form__input zone-form__width"
+            type="number"
+            step="any"
+            [value]="zoneForm().ancho"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('ancho', $event)"
+          />
+        </label>
+        <label class="zone-form__field">
+          <span>Alto</span>
+          <input
+            class="zone-form__input zone-form__height"
+            type="number"
+            step="any"
+            [value]="zoneForm().alto"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('alto', $event)"
+          />
+        </label>
+        <label class="zone-form__field">
+          <span>Etiqueta X</span>
+          <input
+            class="zone-form__input zone-form__label-x"
+            type="number"
+            step="any"
+            [value]="zoneForm().etiquetaX"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('etiquetaX', $event)"
+          />
+        </label>
+        <label class="zone-form__field">
+          <span>Etiqueta Y</span>
+          <input
+            class="zone-form__input zone-form__label-y"
+            type="number"
+            step="any"
+            [value]="zoneForm().etiquetaY"
+            [disabled]="savingZone()"
+            (input)="onZoneTextInput('etiquetaY', $event)"
+          />
+        </label>
+      </fieldset>
+
+      @if (zoneFormError()) {
+      <p class="zone-form__error" role="alert">{{ zoneFormError() }}</p>
+      } @if (zoneFormSuccess()) {
+      <p class="zone-form__success" role="status">{{ zoneFormSuccess() }}</p>
+      } @if (savingZone()) {
+      <p class="zone-form__saving" role="status">{{ zoneSavingMessage }}</p>
+      }
+
+      <div class="zone-form__actions">
+        <ion-button class="app-button zone-form__submit" type="submit" [disabled]="savingZone()">
+          @if (savingZone()) { Guardando… } @else { {{ editingZoneId() === null ? 'Crear zona' : 'Guardar cambios' }} }
+        </ion-button>
+        <ion-button
+          class="zone-form__cancel"
+          type="button"
+          fill="clear"
+          [disabled]="savingZone()"
+          (click)="cancelZoneForm()"
+        >
+          Cancelar
+        </ion-button>
+      </div>
+    </form>
+  </section>
   }
 
   <section class="app-card admin-scope" aria-labelledby="admin-scope-title">

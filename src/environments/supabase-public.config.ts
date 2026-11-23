@@ -1,14 +1,17 @@
-export interface SupabasePublicConfig {
-  readonly supabaseUrl: string;
-  readonly supabasePublishableKey: string;
-}
+import {
+  SUPABASE_PUBLISHABLE_KEY_PLACEHOLDER,
+  SUPABASE_URL_PLACEHOLDER,
+  type SupabasePublicConfig,
+} from './supabase-public.config.validator';
+
+export type { SupabasePublicConfig } from './supabase-public.config.validator';
 
 /**
- * Valores versionados por defecto. En desarrollo, Angular sustituye este módulo
- * por `supabase-public.config.generated.ts`, generado desde las dos variables
- * públicas de `.env`. Producción no consume `.env`.
+ * Valores versionados por defecto. En desarrollo y producción, Angular
+ * sustituye este módulo por `supabase-public.config.generated.ts`, creado desde
+ * las dos variables públicas del entorno de compilación.
  */
 export const supabasePublicConfig: SupabasePublicConfig = {
-  supabaseUrl: 'https://REEMPLAZAR.supabase.co',
-  supabasePublishableKey: 'sb_publishable_REEMPLAZAR_AQUI',
+  supabaseUrl: SUPABASE_URL_PLACEHOLDER,
+  supabasePublishableKey: SUPABASE_PUBLISHABLE_KEY_PLACEHOLDER,
 };

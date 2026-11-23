@@ -6,7 +6,16 @@
         eyebrow="Zonas"
         title="Monitoreo de zonas"
         description="Supervisa la ocupación estimada de cada área"
-        badge="MODO DEMOSTRACIÓN"
+        [badge]="
+          zoneConfigMode() === 'remote' ? 'ZONAS REMOTAS · OCUPACIÓN SIMULADA' : 'ZONAS LOCALES · OCUPACIÓN SIMULADA'
+        "
+      />
+
+      <app-zone-config-status
+        [remote]="zoneConfigMode() === 'remote'"
+        [status]="zoneConfigStatus()"
+        [message]="zoneConfigError()?.message ?? null"
+        (retry)="retryZoneConfigs()"
       />
 
       <section class="app-card zonas-simulation" aria-labelledby="zonas-simulation-title">
@@ -15,7 +24,7 @@
             <p class="app-overline">Simulación manual</p>
             <h2 id="zonas-simulation-title" class="app-card-title">Ajuste de ocupación</h2>
           </div>
-          <span class="app-badge app-badge--warning zonas-simulation__badge">MODO SIMULACIÓN — DATOS NO REALES</span>
+          <span class="app-badge app-badge--warning zonas-simulation__badge">OCUPACIÓN SIMULADA — DATOS NO REALES</span>
         </div>
 
         @if (canUpdateOccupancy() || canResetOccupancy()) {

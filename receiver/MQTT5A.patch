@@ -1,0 +1,643 @@
+diff --git a/src/app/features/inicio/inicio.page.ts b/src/app/features/inicio/inicio.page.ts
+index b511e45..9d07783 100644
+--- a/src/app/features/inicio/inicio.page.ts
++++ b/src/app/features/inicio/inicio.page.ts
+@@ -1,6 +1,6 @@
+ import { Component, computed, effect, inject, signal } from '@angular/core';
+ import { RouterLink } from '@angular/router';
+-import { AlertController, IonButton, IonContent, IonIcon } from '@ionic/angular';
++import { AlertController, IonButton, IonContent, IonIcon, IonSelect, IonSelectOption } from '@ionic/angular';
+ import { addIcons } from 'ionicons';
+ import {
+   alarmOutline,
+@@ -16,6 +16,7 @@ import {
+ } from 'ionicons/icons';
+ 
+ import { DemoPermissionsService } from '../../core/auth/demo-permissions.service';
++import { AlarmEventSelectionService } from '../../core/data/alarm-event-selection.service';
+ import { createManualAlarmNotification } from '../../core/data/notification.models';
+ import { AlertsStateService } from '../../core/services/alerts-state.service';
+ import { DemoAlarmNoticeService } from '../../core/services/demo-alarm-notice.service';
+@@ -43,7 +44,10 @@ interface DashboardMetric {
+   selector: 'app-inicio',
+   templateUrl: 'inicio.page.html',
+   styleUrls: ['inicio.page.scss'],
+-  imports: [IonButton, IonContent, IonIcon, RouterLink, MetricCardComponent, ZoneConfigStatusComponent],
++  imports: [
++    IonButton, IonContent, IonIcon, IonSelect, IonSelectOption,
++    RouterLink, MetricCardComponent, ZoneConfigStatusComponent,
++  ],
+ })
+ export class InicioPage {
+   private readonly monitoring = inject(MonitoringStateService);
+@@ -55,6 +59,7 @@ export class InicioPage {
+   private readonly notificationStore = inject(NotificationStoreService);
+   private readonly manualAlarmService = inject(ManualAlarmService);
+   private readonly manualAlarmSync = inject(ManualAlarmSyncService);
++  private readonly seleccionAlarma = inject(AlarmEventSelectionService);
+ 
+   readonly confirmingAlarm = signal(false);
+   readonly activatingAlarm = signal(false);
+@@ -71,6 +76,8 @@ export class InicioPage {
+   readonly notice = this.alarmNoticeService.notice;
+   readonly ledInstruction = this.alarmNoticeService.ledInstruction;
+   readonly canControlAlarm = computed(() => this.permissions.can('alarm:control'));
++  readonly eventosAlarma = this.seleccionAlarma.opciones;
++  readonly eventoAlarma = this.seleccionAlarma.evento;
+   readonly notificationUnreadCount = this.notificationStore.unreadCount;
+ 
+   readonly zones = this.monitoring.zones;
+@@ -174,12 +181,26 @@ export class InicioPage {
+     return this.confirmAlarmChange('turn-off');
+   }
+ 
++  seleccionarEventoAlarma(evento: unknown): void {
++    if (!this.canControlAlarm() || this.alarm.isOn() || this.activeManualAlarmId()) {
++      this.seleccionAlarma.limpiar();
++      return;
++    }
++    if (!this.seleccionAlarma.seleccionar(evento)) {
++      this.seleccionAlarma.limpiar();
++    }
++  }
++
+   /**
+    * Un único flujo de confirmación evita acciones duplicadas por pulsaciones
+    * rápidas. El permiso se revalúa dentro del servicio al ejecutar la acción.
+    */
+   private async confirmAlarmChange(action: DemoAlarmAction): Promise<void> {
+-    if (!this.canControlAlarm() || this.confirmingAlarm() || this.activatingAlarm() || this.finalizingAlarm()) {
++    if (!this.canControlAlarm()) {
++      this.seleccionAlarma.limpiar();
++      return;
++    }
++    if (this.confirmingAlarm() || this.activatingAlarm() || this.finalizingAlarm()) {
+       return;
+     }
+ 
+@@ -187,6 +208,13 @@ export class InicioPage {
+     if (turningOn && this.alarm.isOn()) {
+       return;
+     }
++    if (turningOn && this.eventoAlarma() === null) {
++      await this.presentAlarmMessage(
++        'Selecciona el tipo de alarma',
++        'Debes elegir incendio, sismo, impacto, emergencia o simulacro antes de activar.',
++      );
++      return;
++    }
+ 
+     this.confirmingAlarm.set(true);
+     const expectedStatus = this.alarm.status();
+@@ -220,7 +248,11 @@ export class InicioPage {
+   }
+ 
+   private async handleManualAlarmActivation(expectedStatus: DemoAlarmStatus): Promise<void> {
+-    if (this.activatingAlarm() || this.finalizingAlarm() || !this.canControlAlarm()) {
++    if (!this.canControlAlarm()) {
++      this.seleccionAlarma.limpiar();
++      return;
++    }
++    if (this.activatingAlarm() || this.finalizingAlarm()) {
+       return;
+     }
+ 
+@@ -256,11 +288,21 @@ export class InicioPage {
+         return;
+       }
+ 
++      const evento = this.eventoAlarma();
++      if (evento === null) {
++        await this.presentAlarmMessage(
++          'Selecciona el tipo de alarma',
++          'Debes elegir incendio, sismo, impacto, emergencia o simulacro antes de activar.',
++        );
++        return;
++      }
++
+       const idempotencyKey = this.pendingAlarmIdempotencyKey ?? globalThis.crypto.randomUUID();
+       this.pendingAlarmIdempotencyKey = idempotencyKey;
+ 
+-      const alarma = await this.manualAlarmService.activate(idempotencyKey);
++      const alarma = await this.manualAlarmService.activate(idempotencyKey, evento);
+       this.pendingAlarmIdempotencyKey = null;
++      this.seleccionAlarma.limpiar();
+       this.activeManualAlarmId.set(alarma.id);
+ 
+       const activated = this.alarmState.turnOn(expectedStatus);
+@@ -389,6 +431,9 @@ export class InicioPage {
+     if (code === 'UNAUTHENTICATED' || status === 401) {
+       return 'Tu sesión no es válida o expiró. Inicia sesión nuevamente para continuar.';
+     }
++    if (code === 'EVENTO_NO_SELECCIONADO') {
++      return 'Debes seleccionar el tipo de alarma antes de activarla.';
++    }
+     if (code === 'INVALID_ALARM_ID' || code === 'INVALID_ALARM_RESPONSE') {
+       return action === 'finalize'
+         ? 'No se pudo confirmar la finalización de la alarma. Intenta nuevamente.'
+diff --git a/src/app/features/inicio/inicio.page.html b/src/app/features/inicio/inicio.page.html
+index 1650d04..c2b881a 100644
+--- a/src/app/features/inicio/inicio.page.html
++++ b/src/app/features/inicio/inicio.page.html
+@@ -158,6 +158,22 @@
+           <p class="alarm-control__text">Control manual del buzzer</p>
+ 
+           @if (canControlAlarm()) {
++          @if (!alarm.isOn() && !activeManualAlarmId()) {
++          <label class="alarm-control__text" for="alarm-evento">Tipo de alarma</label>
++          <ion-select
++            id="alarm-evento"
++            interface="popover"
++            placeholder="Selecciona un evento"
++            aria-label="Tipo de alarma"
++            [disabled]="confirmingAlarm() || activatingAlarm()"
++            [value]="eventoAlarma() ?? ''"
++            (ionChange)="seleccionarEventoAlarma($event.detail.value)"
++          >
++            @for (evento of eventosAlarma(); track evento) {
++            <ion-select-option [value]="evento">{{ evento }}</ion-select-option>
++            }
++          </ion-select>
++          }
+           <div class="alarm-control__actions">
+             @if (alarm.isOn() || activeManualAlarmId()) {
+             <ion-button
+diff --git a/src/app/core/services/manual-alarm.service.ts b/src/app/core/services/manual-alarm.service.ts
+index 580f13e..2a7fc05 100644
+--- a/src/app/core/services/manual-alarm.service.ts
++++ b/src/app/core/services/manual-alarm.service.ts
+@@ -1,27 +1,26 @@
+ import { inject, Injectable } from '@angular/core';
+ 
++import {
++  esAlarmaIncidente,
++  esAlarmaOrigen,
++  normalizarIncidenteAlarma,
++  type AlarmaIncidente,
++  type AlarmaOrigen,
++  type IncidenteAlarma,
++} from '../data/alarm-incident-contract';
+ import { SupabaseService } from '../supabase.service';
+ 
+-export interface ManualAlarmRecord {
+-  id: string;
+-  tipo: string;
+-  titulo: string;
+-  mensaje: string;
+-  severidad: string;
+-  fecha_activacion: string;
+-  estado?: 'activa' | 'finalizada';
+-  fecha_finalizacion?: string | null;
+-}
++export type ManualAlarmRecord = IncidenteAlarma;
+ 
+ interface ActivateAlarmResponse {
+   status: 'ACTIVATED';
+-  alarma: ManualAlarmRecord;
++  alarma: unknown;
+ }
+ 
+ interface ConsultarAlarmasResponse {
+   status: 'SUCCESS';
+   hay_alarma_activa: boolean;
+-  alarmas: ManualAlarmRecord[];
++  alarmas: unknown[];
+ }
+ 
+ interface FinalizeAlarmResponse {
+@@ -35,7 +34,20 @@ interface FinalizeAlarmResponse {
+ export class ManualAlarmService {
+   private readonly supabase = inject(SupabaseService);
+ 
+-  async activate(idempotencyKey: string): Promise<ManualAlarmRecord> {
++  async activate(
++    idempotencyKey: string,
++    evento?: AlarmaIncidente,
++    origen: AlarmaOrigen = 'cliente',
++  ): Promise<ManualAlarmRecord> {
++    if (evento !== undefined) {
++      if (!esAlarmaIncidente(evento)) {
++        throw new Error('EVENTO_NO_VALIDO');
++      }
++      if (!esAlarmaOrigen(origen)) {
++        throw new Error('ORIGEN_NO_VALIDO');
++      }
++    }
++
+     const client = this.supabase.client;
+ 
+     if (!client) {
+@@ -51,6 +63,7 @@ export class ManualAlarmService {
+     const { data, error } = await client.functions.invoke<ActivateAlarmResponse>('activar-alarma-manual', {
+       body: {
+         clave_idempotencia: idempotencyKey,
++        ...(evento === undefined ? {} : { evento, origen }),
+       },
+     });
+ 
+@@ -58,11 +71,12 @@ export class ManualAlarmService {
+       throw error;
+     }
+ 
+-    if (!data || data.status !== 'ACTIVATED' || !data.alarma) {
++    const alarma = data?.status === 'ACTIVATED' ? normalizarIncidenteAlarma(data.alarma) : null;
++    if (!alarma) {
+       throw new Error('INVALID_ALARM_RESPONSE');
+     }
+ 
+-    return data.alarma;
++    return alarma;
+   }
+ 
+   async getActiveAlarms(): Promise<ManualAlarmRecord[]> {
+@@ -84,7 +98,9 @@ export class ManualAlarmService {
+       throw new Error('INVALID_ALARM_RESPONSE');
+     }
+ 
+-    return data.alarmas;
++    return data.alarmas
++      .map((crudo: unknown) => normalizarIncidenteAlarma(crudo))
++      .filter((alarma): alarma is ManualAlarmRecord => alarma !== null);
+   }
+ 
+   async finalize(alarmId: string): Promise<ManualAlarmRecord> {
+diff --git a/src/app/features/inicio/inicio.page.spec.ts b/src/app/features/inicio/inicio.page.spec.ts
+index 000ada4..397d5b2 100644
+--- a/src/app/features/inicio/inicio.page.spec.ts
++++ b/src/app/features/inicio/inicio.page.spec.ts
+@@ -8,23 +8,62 @@ import {
+   verifiedTestIdentities,
+   type VerifiedTestIdentities,
+ } from '../../core/auth/testing/verified-session-test.util';
++import { ALARM_INCIDENTES } from '../../core/data/alarm-incident-contract';
+ import { countActiveAlerts, getActiveCriticalAlert } from '../../core/data/demo-alerts';
+ import { DEMO_ZONES } from '../../core/data/demo-monitoring';
+ import { AlertsStateService } from '../../core/services/alerts-state.service';
+ import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
++import { ManualAlarmService, type ManualAlarmRecord } from '../../core/services/manual-alarm.service';
+ 
+ import { InicioPage } from './inicio.page';
+ 
++const ALARMA_PRUEBA: ManualAlarmRecord = {
++  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
++  tipo: 'alarma_manual',
++  titulo: '⚠️ PRECAUCIÓN',
++  mensaje: 'Diríjase con calma a la zona segura y siga las indicaciones del personal autorizado.',
++  severidad: 'critical',
++  fecha_activacion: '2026-11-23T12:00:00.000Z',
++  estado: 'activa',
++  evento: null,
++  origen: 'cliente',
++  eventoReportado: false,
++};
++
++class FakeManualAlarmService {
++  readonly activaciones: Array<{ clave: string; evento?: string }> = [];
++
++  async getActiveAlarms(): Promise<ManualAlarmRecord[]> {
++    return [];
++  }
++
++  async activate(clave: string, evento?: string): Promise<ManualAlarmRecord> {
++    this.activaciones.push({ clave, evento });
++    return {
++      ...ALARMA_PRUEBA,
++      id: `alarma-${this.activaciones.length}`,
++      evento: evento ?? null,
++      eventoReportado: evento !== undefined,
++    };
++  }
++
++  async finalize(id: string): Promise<ManualAlarmRecord> {
++    return { ...ALARMA_PRUEBA, id, estado: 'finalizada' };
++  }
++}
++
+ describe('InicioPage', () => {
+   let component: InicioPage;
+   let fixture: ComponentFixture<InicioPage>;
+   let verified: VerifiedTestIdentities;
++  let manualAlarm: FakeManualAlarmService;
+ 
+   beforeEach(async () => {
+     verified = await verifiedTestIdentities();
++    manualAlarm = new FakeManualAlarmService();
+     await TestBed.configureTestingModule({
+       imports: [InicioPage],
+-      providers: [provideRouter([])],
++      providers: [provideRouter([]), { provide: ManualAlarmService, useValue: manualAlarm }],
+     }).compileComponents();
+ 
+     fixture = TestBed.createComponent(InicioPage);
+@@ -102,6 +141,18 @@ describe('InicioPage', () => {
+     expect(component.activeAlert()?.zoneName).toBe('Pasillo principal');
+   });
+ 
++  const publicarOperador = (rol: 'administrador' | 'instructor'): void => {
++    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified[rol]);
++    fixture.detectChanges();
++  };
++
++  const seleccionarEvento = (evento: unknown): void => {
++    const select = fixture.nativeElement.querySelector('#alarm-evento');
++    expect(select).not.toBeNull();
++    select.dispatchEvent(new CustomEvent('ionChange', { detail: { value: evento } }));
++    fixture.detectChanges();
++  };
++
+   const mockConfirmation = () => {
+     const alertController = TestBed.inject(AlertController);
+     const alert = {
+@@ -129,22 +180,22 @@ describe('InicioPage', () => {
+ 
+     expect(status.textContent).toContain('Alarma apagada');
+     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
+     expect(note.textContent).toContain('Solo Administradores e Instructores pueden controlar la alarma.');
+ 
+-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.instructor);
+-    fixture.detectChanges();
++    publicarOperador('instructor');
+ 
+     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(1);
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).not.toBeNull();
+     expect(fixture.nativeElement.querySelector('.alarm-control__note')).toBeNull();
+   });
+ 
+   it('refleja reactivamente los cambios de alarma en Inicio', () => {
+-    const session = TestBed.inject(DemoSessionService);
++    publicarOperador('administrador');
+     const alarm = TestBed.inject(DemoAlarmStateService);
+-    session.publishVerifiedIdentity(verified.administrador);
+-    fixture.detectChanges();
+ 
+     expect(fixture.nativeElement.querySelector('.alarm-control__notice')?.getAttribute('data-scenario')).toBe('B');
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).not.toBeNull();
+ 
+     alarm.turnOn();
+     fixture.detectChanges();
+@@ -156,10 +207,41 @@ describe('InicioPage', () => {
+     expect((fixture.nativeElement.querySelector('.alarm-control__button') as HTMLElement).textContent).toContain(
+       'Apagar alarma',
+     );
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
++  });
++
++  it('muestra el selector con los cinco eventos para ambos operadores y ninguno para aprendiz', () => {
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
++
++    publicarOperador('administrador');
++    const opciones = Array.from(
++      fixture.nativeElement.querySelectorAll('#alarm-evento ion-select-option') as NodeListOf<HTMLElement>,
++    ).map((opcion) => opcion.textContent?.trim());
++    expect(opciones).toEqual([...ALARM_INCIDENTES]);
++
++    publicarOperador('instructor');
++    expect(fixture.nativeElement.querySelectorAll('#alarm-evento ion-select-option')).toHaveLength(5);
++
++    TestBed.inject(DemoSessionService).selectProfile('aprendiz');
++    fixture.detectChanges();
++
++    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
++    expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
++  });
++
++  it('exige selección explícita antes de abrir la confirmación de encendido', async () => {
++    publicarOperador('administrador');
++    const { createSpy } = mockConfirmation();
++
++    await component.confirmTurnOn();
++
++    expect(createSpy.mock.calls.at(0)?.at(0)?.header).toBe('Selecciona el tipo de alarma');
++    expect(manualAlarm.activaciones).toHaveLength(0);
+   });
+ 
+   it('muestra el diálogo de encendido con los textos y botones esperados', async () => {
+-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
++    publicarOperador('administrador');
++    seleccionarEvento('incendio');
+     const { createSpy, buttons } = mockConfirmation();
+ 
+     await component.confirmTurnOn();
+@@ -171,47 +253,83 @@ describe('InicioPage', () => {
+   });
+ 
+   it('cancelar el diálogo no cambia el estado', async () => {
+-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
++    publicarOperador('administrador');
++    seleccionarEvento('incendio');
+     const alarm = TestBed.inject(DemoAlarmStateService);
+     mockConfirmation();
+ 
+     await component.confirmTurnOn();
+ 
+     expect(alarm.isOn()).toBe(false);
++    expect(manualAlarm.activaciones).toHaveLength(0);
+   });
+ 
+-  it('ejecuta el encendido y el apagado al confirmar', async () => {
+-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
++  it('ejecuta el encendido y el apagado al confirmar con el evento elegido', async () => {
++    publicarOperador('administrador');
++    seleccionarEvento('incendio');
+     const alarm = TestBed.inject(DemoAlarmStateService);
++    const activateSpy = vi.spyOn(manualAlarm, 'activate');
+     const { buttons } = mockConfirmation();
+ 
+     await component.confirmTurnOn();
+     buttons().at(1)?.handler?.();
+-    expect(alarm.isOn()).toBe(true);
++    await vi.waitFor(() => expect(alarm.isOn()).toBe(true));
++
++    expect(activateSpy).toHaveBeenCalledWith(expect.any(String), 'incendio');
++    expect(component.eventoAlarma()).toBeNull();
+ 
+-    // Se reinicia el spy para la segunda confirmación.
+     vi.restoreAllMocks();
+     const { buttons: offButtons } = mockConfirmation();
+     await component.confirmTurnOff();
+     offButtons().at(1)?.handler?.();
+-    expect(alarm.isOn()).toBe(false);
++    await vi.waitFor(() => expect(alarm.isOn()).toBe(false));
++  });
++
++  it('activa los cinco eventos para administrador e instructor', async () => {
++    for (const rol of ['administrador', 'instructor'] as const) {
++      for (const evento of ALARM_INCIDENTES) {
++        publicarOperador(rol);
++        seleccionarEvento(evento);
++        const activateSpy = vi.spyOn(manualAlarm, 'activate');
++        const { buttons } = mockConfirmation();
++
++        await component.confirmTurnOn();
++        buttons().at(1)?.handler?.();
++        await vi.waitFor(() => expect(activateSpy).toHaveBeenCalled());
++
++        expect(activateSpy).toHaveBeenCalledWith(expect.any(String), evento);
++        expect(manualAlarm.activaciones.at(-1)?.evento).toBe(evento);
++        expect(component.eventoAlarma()).toBeNull();
++
++        TestBed.inject(DemoAlarmStateService).turnOff();
++        fixture.detectChanges();
++        vi.restoreAllMocks();
++      }
++    }
++
++    expect(manualAlarm.activaciones).toHaveLength(10);
+   });
+ 
+   it('revalúa el permiso si cambia el perfil durante la confirmación', async () => {
++    publicarOperador('administrador');
++    seleccionarEvento('sismo');
+     const session = TestBed.inject(DemoSessionService);
+     const alarm = TestBed.inject(DemoAlarmStateService);
+-    session.publishVerifiedIdentity(verified.administrador);
+     const { buttons } = mockConfirmation();
+ 
+     await component.confirmTurnOn();
+     session.selectProfile('aprendiz');
+     buttons().at(1)?.handler?.();
++    await Promise.resolve();
+ 
+     expect(alarm.isOn()).toBe(false);
++    expect(manualAlarm.activaciones).toHaveLength(0);
++    expect(component.eventoAlarma()).toBeNull();
+   });
+ 
+   it('ignora pulsaciones rápidas mientras hay una confirmación abierta', async () => {
+-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
++    publicarOperador('administrador');
++    seleccionarEvento('emergencia');
+     const alertController = TestBed.inject(AlertController);
+     const alert = {
+       present: vi.fn().mockResolvedValue(undefined),
+diff --git a/src/app/core/services/manual-alarm.service.spec.ts b/src/app/core/services/manual-alarm.service.spec.ts
+new file mode 100644
+index 0000000..8c4394e
+--- /dev/null
++++ b/src/app/core/services/manual-alarm.service.spec.ts
+@@ -0,0 +1,124 @@
++import { TestBed } from '@angular/core/testing';
++import type { SupabaseClient } from '@supabase/supabase-js';
++
++import { ALARM_INCIDENTES } from '../data/alarm-incident-contract';
++import { SupabaseService } from '../supabase.service';
++import { ManualAlarmService, type ManualAlarmRecord } from './manual-alarm.service';
++
++const CLAVE = '11111111-1111-4111-8111-111111111111';
++
++const ALARMA_BASE: ManualAlarmRecord = {
++  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
++  tipo: 'alarma_manual',
++  titulo: '⚠️ PRECAUCIÓN',
++  mensaje: 'Diríjase con calma a la zona segura y siga las indicaciones del personal autorizado.',
++  severidad: 'critical',
++  fecha_activacion: '2026-11-23T12:00:00.000Z',
++  estado: 'activa',
++  evento: null,
++  origen: 'cliente',
++  eventoReportado: false,
++};
++
++class FakeSupabaseService {
++  readonly invocaciones: Array<{ nombre: string; opciones: { body?: unknown; method?: string } }> = [];
++  respuesta: unknown = { status: 'ACTIVATED', alarma: { ...ALARMA_BASE } };
++  error: Error | null = null;
++  conSesion = true;
++
++  readonly client = {
++    auth: {
++      getSession: async () => ({
++        data: { session: this.conSesion ? { access_token: 'token-simulado' } : null },
++        error: null,
++      }),
++    },
++    functions: {
++      invoke: async (nombre: string, opciones: { body?: unknown; method?: string }) => {
++        this.invocaciones.push({ nombre, opciones });
++        if (this.error) return { data: null, error: this.error };
++        return { data: this.respuesta, error: null };
++      },
++    },
++  } as unknown as SupabaseClient;
++}
++
++describe('ManualAlarmService — MQTT.5A', () => {
++  let service: ManualAlarmService;
++  let supabase: FakeSupabaseService;
++
++  beforeEach(() => {
++    supabase = new FakeSupabaseService();
++    TestBed.configureTestingModule({
++      providers: [{ provide: SupabaseService, useValue: supabase }],
++    });
++    service = TestBed.inject(ManualAlarmService);
++  });
++
++  it('conserva la firma legacy: activate(clave) envía solo clave_idempotencia', async () => {
++    const alarma = await service.activate(CLAVE);
++
++    expect(supabase.invocaciones[0]).toEqual({
++      nombre: 'activar-alarma-manual',
++      opciones: { body: { clave_idempotencia: CLAVE } },
++    });
++    expect(alarma.tipo).toBe('alarma_manual');
++    expect(alarma.evento).toBeNull();
++    expect(alarma.origen).toBe('cliente');
++    expect(alarma.eventoReportado).toBe(false);
++  });
++
++  it('envía evento y origen explícitos para los cinco eventos', async () => {
++    for (const evento of ALARM_INCIDENTES) {
++      supabase.invocaciones.length = 0;
++      supabase.respuesta = {
++        status: 'ACTIVATED',
++        alarma: { ...ALARMA_BASE, evento, eventoReportado: true },
++      };
++
++      const alarma = await service.activate(CLAVE, evento);
++
++      expect(supabase.invocaciones[0].opciones.body).toEqual({
++        clave_idempotencia: CLAVE,
++        evento,
++        origen: 'cliente',
++      });
++      expect(alarma.tipo).toBe('alarma_manual');
++      expect(alarma.evento).toBe(evento);
++      expect(alarma.eventoReportado).toBe(true);
++    }
++    expect(ALARM_INCIDENTES).toHaveLength(5);
++  });
++
++  it('rechaza eventos fuera del dominio antes de invocar al backend', async () => {
++    await expect(service.activate(CLAVE, 'volcan' as never)).rejects.toThrow('EVENTO_NO_VALIDO');
++    expect(supabase.invocaciones).toHaveLength(0);
++  });
++
++  it('normaliza históricos sin evento a evento:null sin inventarlo', async () => {
++    supabase.respuesta = {
++      status: 'SUCCESS',
++      hay_alarma_activa: true,
++      alarmas: [
++        { ...ALARMA_BASE, evento: undefined, origen: undefined, eventoReportado: undefined },
++        { ...ALARMA_BASE, id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', evento: 'sismo', origen: 'cliente' },
++        null,
++      ],
++    };
++
++    const alarmas = await service.getActiveAlarms();
++
++    expect(alarmas).toHaveLength(2);
++    expect(alarmas[0].evento).toBeNull();
++    expect(alarmas[0].origen).toBe('cliente');
++    expect(alarmas[0].eventoReportado).toBe(false);
++    expect(alarmas[1].evento).toBe('sismo');
++    expect(alarmas.every((alarma) => alarma.tipo === 'alarma_manual')).toBe(true);
++  });
++
++  it('propaga el código canónico EVENTO_NO_SELECCIONADO del backend', async () => {
++    supabase.error = new Error('EVENTO_NO_SELECCIONADO');
++
++    await expect(service.activate(CLAVE, 'incendio')).rejects.toThrow('EVENTO_NO_SELECCIONADO');
++  });
++});

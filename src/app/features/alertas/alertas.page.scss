@@ -438,6 +438,104 @@
   }
 }
 
+/* --- Notificaciones manuales --------------------------------------------- */
+
+.alert-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+  margin-top: var(--app-space-5);
+}
+
+.alert-notifications .app-section-head {
+  align-items: flex-start;
+}
+
+.alert-notifications .app-section-head > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alert-notifications > .app-section-head:first-child .app-badge {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.alert-notifications .alert-list {
+  gap: var(--app-space-3);
+}
+
+.alert-notifications article.app-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  border-left: 4px solid var(--app-border);
+}
+
+.alert-notifications article.app-card[data-read-status='unread'] {
+  border-color: rgba(179, 38, 30, 0.35);
+  border-left-color: var(--app-red);
+  background: linear-gradient(180deg, rgba(179, 38, 30, 0.04), transparent 48%), var(--app-surface);
+}
+
+.alert-notifications article.app-card[data-read-status='read'] {
+  border-color: var(--app-border-subtle);
+  border-left-color: var(--app-green);
+  background: var(--app-surface);
+}
+
+.alert-notifications article.app-card .alert-list-head {
+  margin-bottom: 0;
+  align-items: flex-start;
+}
+
+.alert-notifications article.app-card .alert-list-head > div {
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.alert-notifications article.app-card .app-card-title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.alert-notifications .alert-alarm__zone {
+  margin-top: var(--app-space-1);
+}
+
+.alert-notifications .alert-alarm__message {
+  margin: 0;
+}
+
+.alert-notifications article.app-card[data-read-status='read'] .alert-alarm__message {
+  background: var(--app-bg-secondary);
+  border-color: var(--app-border);
+  border-left-color: var(--app-text-soft);
+  color: var(--app-text);
+}
+
+.alert-notifications article.app-card[data-severity='critical'] .app-badge--danger {
+  max-width: 100%;
+}
+
+.alert-notifications .alert-empty__reset {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+@media (max-width: 359px) {
+  .alert-notifications .app-section-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .alert-notifications .alert-empty__reset {
+    width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .alert-filter,
   .alert-empty__reset {

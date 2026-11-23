@@ -124,6 +124,94 @@
       </section>
       }
 
+      <hr class="app-divider" />
+
+      <section class="alert-notifications" aria-labelledby="manual-notifications-title">
+        <div class="app-section-head">
+          <div>
+            <p class="app-overline">Alarma manual</p>
+            <h2 id="manual-notifications-title" class="app-card-title">Notificaciones de alarma manual</h2>
+          </div>
+          <span
+            class="app-badge"
+            [class.app-badge--danger]="manualNotificationUnreadCount() > 0"
+            aria-live="polite"
+            [attr.aria-label]="
+              manualNotificationUnreadCount() + ' notificaciones sin leer de ' + manualNotificationTotalCount() + ' en total'
+            "
+          >
+            {{ manualNotificationUnreadCount() }} sin leer · {{ manualNotificationTotalCount() }} en total
+          </span>
+        </div>
+
+        @if (manualNotificationUnreadCount() > 0) {
+        <div class="app-section-head">
+          <span class="app-overline">Pendientes de revisión</span>
+          <button type="button" class="alert-empty__reset" (click)="markAllManualNotificationsAsRead()">
+            <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+            Marcar todas como leídas
+          </button>
+        </div>
+        } @if (manualNotifications().length > 0) {
+        <section class="alert-list" aria-label="Lista de notificaciones de alarma manual">
+          @for (notification of manualNotifications(); track notification.eventId) {
+          <article
+            class="app-card"
+            [attr.data-read-status]="notification.readStatus"
+            [attr.data-severity]="notification.severity"
+          >
+            <div class="alert-list-head">
+              <div>
+                <h3 class="app-card-title">{{ notification.title }}</h3>
+                <p class="alert-alarm__zone">
+                  <time [attr.datetime]="notification.activatedAt" [attr.title]="notification.activatedAt">
+                    {{ notification.activatedAt | date: 'dd/MM/yyyy, h:mm a' }}
+                  </time>
+                </p>
+              </div>
+              <span class="app-badge app-badge--danger" [attr.aria-label]="'Severidad: ' + notification.severity">
+                Severidad: {{ notification.severity }}
+              </span>
+            </div>
+
+            <p class="alert-alarm__message">{{ notification.message }}</p>
+
+            <div class="alert-list-head">
+              <span
+                class="app-badge"
+                [class.app-badge--danger]="notification.readStatus === 'unread'"
+                [class.app-badge--success]="notification.readStatus === 'read'"
+                [attr.aria-label]="
+                  notification.readStatus === 'read' ? 'Estado de lectura: Leída' : 'Estado de lectura: Sin leer'
+                "
+              >
+                {{ notification.readStatus === 'read' ? 'Leída' : 'Sin leer' }}
+              </span>
+              @if (notification.readStatus === 'unread') {
+              <button
+                type="button"
+                class="alert-empty__reset"
+                [attr.aria-label]="'Marcar notificación ' + notification.eventId + ' como leída'"
+                (click)="markManualNotificationAsRead(notification.eventId)"
+              >
+                <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+                Marcar como leída
+              </button>
+              }
+            </div>
+          </article>
+          }
+        </section>
+        } @else {
+        <section class="app-card alert-empty" role="status">
+          <span class="alert-empty__icon">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <h3 class="alert-empty__title">No hay notificaciones de alarma manual.</h3>
+        </section>
+        }
+      </section>
+
       <p class="alert-note">
         <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
         <span>

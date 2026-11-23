@@ -9,9 +9,13 @@
  * oficiales de seguridad.
  */
 
-export type OccupancyStatus = 'normal' | 'warning' | 'critical';
+import type { ZoneType } from './zone-config.types';
 
-export type ZoneType = 'cafeteria' | 'biblioteca' | 'pasillo' | 'punto-encuentro';
+// El tipo canónico vive en el contrato de configuración; se reexporta para no
+// romper los consumidores existentes de `demo-monitoring`.
+export type { ZoneType };
+
+export type OccupancyStatus = 'normal' | 'warning' | 'critical';
 
 export interface OccupancyThresholds {
   readonly warning: number;

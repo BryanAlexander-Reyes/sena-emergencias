@@ -29,10 +29,17 @@ import {
   SIMULATION_STATE_LABELS,
   SimulatedSensorsService,
   type LedPattern,
+  type SensorDeviceType,
   type SimulatedSensor,
   type SimulationState,
 } from '../../../core/services/simulated-sensors.service';
 import { SecondaryPageComponent } from '../../../shared/secondary-page/secondary-page.component';
+
+/**
+ * Tipos con hardware real documentado. El contrato de `SimulatedSensorsService`
+ * conserva el resto por compatibilidad; aquí solo se filtran las tarjetas.
+ */
+const TIPOS_VISIBLES: ReadonlySet<SensorDeviceType> = new Set(['esp32', 'ir', 'ultrasonic']);
 
 @Component({
   selector: 'app-sensores',
@@ -46,11 +53,11 @@ export class SensoresPage {
   private readonly alertController = inject(AlertController);
   private readonly permissions = inject(DemoPermissionsService);
 
-  readonly sensors = this.sensorsService.sensors;
-  readonly totalDevices = this.sensorsService.totalDevices;
-  readonly activeSimulations = this.sensorsService.activeSimulations;
-  readonly pausedSimulations = this.sensorsService.pausedSimulations;
-  readonly faultSimulations = this.sensorsService.faultSimulations;
+  readonly sensors = computed(() => this.sensorsService.sensors().filter((sensor) => TIPOS_VISIBLES.has(sensor.type)));
+  readonly totalDevices = computed(() => this.sensors().length);
+  readonly activeSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'active').length);
+  readonly pausedSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'paused').length);
+  readonly faultSimulations = computed(() => this.sensors().filter((s) => s.simulationState === 'fault').length);
 
   readonly simulationStates: readonly SimulationState[] = ['active', 'paused', 'fault'];
   readonly ledPatterns = LED_PATTERNS;

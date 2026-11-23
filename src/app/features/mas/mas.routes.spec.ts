@@ -1,11 +1,12 @@
 import { adminAccessGuard } from '../../core/auth/admin-access.guard';
 import { AdminPage } from '../admin/admin.page';
+import { MonitoreoIotPage } from '../monitoreo-iot/monitoreo-iot.page';
 
 import { MasPage } from './mas.page';
 import { routes } from './mas.routes';
 
 describe('mas routes', () => {
-  it('should expose the menu, the five original destinations and the protected admin route', () => {
+  it('should expose the menu, the original destinations, MQTT monitoring and the protected admin route', () => {
     const paths = routes.map((route) => route.path);
 
     expect(paths).toEqual([
@@ -13,6 +14,7 @@ describe('mas routes', () => {
       'zona-segura',
       'estadisticas',
       'sensores',
+      'monitoreo-iot',
       'asistente',
       'configuracion',
       'administracion',
@@ -31,6 +33,12 @@ describe('mas routes', () => {
     const loaded = await route?.loadComponent?.();
 
     expect(loaded).toBe(MasPage);
+  });
+
+  it('should resolve the MQTT monitoring route to MonitoreoIotPage', async () => {
+    const route = routes.find((candidate) => candidate.path === 'monitoreo-iot');
+
+    expect(await route?.loadComponent?.()).toBe(MonitoreoIotPage);
   });
 
   it('should resolve the admin route to AdminPage behind the guard', async () => {

@@ -33,12 +33,35 @@ describe('ZonasPage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render the header and demo indicator', () => {
+  it('no muestra avisos de configuración remota en modo DEMO', () => {
+    expect(fixture.nativeElement.querySelector('.zone-status')).toBeNull();
+  });
+
+  it('should render the header and the local-configuration indicator in DEMO', () => {
     const content = fixture.nativeElement.textContent as string;
 
     expect(content).toContain('Monitoreo de zonas');
     expect(content).toContain('Supervisa la ocupación estimada de cada área');
-    expect(content).toContain('MODO DEMOSTRACIÓN');
+    expect(content).toContain('ZONAS LOCALES · OCUPACIÓN SIMULADA');
+    expect(content).not.toContain('MODO DEMOSTRACIÓN');
+    expect(content).toContain('OCUPACIÓN SIMULADA — DATOS NO REALES');
+  });
+
+  it('muestra el badge de configuración remota y conserva la advertencia de ocupación simulada', () => {
+    const monitoring = TestBed.inject(MonitoringStateService);
+    const modeSpy = vi.spyOn(monitoring, 'zoneConfigMode').mockReturnValue('remote');
+
+    const remoteFixture = TestBed.createComponent(ZonasPage);
+    remoteFixture.detectChanges();
+
+    const content = remoteFixture.nativeElement.textContent as string;
+
+    expect(content).toContain('ZONAS REMOTAS · OCUPACIÓN SIMULADA');
+    expect(content).not.toContain('ZONAS LOCALES · OCUPACIÓN SIMULADA');
+    expect(content).toContain('OCUPACIÓN SIMULADA — DATOS NO REALES');
+    expect(remoteFixture.nativeElement.querySelectorAll('app-zone-card')).toHaveLength(4);
+
+    modeSpy.mockRestore();
   });
 
   it('should read the totals from the centralized monitoring state', () => {

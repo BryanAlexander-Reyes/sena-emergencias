@@ -31,12 +31,13 @@ describe('app routes', () => {
     expect(children.map((route) => route.path)).toEqual(['', 'inicio', 'zonas', 'mapa', 'alertas', 'mas']);
   });
 
-  it('should keep the five existing secondary Más routes and add the protected admin route', () => {
+  it('should keep the existing secondary Más routes, MQTT monitoring and the protected admin route', () => {
     expect(masRoutes.map((route) => route.path)).toEqual([
       '',
       'zona-segura',
       'estadisticas',
       'sensores',
+      'monitoreo-iot',
       'asistente',
       'configuracion',
       'administracion',

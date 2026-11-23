@@ -423,6 +423,18 @@
   text-transform: uppercase;
 }
 
+.alarm-control__mqtt {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.4;
+
+  &[data-fase='pendiente'] {
+    color: var(--app-red);
+    font-weight: 700;
+  }
+}
+
 .alarm-control__text {
   margin: 0;
   color: var(--app-text-muted);

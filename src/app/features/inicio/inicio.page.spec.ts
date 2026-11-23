@@ -8,23 +8,84 @@ import {
   verifiedTestIdentities,
   type VerifiedTestIdentities,
 } from '../../core/auth/testing/verified-session-test.util';
+import { ALARM_INCIDENTES, type AlarmaIncidente } from '../../core/data/alarm-incident-contract';
 import { countActiveAlerts, getActiveCriticalAlert } from '../../core/data/demo-alerts';
 import { DEMO_ZONES } from '../../core/data/demo-monitoring';
 import { AlertsStateService } from '../../core/services/alerts-state.service';
 import { DemoAlarmStateService } from '../../core/services/demo-alarm-state.service';
+import { ManualAlarmSyncService } from '../../core/services/manual-alarm-sync.service';
+import {
+  AlarmCommandPendingError,
+  ManualAlarmService,
+  type ManualAlarmOperationResult,
+  type ManualAlarmRecord,
+} from '../../core/services/manual-alarm.service';
 
 import { InicioPage } from './inicio.page';
+
+const ALARMA_PRUEBA: ManualAlarmRecord = {
+  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  tipo: 'alarma_manual',
+  titulo: '⚠️ PRECAUCIÓN',
+  mensaje: 'Diríjase con calma a la zona segura y siga las indicaciones del personal autorizado.',
+  severidad: 'critical',
+  fecha_activacion: '2026-11-23T12:00:00.000Z',
+  estado: 'activa',
+  evento: null,
+  origen: 'cliente',
+  eventoReportado: false,
+};
+
+const COMANDO_PUBLICADO = {
+  fase: 'publicado',
+  mensaje: 'Comando entregado al transporte MQTT. Sin confirmación física del ESP32.',
+} as const;
+
+class FakeManualAlarmService {
+  readonly activaciones: { clave: string; evento?: AlarmaIncidente }[] = [];
+  private activa: ManualAlarmRecord | null = null;
+  errorAlActivar: Error | null = null;
+
+  async getActiveAlarms(): Promise<ManualAlarmRecord[]> {
+    return this.activa === null ? [] : [this.activa];
+  }
+
+  async activate(clave: string, evento?: AlarmaIncidente): Promise<ManualAlarmOperationResult> {
+    this.activaciones.push({ clave, evento });
+    const alarma: ManualAlarmRecord = {
+      ...ALARMA_PRUEBA,
+      id: `alarma-${this.activaciones.length}`,
+      evento: evento ?? null,
+      eventoReportado: evento !== undefined,
+    };
+    if (this.errorAlActivar !== null) throw this.errorAlActivar;
+    this.activa = alarma;
+    return { ...alarma, comandoMqtt: COMANDO_PUBLICADO };
+  }
+
+  async finalize(id: string): Promise<ManualAlarmOperationResult> {
+    this.activa = null;
+    return { ...ALARMA_PRUEBA, id, estado: 'finalizada', comandoMqtt: COMANDO_PUBLICADO };
+  }
+
+  reiniciar(): void {
+    this.activa = null;
+    this.errorAlActivar = null;
+  }
+}
 
 describe('InicioPage', () => {
   let component: InicioPage;
   let fixture: ComponentFixture<InicioPage>;
   let verified: VerifiedTestIdentities;
+  let manualAlarm: FakeManualAlarmService;
 
   beforeEach(async () => {
     verified = await verifiedTestIdentities();
+    manualAlarm = new FakeManualAlarmService();
     await TestBed.configureTestingModule({
       imports: [InicioPage],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: ManualAlarmService, useValue: manualAlarm }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(InicioPage);
@@ -34,6 +95,10 @@ describe('InicioPage', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('no muestra avisos de configuración remota en modo DEMO', () => {
+    expect(fixture.nativeElement.querySelector('.zone-status')).toBeNull();
   });
 
   it('should render the dashboard header and system status', () => {
@@ -98,6 +163,18 @@ describe('InicioPage', () => {
     expect(component.activeAlert()?.zoneName).toBe('Pasillo principal');
   });
 
+  const publicarOperador = (rol: 'administrador' | 'instructor'): void => {
+    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified[rol]);
+    fixture.detectChanges();
+  };
+
+  const seleccionarEvento = (evento: unknown): void => {
+    const select = fixture.nativeElement.querySelector('#alarm-evento');
+    expect(select).not.toBeNull();
+    select.dispatchEvent(new CustomEvent('ionChange', { detail: { value: evento } }));
+    fixture.detectChanges();
+  };
+
   const mockConfirmation = () => {
     const alertController = TestBed.inject(AlertController);
     const alert = {
@@ -125,22 +202,22 @@ describe('InicioPage', () => {
 
     expect(status.textContent).toContain('Alarma apagada');
     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
     expect(note.textContent).toContain('Solo Administradores e Instructores pueden controlar la alarma.');
 
-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.instructor);
-    fixture.detectChanges();
+    publicarOperador('instructor');
 
     expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.alarm-control__note')).toBeNull();
   });
 
   it('refleja reactivamente los cambios de alarma en Inicio', () => {
-    const session = TestBed.inject(DemoSessionService);
+    publicarOperador('administrador');
     const alarm = TestBed.inject(DemoAlarmStateService);
-    session.publishVerifiedIdentity(verified.administrador);
-    fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.alarm-control__notice')?.getAttribute('data-scenario')).toBe('B');
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).not.toBeNull();
 
     alarm.turnOn();
     fixture.detectChanges();
@@ -152,10 +229,41 @@ describe('InicioPage', () => {
     expect((fixture.nativeElement.querySelector('.alarm-control__button') as HTMLElement).textContent).toContain(
       'Apagar alarma',
     );
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
+  });
+
+  it('muestra el selector con los cinco eventos para ambos operadores y ninguno para aprendiz', () => {
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
+
+    publicarOperador('administrador');
+    const opciones = Array.from(
+      fixture.nativeElement.querySelectorAll('#alarm-evento ion-select-option') as NodeListOf<HTMLElement>,
+    ).map((opcion) => opcion.textContent?.trim());
+    expect(opciones).toEqual([...ALARM_INCIDENTES]);
+
+    publicarOperador('instructor');
+    expect(fixture.nativeElement.querySelectorAll('#alarm-evento ion-select-option')).toHaveLength(5);
+
+    TestBed.inject(DemoSessionService).selectProfile('aprendiz');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#alarm-evento')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.alarm-control__button')).toHaveLength(0);
+  });
+
+  it('exige selección explícita antes de abrir la confirmación de encendido', async () => {
+    publicarOperador('administrador');
+    const { createSpy } = mockConfirmation();
+
+    await component.confirmTurnOn();
+
+    expect(createSpy.mock.calls.at(0)?.at(0)?.header).toBe('Selecciona el tipo de alarma');
+    expect(manualAlarm.activaciones).toHaveLength(0);
   });
 
   it('muestra el diálogo de encendido con los textos y botones esperados', async () => {
-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
+    publicarOperador('administrador');
+    seleccionarEvento('incendio');
     const { createSpy, buttons } = mockConfirmation();
 
     await component.confirmTurnOn();
@@ -167,47 +275,117 @@ describe('InicioPage', () => {
   });
 
   it('cancelar el diálogo no cambia el estado', async () => {
-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
+    publicarOperador('administrador');
+    seleccionarEvento('incendio');
     const alarm = TestBed.inject(DemoAlarmStateService);
     mockConfirmation();
 
     await component.confirmTurnOn();
 
     expect(alarm.isOn()).toBe(false);
+    expect(manualAlarm.activaciones).toHaveLength(0);
   });
 
-  it('ejecuta el encendido y el apagado al confirmar', async () => {
-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
+  it('ejecuta el encendido y el apagado al confirmar con el evento elegido', async () => {
+    publicarOperador('administrador');
+    seleccionarEvento('incendio');
     const alarm = TestBed.inject(DemoAlarmStateService);
+    const activateSpy = vi.spyOn(manualAlarm, 'activate');
     const { buttons } = mockConfirmation();
 
     await component.confirmTurnOn();
     buttons().at(1)?.handler?.();
-    expect(alarm.isOn()).toBe(true);
+    await vi.waitFor(() => expect(alarm.isOn()).toBe(true));
 
-    // Se reinicia el spy para la segunda confirmación.
+    expect(activateSpy).toHaveBeenCalledWith(expect.any(String), 'incendio');
+    expect(component.eventoAlarma()).toBeNull();
+
     vi.restoreAllMocks();
     const { buttons: offButtons } = mockConfirmation();
     await component.confirmTurnOff();
     offButtons().at(1)?.handler?.();
-    expect(alarm.isOn()).toBe(false);
+    await vi.waitFor(() => expect(alarm.isOn()).toBe(false));
+  });
+
+  it('muestra que el comando MQTT publicado no confirma el buzzer físico', async () => {
+    publicarOperador('administrador');
+    seleccionarEvento('simulacro');
+    const { buttons } = mockConfirmation();
+
+    await component.confirmTurnOn();
+    buttons().at(1)?.handler?.();
+    await vi.waitFor(() => expect(component.comandoMqtt()?.fase).toBe('publicado'));
+    fixture.detectChanges();
+
+    const nota = fixture.nativeElement.querySelector('.alarm-control__mqtt') as HTMLElement;
+    expect(nota.getAttribute('data-fase')).toBe('publicado');
+    expect(nota.textContent).toContain('Sin confirmación física');
+  });
+
+  it('muestra estado pendiente sin afirmar que sonó el buzzer', async () => {
+    publicarOperador('administrador');
+    seleccionarEvento('simulacro');
+    manualAlarm.errorAlActivar = new AlarmCommandPendingError('MQTT_NO_CONECTADO', ALARMA_PRUEBA);
+    const { buttons } = mockConfirmation();
+
+    await component.confirmTurnOn();
+    buttons().at(1)?.handler?.();
+    await vi.waitFor(() => expect(component.comandoMqtt()?.fase).toBe('pendiente'));
+    fixture.detectChanges();
+
+    const nota = fixture.nativeElement.querySelector('.alarm-control__mqtt') as HTMLElement;
+    expect(nota.getAttribute('data-fase')).toBe('pendiente');
+    expect(nota.textContent).toContain('no se publicó');
+  });
+
+  it('activa los cinco eventos para administrador e instructor', async () => {
+    for (const rol of ['administrador', 'instructor'] as const) {
+      for (const evento of ALARM_INCIDENTES) {
+        manualAlarm.reiniciar();
+        await TestBed.inject(ManualAlarmSyncService).refresh();
+        component.activeManualAlarmId.set(null);
+        publicarOperador(rol);
+        component.seleccionarEventoAlarma(evento);
+        const activateSpy = vi.spyOn(manualAlarm, 'activate');
+        const { buttons } = mockConfirmation();
+
+        await component.confirmTurnOn();
+        buttons().at(1)?.handler?.();
+        await vi.waitFor(() => expect(activateSpy).toHaveBeenCalled());
+
+        expect(activateSpy).toHaveBeenCalledWith(expect.any(String), evento);
+        expect(manualAlarm.activaciones.at(-1)?.evento).toBe(evento);
+        expect(component.eventoAlarma()).toBeNull();
+
+        TestBed.inject(DemoAlarmStateService).turnOff();
+        fixture.detectChanges();
+        vi.restoreAllMocks();
+      }
+    }
+
+    expect(manualAlarm.activaciones).toHaveLength(10);
   });
 
   it('revalúa el permiso si cambia el perfil durante la confirmación', async () => {
+    publicarOperador('administrador');
+    seleccionarEvento('sismo');
     const session = TestBed.inject(DemoSessionService);
     const alarm = TestBed.inject(DemoAlarmStateService);
-    session.publishVerifiedIdentity(verified.administrador);
     const { buttons } = mockConfirmation();
 
     await component.confirmTurnOn();
     session.selectProfile('aprendiz');
     buttons().at(1)?.handler?.();
+    await Promise.resolve();
 
     expect(alarm.isOn()).toBe(false);
+    expect(manualAlarm.activaciones).toHaveLength(0);
+    expect(component.eventoAlarma()).toBeNull();
   });
 
   it('ignora pulsaciones rápidas mientras hay una confirmación abierta', async () => {
-    TestBed.inject(DemoSessionService).publishVerifiedIdentity(verified.administrador);
+    publicarOperador('administrador');
+    seleccionarEvento('emergencia');
     const alertController = TestBed.inject(AlertController);
     const alert = {
       present: vi.fn().mockResolvedValue(undefined),

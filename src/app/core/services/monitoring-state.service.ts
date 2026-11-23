@@ -1,16 +1,17 @@
 /**
  * SENA CROWD INTELLIGENCE — estado centralizado del monitoreo (Fases 3.2–3.5).
  *
- * Fuente única de verdad en memoria para las zonas simuladas. La capa de datos
- * (`core/data/demo-monitoring.ts`) conserva los valores iniciales y las
- * funciones puras; este servicio expone lecturas reactivas y las operaciones
- * manuales del simulador.
+ * Fuente única de verdad en memoria para la OCUPACIÓN SIMULADA. La
+ * configuración de zonas vive aparte, en `ZoneConfigStateService` (ZONAS.3):
+ * este servicio consume ese store raíz para que Inicio, Zonas y Mapa vean
+ * exactamente la misma configuración sin consultar Supabase por pantalla.
  *
- * Las capacidades y los identificadores nunca cambian. Los valores iniciales
- * se conservan aparte para poder restablecer una zona o todas las zonas.
+ * En modo DEMO se conservan las referencias originales de `DEMO_ZONES` y todas
+ * las reglas de simulación existentes. En modo REMOTO las zonas se proyectan
+ * desde la configuración validada, con ocupación simulada inicializada en cero.
  */
 
-import { computed, Injectable, inject, signal } from '@angular/core';
+import { computed, Injectable, inject, signal, type Signal } from '@angular/core';
 
 import {
   countPeople,
@@ -24,8 +25,10 @@ import {
   type MonitoringZone,
   type OccupancyStatus,
 } from '../data/demo-monitoring';
+import type { ZoneConfig } from '../data/zone-config.types';
 
 import { SimulationHistoryService, type OccupancyChangeAction } from './simulation-history.service';
+import { ZoneConfigStateService, type ZoneConfigStatus } from './zone-config-state.service';
 
 export interface ZoneSnapshot {
   readonly zone: MonitoringZone;
@@ -45,6 +48,18 @@ export interface MonitoringSummary {
 
 const INITIAL_PEOPLE_BY_ID: ReadonlyMap<string, number> = new Map(DEMO_ZONES.map((zone) => [zone.id, zone.people]));
 
+/** Marcador explícito de "sin zonas", nunca datos DEMO disfrazados de reales. */
+const REMOTE_EMPTY_ZONE: MonitoringZone = {
+  id: 'sin-zonas-configuradas',
+  code: '—',
+  name: 'Sin zonas disponibles',
+  people: 0,
+  capacity: 0,
+  icon: 'information-circle-outline',
+  type: 'punto-encuentro',
+  safe: false,
+};
+
 function toZoneSnapshot(zone: MonitoringZone): ZoneSnapshot {
   const occupancy = getZoneOccupancy(zone);
   const status = getOccupancyStatus(occupancy);
@@ -58,12 +73,37 @@ function toZoneSnapshot(zone: MonitoringZone): ZoneSnapshot {
   };
 }
 
+/** Proyecta configuración pura + ocupación simulada sin mezclar sus orígenes. */
+function toMonitoringZone(config: ZoneConfig, people: number): MonitoringZone {
+  return {
+    id: config.id,
+    code: config.codigo,
+    name: config.nombre,
+    people,
+    capacity: config.capacidad,
+    icon: config.icono,
+    type: config.tipo,
+    safe: config.segura,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class MonitoringStateService {
-  private readonly zonesState = signal<readonly MonitoringZone[]>(DEMO_ZONES);
+  private readonly zoneConfigState = inject(ZoneConfigStateService);
   private readonly history = inject(SimulationHistoryService);
 
-  readonly zones = this.zonesState.asReadonly();
+  private readonly demoZonesState = signal<readonly MonitoringZone[]>(DEMO_ZONES);
+  private readonly remotePeopleById = signal<ReadonlyMap<string, number>>(new Map());
+
+  readonly zones = computed<readonly MonitoringZone[]>(() => {
+    if (this.zoneConfigState.mode() === 'demo') {
+      return this.demoZonesState();
+    }
+
+    return this.zoneConfigState
+      .activeConfigs()
+      .map((config) => toMonitoringZone(config, this.remotePeopleById().get(config.id) ?? 0));
+  });
   readonly lastUpdate = DEMO_LAST_UPDATE;
 
   readonly snapshots = computed<readonly ZoneSnapshot[]>(() => this.zones().map(toZoneSnapshot));
@@ -75,13 +115,26 @@ export class MonitoringStateService {
   readonly monitoredZones = computed(() => this.zones().length);
   readonly hasOccupancyChanges = computed(() =>
     this.zones().some((zone) => {
-      const initial = INITIAL_PEOPLE_BY_ID.get(zone.id);
+      const initial = this.initialPeopleOf(zone.id);
 
       return initial !== undefined && zone.people !== initial;
     }),
   );
 
-  readonly safeZone = computed<MonitoringZone>(() => this.zones().find((zone) => zone.safe) ?? DEMO_SAFE_ZONE);
+  readonly safeZone = computed<MonitoringZone>(() => {
+    const zones = this.zones();
+    const safeZone = zones.find((zone) => zone.safe === true);
+
+    if (safeZone) {
+      return safeZone;
+    }
+
+    if (this.zoneConfigState.mode() === 'demo') {
+      return DEMO_SAFE_ZONE;
+    }
+
+    return zones[0] ?? REMOTE_EMPTY_ZONE;
+  });
   readonly safeZoneSnapshot = computed(() => toZoneSnapshot(this.safeZone()));
   readonly safeZonePeople = computed(() => this.safeZone().people);
   readonly safeZoneOccupancy = computed(() => this.safeZoneSnapshot().occupancy);
@@ -109,6 +162,25 @@ export class MonitoringStateService {
       statusCounts,
     };
   });
+
+  /** Señales del store de configuración, compartidas por las tres pantallas. */
+  readonly zoneConfigs = this.zoneConfigState.configs;
+  readonly activeZoneConfigs = this.zoneConfigState.activeConfigs;
+  readonly zoneConfigMode = this.zoneConfigState.mode;
+  readonly zoneConfigLoading = this.zoneConfigState.loading;
+  readonly zoneConfigEmpty = this.zoneConfigState.empty;
+  readonly zoneConfigError = this.zoneConfigState.error;
+  readonly zoneConfigStatus: Signal<ZoneConfigStatus> = this.zoneConfigState.status;
+
+  /** Refresco al entrar a una pantalla, sin consultas Supabase independientes. */
+  ensureZoneConfigs(): Promise<void> {
+    return this.zoneConfigState.onScreenEnter();
+  }
+
+  /** Reintento explícito: usa la misma petición en curso si ya hay una. */
+  retryZoneConfigs(): Promise<void> {
+    return this.zoneConfigState.retry();
+  }
 
   zoneById(zoneId: string): MonitoringZone | undefined {
     return this.zones().find((zone) => zone.id === zoneId);
@@ -146,7 +218,7 @@ export class MonitoringStateService {
 
   isAtInitialOccupancy(zoneId: string): boolean {
     const zone = this.zoneById(zoneId);
-    const initial = INITIAL_PEOPLE_BY_ID.get(zoneId);
+    const initial = this.initialPeopleOf(zoneId);
 
     return zone !== undefined && initial !== undefined && zone.people === initial;
   }
@@ -160,7 +232,7 @@ export class MonitoringStateService {
   }
 
   resetZoneOccupancy(zoneId: string): boolean {
-    const initial = INITIAL_PEOPLE_BY_ID.get(zoneId);
+    const initial = this.initialPeopleOf(zoneId);
 
     if (initial === undefined) {
       return false;
@@ -172,15 +244,18 @@ export class MonitoringStateService {
   resetAllOccupancy(): boolean {
     const zones = this.zones();
     const changes: { zone: MonitoringZone; previousPeople: number; newPeople: number }[] = [];
+    const nextRemotePeople = new Map(this.remotePeopleById());
 
-    const nextZones = zones.map((zone) => {
-      const initial = INITIAL_PEOPLE_BY_ID.get(zone.id);
+    const nextDemoZones = zones.map((zone) => {
+      const initial = this.initialPeopleOf(zone.id);
 
       if (initial === undefined || initial === zone.people) {
         return zone;
       }
 
       changes.push({ zone, previousPeople: zone.people, newPeople: initial });
+      nextRemotePeople.set(zone.id, initial);
+
       return { ...zone, people: initial };
     });
 
@@ -188,7 +263,7 @@ export class MonitoringStateService {
       return false;
     }
 
-    this.zonesState.set(nextZones);
+    this.applyOccupancyChange(nextDemoZones, nextRemotePeople);
 
     const operationId = `reset-all-${Date.now().toString(36)}`;
     const totalAfter = this.totalPeople();
@@ -206,6 +281,31 @@ export class MonitoringStateService {
     }
 
     return true;
+  }
+
+  private get usingRemoteConfig(): boolean {
+    return this.zoneConfigState.mode() === 'remote';
+  }
+
+  private initialPeopleOf(zoneId: string): number | undefined {
+    if (this.usingRemoteConfig) {
+      return this.zoneConfigState.activeConfigs().some((config) => config.id === zoneId) ? 0 : undefined;
+    }
+
+    return INITIAL_PEOPLE_BY_ID.get(zoneId);
+  }
+
+  private applyOccupancyChange(
+    nextDemoZones: readonly MonitoringZone[],
+    nextRemotePeople: ReadonlyMap<string, number>,
+  ): void {
+    if (this.usingRemoteConfig) {
+      this.remotePeopleById.set(nextRemotePeople);
+
+      return;
+    }
+
+    this.demoZonesState.set(nextDemoZones);
   }
 
   private updateZone(
@@ -226,7 +326,13 @@ export class MonitoringStateService {
       return false;
     }
 
-    this.zonesState.set(zones.map((item) => (item === zone ? { ...item, people } : item)));
+    if (this.usingRemoteConfig) {
+      const nextRemotePeople = new Map(this.remotePeopleById());
+      nextRemotePeople.set(zoneId, people);
+      this.remotePeopleById.set(nextRemotePeople);
+    } else {
+      this.demoZonesState.set(zones.map((item) => (item === zone ? { ...item, people } : item)));
+    }
 
     if (action) {
       this.history.recordChange({

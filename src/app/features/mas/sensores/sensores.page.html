@@ -106,18 +106,6 @@
             Alternar paso: {{ sensor.reading ? 'Sí' : 'No' }}
           </ion-button>
         </div>
-        } @if (sensor.type === 'pir') {
-        <div class="sensor-field">
-          <span>Lectura simulada (PIR)</span>
-          <ion-button
-            size="small"
-            fill="outline"
-            [disabled]="!canControlReading(sensor)"
-            (click)="togglePir(sensor.id)"
-          >
-            Alternar movimiento: {{ sensor.reading ? 'Sí' : 'No' }}
-          </ion-button>
-        </div>
         } @if (sensor.type === 'ultrasonic') {
         <div class="sensor-field">
           <span>Distancia simulada (cm, ≥ 0)</span>
@@ -133,44 +121,6 @@
               aria-label="Distancia simulada en centímetros"
             ></ion-input>
             <span class="sensor-field__unit">cm</span>
-          </div>
-        </div>
-        } @if (sensor.type === 'servo') {
-        <div class="sensor-field">
-          <span>Ángulo simulado (0°–180°)</span>
-          <div class="sensor-field__row">
-            <ion-input
-              type="number"
-              min="0"
-              max="180"
-              step="1"
-              inputmode="numeric"
-              [value]="sensor.servoAngle"
-              [disabled]="!canControlReading(sensor)"
-              (ionChange)="setServo(sensor.id, $event.detail.value)"
-              aria-label="Ángulo simulado del servomotor"
-            ></ion-input>
-            <span class="sensor-field__unit">°</span>
-          </div>
-        </div>
-        } @if (sensor.type === 'led-matrix') {
-        <div class="sensor-field">
-          <span>Patrón visual simulado</span>
-          <div class="sensor-field__row">
-            <ion-select
-              interface="popover"
-              [value]="sensor.ledPattern"
-              [disabled]="!canControlReading(sensor)"
-              (ionChange)="setLed(sensor.id, $event.detail.value)"
-              aria-label="Patrón de matriz LED"
-            >
-              @for (p of ledPatterns; track p) {
-              <ion-select-option [value]="p">{{ ledLabel(p) }}</ion-select-option>
-              }
-            </ion-select>
-            <ion-button size="small" fill="clear" [disabled]="!canControlReading(sensor)" (click)="cycleLed(sensor.id)">
-              Cambiar
-            </ion-button>
           </div>
         </div>
         } @if (!canControlReading(sensor) && sensor.type !== 'esp32') {

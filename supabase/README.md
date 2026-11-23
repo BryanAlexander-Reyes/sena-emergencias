@@ -1,7 +1,8 @@
-# Supabase — Fase 5.2.2, Punto A.1
+# Supabase — Fase 5.2.2, Punto A.1 y ZONAS.4
 
 Preparación local corregida de esquema, RLS, Custom Access Token Hook, pruebas y procedimientos.
-**Este directorio no aplica cambios a Supabase Cloud.** La ejecución remota requiere una autorización explícita nueva (Punto B).
+Incluye además la migración local de configuración de zonas (ZONAS.4).
+**Este directorio no aplica cambios a Supabase Cloud.** La ejecución remota requiere una autorización explícita nueva (Punto B / ZONAS.5).
 
 ## Alcance
 
@@ -10,6 +11,7 @@ Incluido:
 - Migración versionada de `public.usuarios` con exactamente cuatro columnas.
 - Políticas RLS y funciones auxiliares mínimas.
 - Función preparada para el Custom Access Token Hook.
+- Migración versionada de `public.zonas`, vista `public.zonas_publicas` y seed controlado (ZONAS.4).
 - Pruebas SQL sin ejecutar.
 - Procedimiento manual del Administrador inicial.
 - Plantilla `.env.example` sin secretos.
@@ -24,6 +26,7 @@ Excluido:
 - Creación de usuarios reales.
 - Cambios remotos de Auth.
 - Commit y push.
+- Activación de `ZONE_CONFIG_MODE = 'remote'`.
 
 ## Estado de las herramientas
 
@@ -38,11 +41,162 @@ Excluido:
 | Archivo | Contenido |
 | --- | --- |
 | `migrations/20261118000000_usuarios.sql` | Esquema, constraints, índice único, RLS, funciones auxiliares y hook. |
+| `migrations/20261120000000_zonas.sql` | ZONAS.4: tabla de zonas, constraints, RLS, vista pública y seed idempotente. |
 | `tests/usuarios_rls_test.sql` | Pruebas RLS, constraints, esquema exacto y privilegios. |
+| `tests/zonas_rls_test.sql` | ZONAS.4: pruebas de roles, JWT obsoleto, constraints, grants y contrato de columnas. |
 | `tests/custom_access_token_hook_test.sql` | Pruebas del hook: válido, corrección de rol, inexistente, inactivo y eventos mal formados. |
 | `../.env.example` | Nombres de variables públicas y privadas, sin valores. |
 | `../docs/fase-5.2.2-punto-a.1.md` | Informe de aceptación del Punto A.1. |
 | `../docs/fase-5.2.2-punto-b.1.md` | Revisión estática, guía de SQL Editor y checklist del Punto B.1. |
+
+## ZONAS.4 — configuración de zonas (preparación LOCAL)
+
+Dependencia: `20261118000000_usuarios.sql`. La migración de zonas falla temprano si
+`private.usuario_activo()` o `private.rol_actual()` no existen. No los modifica.
+
+### Objetos que se crearán
+
+| Objeto | Contenido |
+| --- | --- |
+| `public.zonas` | 17 columnas: identidad/configuración (9), geometría opcional (6) y `creado_en` / `actualizado_en`. Sin ocupación, sensores, MQTT, contraseñas ni notas. |
+| `zonas_id_check`, `zonas_codigo_check`, `zonas_nombre_check`, `zonas_capacidad_check`, `zonas_icono_check`, `zonas_tipo_check` | Equivalencias SQL de `ZONE_ID_PATTERN`, longitudes, `capacidad > 0`, `ZONE_ICON_PATTERN` y `ZONE_TYPES`. |
+| `zonas_map_complete_check`, `zonas_map_ranges_check` | Geometría toda presente o toda ausente; `x/y >= 0`, `ancho/alto > 0`. Coordenadas de etiqueta solo finitas por tipo `double precision`. |
+| `zonas_single_segura_key` | Índice único parcial `where segura`: como máximo una zona segura. |
+| `private.zonas_set_actualizado_en()` + trigger `zonas_touch_actualizado_en` | Actualiza `actualizado_en` en cada `UPDATE`. Función nueva, sin `SECURITY DEFINER`, con `search_path` fijo y sin `EXECUTE` público. |
+| Políticas RLS | `zonas_select_admin_or_public`, `zonas_insert_admin`, `zonas_update_admin` y la restrictiva `zonas_active_only`. Sin policies de `DELETE`. |
+| `public.zonas_publicas` | Vista `security_barrier = true`, propiedad de `postgres`, con exactamente 15 columnas. Sin `creado_en`, `actualizado_en` ni campos internos. |
+| Seed | Cuatro IDs históricos con `on conflict (id) do nothing`. Geometría tomada de `src/app/features/mapa/map-layout.ts`. |
+
+La tabla base tiene RLS habilitado, pero **no** `FORCE ROW LEVEL SECURITY`: la vista
+se ejecuta como su propietario `postgres` y por eso no está sujeta a RLS. El filtro
+`activo AND publico` y el bloqueo de cuentas inactivas se replican dentro de la vista.
+Cualquier acceso directo con `anon`/`authenticated` sí queda sujeto a RLS y a grants.
+
+### Permisos por rol
+
+| Actor | Tabla `public.zonas` | Vista `public.zonas_publicas` |
+| --- | --- | --- |
+| `anon` (Aprendiz / público) | Sin grants. No puede leer ni escribir. | `SELECT` de zonas `activo AND publico`. SIN escrituras. |
+| `authenticated` instructor activo | `SELECT` solo de filas `activo AND publico` por RLS. Sin escrituras. | `SELECT` del mismo subconjunto. |
+| `authenticated` administrador activo | `SELECT` de todas las filas; `INSERT` y `UPDATE` permitidos. Sin `DELETE`. | `SELECT` del subconjunto público; para ver todo usa la tabla base. |
+| Cuenta inactiva con JWT vigente | Ninguno: la policy restrictiva `zonas_active_only` bloquea lectura y escritura. | Ninguno: `auth.uid()` no es null y `private.usuario_activo()` devuelve falso. |
+| JWT con `app_metadata.app_role` obsoleto | No escalate: las policies consultan `private.rol_actual()` en PostgreSQL. | El rol del JWT no altera el filtro; solo cuenta el estado real de la cuenta. |
+| `service_role` | No se usa en Angular. La migración no le concede nada explícitamente; sigue siendo una credencial exclusiva de servidor. | Ídem. |
+
+Detalles de autorización:
+
+- `zonas_select_admin_or_public`: `private.rol_actual() = 'administrador' OR (activo AND publico)`.
+- `zonas_insert_admin`: `WITH CHECK (private.rol_actual() = 'administrador')`.
+- `zonas_update_admin`: `USING` y `WITH CHECK` con `private.rol_actual() = 'administrador'`.
+- `zonas_active_only`: `AS RESTRICTIVE FOR ALL`, `USING` y `WITH CHECK` con `private.usuario_activo()`.
+- `revoke all` seguido de `grant select, insert, update` a `authenticated` en la tabla; `revoke all` y `grant select` a `anon` y `authenticated` en la vista.
+- No existe `grant delete`, `grant truncate` ni policy de `DELETE`.
+
+### Compatibilidad con TypeScript
+
+| SQL (`zonas_publicas`) | Contrato TS | Observación |
+| --- | --- | --- |
+| `id` | `ZoneConfigRow.id` / `ZoneConfig.id` | `text`, patrón y longitud idénticos a `ZONE_ID_PATTERN`. |
+| `codigo` | `ZoneConfigRow.codigo` | `text` 1..32, no vacío. |
+| `nombre` | `ZoneConfigRow.nombre` | `text` 1..120, no vacío. |
+| `capacidad` | `ZoneConfigRow.capacidad` | `integer > 0`, equivalente a entero finito positivo. |
+| `icono` | `ZoneConfigRow.icono` | `text` 1..64 con `ZONE_ICON_PATTERN`. |
+| `tipo` | `ZoneConfigRow.tipo` (`ZoneType`) | `CHECK` con los cuatro valores de `ZONE_TYPES`. |
+| `segura` | `ZoneConfigRow.segura` | `boolean not null`. |
+| `activo` | `ZoneConfigRow.activo` | `boolean not null`; la vista solo devuelve `true`. |
+| `publico` | `ZoneConfigRow.publico` | `boolean not null`; la vista solo devuelve `true`. |
+| `map_x`, `map_y`, `ancho`, `alto`, `etiqueta_x`, `etiqueta_y` | `ZoneConfigRow.*` opcionales | `double precision`, todos o ninguno; `toZoneConfig()` reconstruye `map` o `null`. |
+
+Orden y nombres coinciden con `ZONES_PUBLIC_COLUMNS` y con la consulta
+`.select(...).eq('publico', true).eq('activo', true)` de `SupabaseZonesRepository`.
+Los filtros del repositorio son redundantes con la vista a propósito: defensa en
+profundidad, no una dependencia de la vista. `toZoneConfigList()` sigue validando
+toda la respuesta; una fila inválida hace fallar el listado sin datos parciales.
+
+`creado_en` y `actualizado_en` existen solo en la tabla base y no llegan al
+repositorio. No se agregaron columnas de ocupación real ni credenciales MQTT.
+
+### Validación local realizada
+
+- Revisión estática de los archivos SQL contra `zone-config.types.ts`,
+  `zone-config.validators.ts`, `supabase-zones.repository.ts`, `map-layout.ts` y
+  `20261118000000_usuarios.sql`.
+- Revisión de grants, RLS, ausencia de `DELETE`, filtros de la vista y uso
+  exclusivo de `private.usuario_activo()` / `private.rol_actual()`.
+- `psql`, Supabase CLI y Docker siguen sin estar disponibles: la sintaxis **no**
+  se ejecutó contra un motor PostgreSQL.
+- `supabase/tests/zonas_rls_test.sql` quedó preparado pero **NO VERIFICADO**.
+- No se ejecutó ningún comando remoto ni se cambió `ZONE_CONFIG_MODE` (sigue
+  `'demo'` en `src/main.ts`).
+
+### Riesgos y decisiones pendientes
+
+1. La vista no es `security_invoker`: depende de que siga siendo propiedad de
+   `postgres` y de que sus filtros no se relajen. Es una decisión deliberada para
+   que `anon` nunca reciba privilegios sobre la tabla base.
+2. La distinción `anon` / `authenticated` usa `auth.uid() is null`. Es válida con
+   el JWT anónimo actual (sin `sub`); si cambia el esquema de tokens hay que
+   revisarla.
+3. El seed guarda la geometría actual del plano. `ON CONFLICT DO NOTHING`
+   conserva valores existentes: un cambio futuro de `map-layout.ts` requerirá una
+   migración de actualización controlada, no un re-seed.
+4. `char_length` cuenta caracteres Unicode; `String.length` de TypeScript cuenta
+   unidades UTF-16. El desfase solo aparece con caracteres astrales y se acepta
+   como riesgo bajo; se documenta en lugar de endurecer el CHECK.
+5. Un JWT emitido antes de desactivar una cuenta sigue siendo válido hasta que
+   expire, pero no obtiene datos: el helper consulta `public.usuarios` en cada
+   petición. No se modifica Auth ni se revocan tokens.
+6. No hay `DELETE` desde la aplicación por diseño. Si algún día se requiere, debe
+   hacerse con autorización explícita y una migración/operación de servidor.
+7. Los filtros `activo`/`publico` están tanto en la vista como en el repositorio;
+   deben permanecer alineados si se cambia alguno.
+8. Las pruebas SQL están sin ejecutar: el primer paso con entorno local debe ser
+   ejecutarlas en una base desechable y corregir cualquier `FALLIDO`.
+
+### Procedimiento propuesto para aplicación futura (NO ejecutado)
+
+Requiere autorización explícita nueva. No imprimir secretos ni identificadores de
+proyecto.
+
+1. Confirmar el proyecto correcto (`sena-crowd-intelligence`) y que la migración
+   de usuarios y el hook ya están aplicados.
+2. Crear una base local desechable con ambas migraciones y ejecutar
+   `supabase/tests/usuarios_rls_test.sql` y `supabase/tests/zonas_rls_test.sql`.
+   La salida esperada es ausencia de `FALLIDO` y `ROLLBACK` final.
+3. Revisar el diff de `supabase/migrations/20261120000000_zonas.sql`.
+4. Solo con autorización: aplicar la migración con el mecanismo versionado
+   (`supabase db push`) en el proyecto confirmado.
+5. Validaciones de solo lectura propuestas:
+
+```sql
+-- Comprobaciones de revisión; NO ejecutar contra Cloud sin autorización.
+select column_name, data_type
+from information_schema.columns
+where table_schema = 'public' and table_name = 'zonas_publicas'
+order by ordinal_position;
+
+select policyname, cmd, roles, permissive, qual, with_check
+from pg_policies
+where schemaname = 'public' and tablename = 'zonas'
+order by policyname;
+
+select relrowsecurity, reloptions
+from pg_class
+where oid = 'public.zonas'::regclass;
+
+select has_table_privilege('anon', 'public.zonas', 'SELECT') as anon_base,
+       has_table_privilege('anon', 'public.zonas_publicas', 'SELECT') as anon_view,
+       has_table_privilege('authenticated', 'public.zonas', 'DELETE') as auth_delete;
+
+select id, codigo, nombre, capacidad, icono, tipo, segura, activo, publico
+from public.zonas_publicas
+order by id;
+```
+
+6. Verificar que la aplicación sigue en modo `demo` y que no aparece `service_role`
+   en el frontend. El cambio a `remote` es una fase posterior e independiente.
+7. **Detenerse** tras la preparación y revisión; esperar autorización explícita
+   antes de cualquier cambio en Supabase Cloud.
 
 ## Mecanismo de login
 

@@ -19,6 +19,24 @@ import {
   INSTRUCTOR_REPOSITORY_MESSAGES,
   InstructorRepositoryError,
 } from '../../core/auth/supabase-instructor-account.repository';
+import { ZONE_TYPES, type ZoneConfig, type ZoneId, type ZoneType } from '../../core/data/zone-config.types';
+import { ZoneConfigError } from '../../core/data/zone-config.validators';
+import {
+  EMPTY_ZONE_ADMIN_FORM,
+  ZONE_ADMIN_ICON_SUGGESTIONS,
+  zoneAdminFormFromConfig,
+  zoneAdminFormToConfig,
+  validateZoneAdminWrite,
+  type ZoneAdminFormValue,
+  type ZoneBooleanField,
+  type ZoneTextField,
+} from '../../core/data/zones-admin.input';
+import { ZONES_ADMIN_REPOSITORY } from '../../core/data/zones-admin.repository.contract';
+import {
+  ZONES_ADMIN_REPOSITORY_MESSAGES,
+  ZonesAdminRepositoryError,
+} from '../../core/data/zones-admin.repository.errors';
+import { ZoneConfigStateService } from '../../core/services/zone-config-state.service';
 import { SecondaryPageComponent } from '../../shared/secondary-page/secondary-page.component';
 
 type RoleFilter = AuthenticatedRole | 'all';
@@ -56,6 +74,23 @@ const LIST_LOADING_MESSAGE = 'Cargando usuarios…';
 const LIST_EMPTY_MESSAGE = 'No hay usuarios registrados en el servidor.';
 const LIST_FILTERED_EMPTY_MESSAGE = 'No hay usuarios para los filtros seleccionados.';
 const STATUS_UPDATING_MESSAGE = 'Actualizando estado del instructor…';
+
+export const ZONES_ADMIN_PERMISSION_ERROR = 'No tienes permiso para gestionar las zonas.';
+export const ZONES_LOADING_MESSAGE = 'Cargando zonas…';
+export const ZONES_EMPTY_MESSAGE = 'No hay zonas configuradas en el servidor.';
+export const ZONE_SAVING_MESSAGE = 'Guardando zona…';
+export const ZONE_STATUS_UPDATING_MESSAGE = 'Actualizando estado de la zona…';
+export const ZONE_CREATED_SUCCESS = 'Zona creada correctamente.';
+export const ZONE_UPDATED_SUCCESS = 'Zona actualizada correctamente.';
+export const ZONE_ACTIVATED_SUCCESS = 'Zona activada correctamente.';
+export const ZONE_DEACTIVATED_SUCCESS = 'Zona desactivada correctamente.';
+
+const ZONE_TYPE_LABELS: Readonly<Record<ZoneType, string>> = {
+  cafeteria: 'Cafetería',
+  biblioteca: 'Biblioteca',
+  pasillo: 'Pasillo',
+  'punto-encuentro': 'Punto de encuentro',
+};
 
 interface RoleSummary {
   readonly role: AuthenticatedRole;
@@ -145,6 +180,43 @@ export class AdminPage {
   readonly registrationError = signal<string | null>(null);
   readonly registrationSuccess = signal<string | null>(null);
 
+  private readonly zonesAdminRepository = inject(ZONES_ADMIN_REPOSITORY);
+  private readonly zoneConfigState = inject(ZoneConfigStateService);
+
+  /** Generación de carga de zonas: descarta respuestas en vuelo obsoletas. */
+  private zoneLoadGeneration = 0;
+
+  /** Evita abrir dos diálogos de confirmación para la misma zona. */
+  private zoneConfirmationInProgress = false;
+
+  readonly canManageZones = computed(() => this.permissions.can('zones:manage'));
+
+  readonly zones = signal<readonly ZoneConfig[]>([]);
+  readonly zonesLoading = signal(false);
+  readonly zonesError = signal<string | null>(null);
+  readonly zonesLoadingMessage = ZONES_LOADING_MESSAGE;
+  readonly zonesEmptyMessage = ZONES_EMPTY_MESSAGE;
+  readonly zoneSavingMessage = ZONE_SAVING_MESSAGE;
+  readonly zoneStatusUpdatingMessage = ZONE_STATUS_UPDATING_MESSAGE;
+
+  readonly activeZonesCount = computed(() => this.zones().filter((zone) => zone.activo).length);
+  readonly inactiveZonesCount = computed(() => this.zones().length - this.activeZonesCount());
+  readonly safeZoneName = computed(() => this.zones().find((zone) => zone.segura)?.nombre ?? null);
+
+  readonly zoneForm = signal<ZoneAdminFormValue>({ ...EMPTY_ZONE_ADMIN_FORM });
+  readonly editingZoneId = signal<ZoneId | null>(null);
+  readonly savingZone = signal(false);
+  readonly zoneFormError = signal<string | null>(null);
+  readonly zoneFormSuccess = signal<string | null>(null);
+
+  readonly updatingZoneId = signal<ZoneId | null>(null);
+  readonly failedZoneStatusId = signal<ZoneId | null>(null);
+  readonly zoneStatusSuccess = signal<string | null>(null);
+  readonly zoneStatusError = signal<string | null>(null);
+
+  readonly zoneTypes = ZONE_TYPES;
+  readonly zoneIcons = ZONE_ADMIN_ICON_SUGGESTIONS;
+
   constructor() {
     addIcons({
       bookOutline,
@@ -165,12 +237,14 @@ export class AdminPage {
 
     effect(() => {
       if (this.canAccess()) {
-        // `loadUsers()` lee estados reactivos internos; sin `untracked` el propio
-        // efecto se volvería a disparar al cambiar `usersLoading` y generaría un bucle.
+        // Las cargas leen estados reactivos internos; sin `untracked` el propio
+        // efecto se volvería a disparar al cambiar `usersLoading` o `zonesLoading`.
         void untracked(() => this.loadUsers());
+        void untracked(() => this.loadZones());
       } else {
         // Invalida respuestas en vuelo antes de limpiar la vista restringida.
         this.loadGeneration += 1;
+        this.zoneLoadGeneration += 1;
         this.users.set([]);
         this.usersLoading.set(false);
         this.usersError.set(null);
@@ -178,6 +252,18 @@ export class AdminPage {
         this.statusUpdateSuccess.set(null);
         this.statusUpdateError.set(null);
         this.failedStatusUserId.set(null);
+        this.zones.set([]);
+        this.zonesLoading.set(false);
+        this.zonesError.set(null);
+        this.zoneForm.set({ ...EMPTY_ZONE_ADMIN_FORM });
+        this.editingZoneId.set(null);
+        this.savingZone.set(false);
+        this.zoneFormError.set(null);
+        this.zoneFormSuccess.set(null);
+        this.updatingZoneId.set(null);
+        this.failedZoneStatusId.set(null);
+        this.zoneStatusSuccess.set(null);
+        this.zoneStatusError.set(null);
       }
     });
   }
@@ -437,5 +523,266 @@ export class AdminPage {
     }
 
     return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // ZONAS.6 — administración de la configuración remota de zonas
+  // ---------------------------------------------------------------------------
+
+  /** Carga todas las zonas, activas e inactivas, para el panel administrativo. */
+  async loadZones(): Promise<void> {
+    if (!this.canAccess() || !this.canManageZones() || this.zonesLoading()) {
+      return;
+    }
+
+    const generation = ++this.zoneLoadGeneration;
+    this.zonesLoading.set(true);
+    this.zonesError.set(null);
+
+    try {
+      const rows = await this.zonesAdminRepository.listAll();
+      if (generation !== this.zoneLoadGeneration) {
+        return;
+      }
+
+      // El repositorio ya entrega zonas validadas: se revalidan con el mismo
+      // adaptador de escritura para conservar la geometría anidada.
+      this.zones.set(rows.map((row) => validateZoneAdminWrite(row)));
+    } catch (error) {
+      if (generation !== this.zoneLoadGeneration) {
+        return;
+      }
+
+      this.zones.set([]);
+      this.zonesError.set(
+        error instanceof ZonesAdminRepositoryError ? error.message : ZONES_ADMIN_REPOSITORY_MESSAGES.QUERY_FAILED,
+      );
+    } finally {
+      if (generation === this.zoneLoadGeneration) {
+        this.zonesLoading.set(false);
+      }
+    }
+  }
+
+  startCreateZone(): void {
+    if (!this.canManageZones() || this.savingZone()) {
+      return;
+    }
+
+    this.zoneForm.set({ ...EMPTY_ZONE_ADMIN_FORM });
+    this.editingZoneId.set(null);
+    this.zoneFormError.set(null);
+    this.zoneFormSuccess.set(null);
+  }
+
+  startEditZone(zone: ZoneConfig): void {
+    if (!this.canManageZones() || this.savingZone()) {
+      return;
+    }
+
+    this.zoneForm.set(zoneAdminFormFromConfig(zone));
+    this.editingZoneId.set(zone.id);
+    this.zoneFormError.set(null);
+    this.zoneFormSuccess.set(null);
+  }
+
+  cancelZoneForm(): void {
+    if (this.savingZone()) {
+      return;
+    }
+
+    this.zoneForm.set({ ...EMPTY_ZONE_ADMIN_FORM });
+    this.editingZoneId.set(null);
+    this.zoneFormError.set(null);
+    this.zoneFormSuccess.set(null);
+  }
+
+  onZoneTextInput(field: ZoneTextField, event: Event | CustomEvent<{ value?: string | null }>): void {
+    // El ID de una zona existente es estable: no se puede cambiar al editar.
+    if (field === 'id' && this.editingZoneId() !== null) {
+      return;
+    }
+
+    const detail = (event as CustomEvent<{ value?: string | null }>).detail;
+    const value =
+      typeof detail === 'object' && detail !== null && 'value' in detail
+        ? (detail.value ?? '')
+        : ((event.target as HTMLInputElement | null)?.value ?? '');
+
+    this.zoneForm.update((form) => ({ ...form, [field]: value }) as ZoneAdminFormValue);
+  }
+
+  onZoneBooleanInput(field: ZoneBooleanField, event: Event): void {
+    this.setZoneBoolean(field, (event.target as HTMLInputElement).checked);
+  }
+
+  setZoneBoolean(field: ZoneBooleanField, value: boolean): void {
+    this.zoneForm.update((form) => ({ ...form, [field]: value }) as ZoneAdminFormValue);
+  }
+
+  zoneTypeLabel(tipo: ZoneType): string {
+    return ZONE_TYPE_LABELS[tipo];
+  }
+
+  zoneStatusLabel(activo: boolean): string {
+    return activo ? 'Activa' : 'Inactiva';
+  }
+
+  zoneGeometryLabel(zone: ZoneConfig): string {
+    return zone.map === null ? 'Sin geometría' : 'Con geometría';
+  }
+
+  /** Alta o edición. Valida antes de enviar y bloquea cualquier doble envío. */
+  async saveZone(event?: Event): Promise<void> {
+    event?.preventDefault();
+
+    if (this.savingZone() || this.updatingZoneId() !== null) {
+      return;
+    }
+
+    if (!this.canAccess() || !this.canManageZones()) {
+      this.zoneFormError.set(ZONES_ADMIN_PERMISSION_ERROR);
+      this.zoneFormSuccess.set(null);
+      return;
+    }
+
+    const editingId = this.editingZoneId();
+    let config: ZoneConfig;
+
+    try {
+      config = validateZoneAdminWrite(zoneAdminFormToConfig(this.zoneForm()), editingId ?? undefined);
+    } catch (error) {
+      this.zoneFormError.set(
+        error instanceof ZoneConfigError ? error.message : ZONES_ADMIN_REPOSITORY_MESSAGES.VALIDATION_FAILED,
+      );
+      this.zoneFormSuccess.set(null);
+      return;
+    }
+
+    const duplicate = this.zones().some((zone) => zone.id === config.id && zone.id !== editingId);
+    if (duplicate) {
+      this.zoneFormError.set(ZONES_ADMIN_REPOSITORY_MESSAGES.DUPLICATE_ID);
+      this.zoneFormSuccess.set(null);
+      return;
+    }
+
+    const safeConflict = config.segura && this.zones().some((zone) => zone.segura && zone.id !== editingId);
+    if (safeConflict) {
+      this.zoneFormError.set(ZONES_ADMIN_REPOSITORY_MESSAGES.SAFE_ZONE_CONFLICT);
+      this.zoneFormSuccess.set(null);
+      return;
+    }
+
+    this.savingZone.set(true);
+    this.zoneFormError.set(null);
+    this.zoneFormSuccess.set(null);
+
+    try {
+      const saved =
+        editingId === null
+          ? await this.zonesAdminRepository.create(config)
+          : await this.zonesAdminRepository.update(editingId, config);
+
+      // El ID devuelto por el servidor debe ser el mismo que se envió.
+      if (saved.id !== config.id) {
+        throw new ZonesAdminRepositoryError('INVALID_RESPONSE');
+      }
+
+      this.zoneFormSuccess.set(editingId === null ? ZONE_CREATED_SUCCESS : ZONE_UPDATED_SUCCESS);
+      this.zoneForm.set({ ...EMPTY_ZONE_ADMIN_FORM });
+      this.editingZoneId.set(null);
+    } catch (error) {
+      this.zoneFormError.set(
+        error instanceof ZonesAdminRepositoryError ? error.message : ZONES_ADMIN_REPOSITORY_MESSAGES.QUERY_FAILED,
+      );
+    } finally {
+      this.savingZone.set(false);
+    }
+
+    // Refresco best-effort: el éxito de la escritura no depende de la recarga.
+    if (this.zoneFormSuccess() !== null) {
+      await this.refreshZoneConfigs();
+      await this.loadZones();
+    }
+  }
+
+  /** Punto de entrada de activación/desactivación: exige confirmación explícita. */
+  async confirmZoneStatusChange(zone: ZoneConfig, activo: boolean): Promise<void> {
+    if (
+      !this.canAccess() ||
+      !this.canManageZones() ||
+      this.updatingZoneId() !== null ||
+      this.zoneConfirmationInProgress
+    ) {
+      return;
+    }
+
+    this.zoneConfirmationInProgress = true;
+    let role: string | undefined;
+
+    try {
+      const action = activo ? 'activar' : 'desactivar';
+      const alert = await this.alertController.create({
+        header: activo ? 'Activar zona' : 'Desactivar zona',
+        message: `¿Deseas ${action} la zona ${zone.nombre}? El cambio se aplicará en el servidor y las vistas que consumen la configuración se actualizarán.`,
+        buttons: [
+          { text: 'Cancelar', role: 'cancel' },
+          { text: activo ? 'Activar' : 'Desactivar', role: 'confirm' },
+        ],
+      });
+
+      await alert.present();
+      role = (await alert.onDidDismiss()).role;
+    } finally {
+      this.zoneConfirmationInProgress = false;
+    }
+
+    if (role !== 'confirm' || this.updatingZoneId() !== null || !this.canAccess() || !this.canManageZones()) {
+      return;
+    }
+
+    await this.applyZoneStatusChange(zone.id, activo);
+  }
+
+  /** Un reintento vuelve a pedir confirmación antes de enviar nada. */
+  retryZoneStatusChange(zone: ZoneConfig): void {
+    void this.confirmZoneStatusChange(zone, !zone.activo);
+  }
+
+  private async applyZoneStatusChange(id: ZoneId, activo: boolean): Promise<void> {
+    if (this.updatingZoneId() !== null) {
+      return;
+    }
+
+    this.updatingZoneId.set(id);
+    this.zoneStatusSuccess.set(null);
+    this.zoneStatusError.set(null);
+    this.failedZoneStatusId.set(null);
+
+    try {
+      await this.zonesAdminRepository.setActive(id, activo);
+      this.zoneStatusSuccess.set(activo ? ZONE_ACTIVATED_SUCCESS : ZONE_DEACTIVATED_SUCCESS);
+    } catch (error) {
+      this.zoneStatusError.set(
+        error instanceof ZonesAdminRepositoryError ? error.message : ZONES_ADMIN_REPOSITORY_MESSAGES.QUERY_FAILED,
+      );
+      this.failedZoneStatusId.set(id);
+    } finally {
+      this.updatingZoneId.set(null);
+    }
+
+    if (this.zoneStatusSuccess() !== null) {
+      await this.refreshZoneConfigs();
+      await this.loadZones();
+    }
+  }
+
+  /** Invalidación de la store raíz tras una escritura confirmada. */
+  private async refreshZoneConfigs(): Promise<void> {
+    try {
+      await this.zoneConfigState.refreshAfterWrite();
+    } catch {
+      // La escritura ya fue confirmada: la recarga es best-effort.
+    }
   }
 }

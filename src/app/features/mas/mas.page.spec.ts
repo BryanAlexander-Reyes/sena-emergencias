@@ -64,21 +64,23 @@ describe('MasPage', () => {
     expect(content).toContain('Los datos mostrados son simulados. No hay conexión con dispositivos IoT.');
   });
 
-  it('should expose the five menu destinations with their descriptions', () => {
+  it('should expose the menu destinations with their descriptions', () => {
     const cards = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card')) as HTMLElement[];
     const texts = cards.map((card) => (card.textContent ?? '').replace(/\s+/g, ' ').trim());
 
-    expect(cards).toHaveLength(5);
+    expect(cards).toHaveLength(6);
     expect(texts[0]).toContain('Zona segura');
     expect(texts[0]).toContain('Punto de encuentro y ocupación');
     expect(texts[1]).toContain('Estadísticas');
     expect(texts[1]).toContain('Gráficos y tendencias de ocupación');
     expect(texts[2]).toContain('Sensores IoT');
     expect(texts[2]).toContain('Dispositivos y lecturas simuladas');
-    expect(texts[3]).toContain('Asistente IA');
-    expect(texts[3]).toContain('Consultas sobre el monitoreo');
-    expect(texts[4]).toContain('Configuración');
-    expect(texts[4]).toContain('Preferencias e información');
+    expect(texts[3]).toContain('Monitoreo IoT');
+    expect(texts[3]).toContain('Telemetría MQTT de los ESP32');
+    expect(texts[4]).toContain('Asistente IA');
+    expect(texts[4]).toContain('Consultas sobre el monitoreo');
+    expect(texts[5]).toContain('Configuración');
+    expect(texts[5]).toContain('Preferencias e información');
   });
 
   it('should keep the accessible profile and navigation structure used by the visual layout', () => {
@@ -89,7 +91,7 @@ describe('MasPage', () => {
     expect(profile.getAttribute('aria-labelledby')).toBe('mas-profile-title');
     expect(menu.getAttribute('aria-labelledby')).toBe('mas-menu-title');
     expect(list.getAttribute('aria-label')).toBe('Opciones del menú Más');
-    expect(list.querySelectorAll('app-nav-card')).toHaveLength(5);
+    expect(list.querySelectorAll('app-nav-card')).toHaveLength(6);
   });
 
   it('should link every card to its secondary route', () => {
@@ -99,6 +101,7 @@ describe('MasPage', () => {
       '/tabs/mas/zona-segura',
       '/tabs/mas/estadisticas',
       '/tabs/mas/sensores',
+      '/tabs/mas/monitoreo-iot',
       '/tabs/mas/asistente',
       '/tabs/mas/configuracion',
     ]);
@@ -115,6 +118,7 @@ describe('MasPage', () => {
       'nav-card-host--green',
       'nav-card-host--cyan',
       'nav-card-host--blue',
+      'nav-card-host--cyan',
       'nav-card-host--violet',
       'nav-card-host--gray',
     ]);
@@ -122,6 +126,7 @@ describe('MasPage', () => {
       'shield-checkmark-outline',
       'stats-chart-outline',
       'hardware-chip-outline',
+      'radio-outline',
       'chatbubbles-outline',
       'settings-outline',
     ]);
@@ -167,13 +172,13 @@ describe('MasPage', () => {
         (link as HTMLAnchorElement).getAttribute('href'),
       );
 
-    expect(component.menu()).toHaveLength(5);
+    expect(component.menu()).toHaveLength(6);
     expect(links()).not.toContain('/tabs/mas/administracion');
 
     session.publishVerifiedIdentity(verified.administrador);
     fixture.detectChanges();
 
-    expect(component.menu()).toHaveLength(6);
+    expect(component.menu()).toHaveLength(7);
     expect(pageText()).toContain('Administración');
     expect(pageText()).toContain('Usuarios y roles registrados');
     expect(links().at(-1)).toBe('/tabs/mas/administracion');
@@ -181,7 +186,7 @@ describe('MasPage', () => {
     session.selectProfile('aprendiz');
     fixture.detectChanges();
 
-    expect(component.menu()).toHaveLength(5);
+    expect(component.menu()).toHaveLength(6);
     expect(links()).not.toContain('/tabs/mas/administracion');
   });
 
@@ -321,8 +326,73 @@ describe('MasPage acceso denegado', () => {
       (link as HTMLAnchorElement).getAttribute('href'),
     );
 
-    expect(links).toHaveLength(5);
+    expect(links).toHaveLength(6);
+    expect(links).toContain('/tabs/mas/monitoreo-iot');
     expect(links).toContain('/tabs/mas/configuracion');
     expect(links).not.toContain('/tabs/mas/administracion');
+  });
+});
+
+describe('MasPage descarga de la APK', () => {
+  let component: MasPage;
+  let fixture: ComponentFixture<MasPage>;
+
+  const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
+  const apkSection = (): HTMLElement | null => fixture.nativeElement.querySelector('.mas-apk');
+  const apkButton = (): (HTMLElement & { href?: string; target?: string; rel?: string; disabled?: boolean }) | null =>
+    fixture.nativeElement.querySelector('.mas-apk ion-button');
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [MasPage],
+      providers: [provideRouter([]), { provide: AUTH_FACADE, useValue: authFacade }],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MasPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('muestra la descarga en el navegador y la oculta dentro de la APK nativa', () => {
+    expect(component.isNativeApp()).toBe(false);
+    expect(apkSection()).toBeTruthy();
+    expect(apkSection()?.querySelector('ion-icon')?.getAttribute('name')).toBe('download-outline');
+    expect(apkSection()?.getAttribute('aria-labelledby')).toBe('mas-apk-title');
+
+    component.isNativeApp.set(true);
+    fixture.detectChanges();
+
+    expect(apkSection()).toBeNull();
+    expect(pageText()).not.toContain('Descargar aplicación Android');
+    expect(pageText()).not.toContain('Próximamente disponible');
+  });
+
+  it('deshabilita la descarga cuando no hay APK oficial publicada', () => {
+    component.apkDownloadUrl.set('');
+    fixture.detectChanges();
+
+    expect(pageText()).toContain('Próximamente disponible');
+    expect(pageText()).not.toContain('Descargar aplicación Android');
+
+    const boton = apkButton();
+    expect(boton).toBeTruthy();
+    expect(boton?.disabled ?? boton?.hasAttribute('disabled')).toBe(true);
+    expect(boton?.href ?? boton?.getAttribute('href')).toBeFalsy();
+  });
+
+  it('enlaza la APK oficial por HTTPS en una pestaña nueva cuando está publicada', () => {
+    const url = 'https://descargas.ejemplo.com/sena-crowd-intelligence.apk';
+    component.apkDownloadUrl.set(url);
+    fixture.detectChanges();
+
+    expect(pageText()).toContain('Descargar aplicación Android');
+    expect(pageText()).not.toContain('Próximamente disponible');
+
+    const boton = apkButton();
+    expect(boton).toBeTruthy();
+    expect(boton?.disabled ?? boton?.hasAttribute('disabled')).toBe(false);
+    expect(boton?.href ?? boton?.getAttribute('href')).toBe(url);
+    expect(boton?.target ?? boton?.getAttribute('target')).toBe('_blank');
+    expect(boton?.rel ?? boton?.getAttribute('rel')).toBe('noopener');
   });
 });

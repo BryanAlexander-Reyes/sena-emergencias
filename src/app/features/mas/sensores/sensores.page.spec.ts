@@ -48,14 +48,23 @@ describe('SensoresPage (Fase 3.6)', () => {
     expect(content).toContain('Simulaciones activas');
     expect(content).toContain('Simulaciones pausadas');
     expect(content).toContain('Fallos ficticios');
-    expect(component.totalDevices()).toBe(6);
-    expect(cards.length).toBe(6);
+    expect(component.totalDevices()).toBe(3);
+    expect(cards.length).toBe(3);
     expect(content).toContain('ESP32');
     expect(content).toContain('Sensor infrarrojo (IR)');
     expect(content).toContain('Sensor ultrasónico');
-    expect(content).toContain('Sensor PIR 360°');
-    expect(content).toContain('Matriz LED 8×8');
-    expect(content).toContain('Servomotor');
+    expect(content).not.toContain('Sensor PIR 360°');
+    expect(content).not.toContain('Matriz LED 8×8');
+    expect(content).not.toContain('Servomotor');
+  });
+
+  it('conserva el contrato completo del servicio aunque la interfaz filtre tipos sin hardware', () => {
+    const sensors = TestBed.inject(SimulatedSensorsService);
+
+    expect(sensors.totalDevices()).toBe(6);
+    expect(sensors.sensors().map((sensor) => sensor.type)).toEqual(
+      expect.arrayContaining(['esp32', 'ir', 'ultrasonic', 'pir', 'led-matrix', 'servo']),
+    );
   });
 
   it('should keep the accessible simulation summary and expandable cards', () => {
@@ -77,7 +86,7 @@ describe('SensoresPage (Fase 3.6)', () => {
     expect(content).toContain('Zona: Pasillo principal');
     expect(content).toContain('Zona: Cafetería');
     expect(content).toContain('Zona: Biblioteca');
-    expect(content).toContain('Zona: Punto de encuentro');
+    expect(content).not.toContain('Zona: Punto de encuentro');
     expect(content).toContain('Hardware real: Sin conexión física');
   });
 

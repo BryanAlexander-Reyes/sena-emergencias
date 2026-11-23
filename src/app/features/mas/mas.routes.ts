@@ -20,6 +20,10 @@ export const routes: Routes = [
     loadComponent: () => import('./sensores/sensores.page').then((m) => m.SensoresPage),
   },
   {
+    path: 'monitoreo-iot',
+    loadComponent: () => import('../monitoreo-iot/monitoreo-iot.page').then((m) => m.MonitoreoIotPage),
+  },
+  {
     path: 'asistente',
     loadComponent: () => import('./asistente/asistente.page').then((m) => m.AsistentePage),
   },

@@ -87,6 +87,30 @@
         </nav>
       </section>
 
+      @if (!isNativeApp()) {
+      <section class="app-card mas-apk" aria-labelledby="mas-apk-title">
+        <span class="mas-apk__icon">
+          <ion-icon name="download-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="mas-apk__body">
+          <h2 id="mas-apk-title" class="mas-apk__title">Aplicación Android</h2>
+          <p class="mas-apk__text">Lleva el monitoreo y las alertas de emergencia en tu teléfono.</p>
+          @if (apkDownloadUrl()) {
+          <ion-button class="app-button mas-apk__action" [href]="apkDownloadUrl()" target="_blank" rel="noopener">
+            <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+            Descargar aplicación Android
+          </ion-button>
+          } @else {
+          <ion-button class="app-button mas-apk__action" type="button" [disabled]="true">
+            <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+            Próximamente disponible
+          </ion-button>
+          <p class="mas-apk__hint">La aplicación oficial todavía no está publicada.</p>
+          }
+        </div>
+      </section>
+      }
+
       <footer class="mas-footer">
         <span>Fase 2.7 · Menú Más</span>
         <span class="mas-footer__dot" aria-hidden="true"></span>

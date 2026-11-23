@@ -15,17 +15,22 @@ import { DemoPermissionsService } from '../../core/auth/demo-permissions.service
 import { MonitoringStateService } from '../../core/services/monitoring-state.service';
 import { FeatureIntroComponent } from '../../shared/feature-intro/feature-intro.component';
 import { ZoneCardComponent } from '../../shared/zone-card/zone-card.component';
+import { ZoneConfigStatusComponent } from '../../shared/zone-config-status/zone-config-status.component';
 
 @Component({
   selector: 'app-zonas',
   templateUrl: 'zonas.page.html',
   styleUrls: ['zonas.page.scss'],
-  imports: [IonContent, IonIcon, FeatureIntroComponent, ZoneCardComponent],
+  imports: [IonContent, IonIcon, FeatureIntroComponent, ZoneCardComponent, ZoneConfigStatusComponent],
 })
 export class ZonasPage {
   private readonly monitoring = inject(MonitoringStateService);
   private readonly alertController = inject(AlertController);
   private readonly permissions = inject(DemoPermissionsService);
+
+  readonly zoneConfigMode = this.monitoring.zoneConfigMode;
+  readonly zoneConfigStatus = this.monitoring.zoneConfigStatus;
+  readonly zoneConfigError = this.monitoring.zoneConfigError;
 
   readonly zones = this.monitoring.zones;
   readonly totalPeople = this.monitoring.totalPeople;
@@ -36,7 +41,12 @@ export class ZonasPage {
   readonly canResetOccupancy = computed(() => this.permissions.can('occupancy:reset'));
   private readonly readOnlyMessage = 'Tu perfil solo permite consultar la ocupación.';
 
+  retryZoneConfigs(): void {
+    void this.monitoring.retryZoneConfigs();
+  }
+
   constructor() {
+    void this.monitoring.ensureZoneConfigs();
     addIcons({
       bookOutline,
       businessOutline,

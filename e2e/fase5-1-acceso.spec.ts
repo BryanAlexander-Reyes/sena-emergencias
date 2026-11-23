@@ -75,7 +75,7 @@ test('inicia sesión correctamente como Administrador', async ({ page }) => {
 
   await page.locator('ion-tab-button[tab="mas"]').click();
   await expect(page.locator('.mas-profile__value')).toHaveText('Administrador de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(6);
+  await expect(page.locator('app-nav-card')).toHaveCount(7);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(1);
 
   await page.locator('ion-tab-button[tab="inicio"]').click();
@@ -89,7 +89,7 @@ test('inicia sesión correctamente como Instructor', async ({ page }) => {
 
   await page.locator('ion-tab-button[tab="mas"]').click();
   await expect(page.locator('.mas-profile__value')).toHaveText('Instructor de demostración');
-  await expect(page.locator('app-nav-card')).toHaveCount(5);
+  await expect(page.locator('app-nav-card')).toHaveCount(6);
   await expect(page.locator(ADMIN_LINK)).toHaveCount(0);
 
   await page.locator('ion-tab-button[tab="inicio"]').click();

@@ -54,6 +54,7 @@ describe('Integración Fase 4.3 — permisos por perfil', () => {
       TestBed.flushEffects();
       expect(permissions.can('occupancy:update')).toBe(profileId === 'administrador');
       expect(permissions.can('alerts:review')).toBe(profileId === 'administrador');
+      expect(permissions.can('zones:manage')).toBe(profileId === 'administrador');
     }
 
     activate(session, 'administrador');
