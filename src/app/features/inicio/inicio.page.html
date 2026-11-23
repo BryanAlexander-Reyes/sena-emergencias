@@ -1,0 +1,227 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <header class="dash-header">
+        <div class="dash-header__top">
+          <div class="dash-brand">
+            <span class="app-icon-tile dash-brand__mark">
+              <ion-icon name="scan-outline" aria-hidden="true"></ion-icon>
+            </span>
+            <div class="dash-brand__text">
+              <h1 class="dash-brand__name">
+                <span class="dash-brand__line">SENA CROWD</span>
+                <span class="dash-brand__line dash-brand__line--accent">INTELLIGENCE</span>
+              </h1>
+              <p class="dash-brand__sub">Sistema inteligente de monitoreo.</p>
+            </div>
+          </div>
+
+          <a
+            class="dash-notify"
+            routerLink="/tabs/alertas"
+            [attr.aria-label]="
+              notificationUnreadCount() > 0
+                ? 'Ver centro de alertas, ' +
+                  notificationUnreadCount() +
+                  (notificationUnreadCount() === 1 ? ' notificación sin leer' : ' notificaciones sin leer')
+                : 'Ver centro de alertas, sin notificaciones sin leer'
+            "
+          >
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+            @if (notificationUnreadCount() > 0) {
+            <span class="dash-notify__dot" aria-hidden="true"></span>
+            }
+          </a>
+        </div>
+
+        <div class="dash-header__meta">
+          <span class="app-badge app-badge--demo">MODO DEMOSTRACIÓN</span>
+          <span class="dash-header__panel">Panel de monitoreo</span>
+        </div>
+      </header>
+
+      <app-zone-config-status
+        [remote]="zoneConfigMode() === 'remote'"
+        [status]="zoneConfigStatus()"
+        [message]="zoneConfigError()?.message ?? null"
+        (retry)="retryZoneConfigs()"
+      />
+
+      <section
+        class="app-card app-card--accent dash-status"
+        [class.dash-status--attention]="!!activeAlert()"
+        aria-labelledby="dash-status-title"
+      >
+        <div class="dash-status__head">
+          <p class="app-overline">Estado actual</p>
+          <h2 id="dash-status-title" class="app-card-title">Estado general del sistema</h2>
+        </div>
+
+        <div class="dash-status__state">
+          <span class="dash-status__indicator" aria-hidden="true">
+            <span class="dash-status__dot"></span>
+          </span>
+          <div class="dash-status__copy">
+            @if (activeAlert(); as alert) {
+            <p class="dash-status__label">Alerta crítica activa</p>
+            <p class="dash-status__text">Monitoreo de demostración · {{ alert.zoneName }}</p>
+            } @else {
+            <p class="dash-status__label">Sin alertas críticas</p>
+            <p class="dash-status__text">Monitoreo de demostración activo</p>
+            }
+          </div>
+        </div>
+
+        <hr class="app-divider" />
+
+        <div class="dash-status__footer">
+          <span class="dash-status__updated">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            Última actualización: {{ lastUpdate }}
+          </span>
+          <span class="app-badge">DATOS SIMULADOS</span>
+        </div>
+      </section>
+
+      <section class="dash-metrics" aria-label="Indicadores principales">
+        @for (metric of metrics(); track metric.title) {
+        <app-metric-card
+          [title]="metric.title"
+          [value]="metric.value"
+          [icon]="metric.icon"
+          [accent]="metric.accent"
+          [description]="metric.description"
+        />
+        }
+      </section>
+
+      <div class="dash-content">
+        <section class="app-card dash-summary" aria-labelledby="dash-summary-title">
+          <div class="app-section-head">
+            <h2 id="dash-summary-title" class="app-card-title">Resumen de monitoreo</h2>
+            <span class="app-badge">DEMO</span>
+          </div>
+
+          <dl class="dash-summary__stats">
+            <div class="dash-summary__stat">
+              <dt>Zonas monitoreadas</dt>
+              <dd>{{ monitoredZones() }}</dd>
+            </div>
+            <div class="dash-summary__stat">
+              <dt>Estado general</dt>
+              @if (activeAlerts() > 0) {
+              <dd class="dash-summary__attention">Alerta activa</dd>
+              } @else {
+              <dd class="dash-summary__ok">Sin alertas activas</dd>
+              }
+            </div>
+          </dl>
+
+          @if (activeAlert(); as alert) {
+          <div class="dash-summary__alert" role="status">
+            <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+            <div class="dash-summary__alert-copy">
+              <p class="dash-summary__alert-title">{{ alert.title }}</p>
+              <p class="dash-summary__alert-text">{{ alert.zoneName }} · {{ alert.description }}</p>
+            </div>
+          </div>
+          }
+
+          <p class="dash-summary__note">Información de demostración</p>
+
+          <ion-button expand="block" class="app-button dash-summary__cta" routerLink="/tabs/zonas">
+            Ver zonas
+            <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </section>
+
+        <section class="app-card alarm-control" aria-labelledby="alarm-control-title">
+          <div class="app-section-head">
+            <div class="alarm-control__heading">
+              <span class="alarm-control__icon">
+                <ion-icon name="alarm-outline" aria-hidden="true"></ion-icon>
+              </span>
+              <div class="alarm-control__titles">
+                <p class="app-overline">Buzzer ESP32 2</p>
+                <h2 id="alarm-control-title" class="app-card-title">Control de alarma</h2>
+              </div>
+            </div>
+            <span class="app-badge">Control real</span>
+          </div>
+
+          <div class="alarm-control__state" role="status" aria-live="polite">
+            <span class="alarm-control__dot" [class.alarm-control__dot--on]="alarm.isOn()" aria-hidden="true"></span>
+            <span class="alarm-control__status">{{ alarm.label() }}</span>
+            <span class="alarm-control__simulated">Comando MQTT · confirmación física no disponible</span>
+          </div>
+
+          <p class="alarm-control__mqtt" role="status" [attr.data-fase]="comandoMqtt()?.fase ?? 'sin_comando'">
+            {{ comandoMqtt()?.mensaje ?? 'Sin comandos MQTT enviados en esta sesión. El ESP32 no publica confirmación
+            física del buzzer.' }}
+          </p>
+
+          <p class="alarm-control__text">Control manual del buzzer</p>
+
+          @if (canControlAlarm()) { @if (!alarm.isOn() && !activeManualAlarmId()) {
+          <label class="alarm-control__text" for="alarm-evento">Tipo de alarma</label>
+          <ion-select
+            id="alarm-evento"
+            interface="popover"
+            placeholder="Selecciona un evento"
+            aria-label="Tipo de alarma"
+            [disabled]="confirmingAlarm() || activatingAlarm()"
+            [value]="eventoAlarma() ?? ''"
+            (ionChange)="seleccionarEventoAlarma($event.detail.value)"
+          >
+            @for (evento of eventosAlarma(); track evento) {
+            <ion-select-option [value]="evento">{{ evento }}</ion-select-option>
+            }
+          </ion-select>
+          }
+          <div class="alarm-control__actions">
+            @if (alarm.isOn() || activeManualAlarmId()) {
+            <ion-button
+              expand="block"
+              class="app-button alarm-control__button alarm-control__button--off"
+              [disabled]="confirmingAlarm() || activatingAlarm() || finalizingAlarm()"
+              (click)="confirmTurnOff()"
+            >
+              {{ finalizingAlarm() ? 'Finalizando alarma...' : 'Apagar alarma' }}
+            </ion-button>
+            } @else {
+            <ion-button
+              expand="block"
+              class="app-button alarm-control__button alarm-control__button--on"
+              [disabled]="confirmingAlarm() || activatingAlarm() || finalizingAlarm()"
+              (click)="confirmTurnOn()"
+            >
+              {{ activatingAlarm() ? 'Activando alarma...' : 'Encender alarma' }}
+            </ion-button>
+            }
+          </div>
+          } @else {
+          <p class="alarm-control__note">Solo Administradores e Instructores pueden controlar la alarma.</p>
+          }
+
+          <div class="alarm-control__notice" role="status" [attr.data-scenario]="notice().scenario">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <div class="alarm-control__notice-copy">
+              <p class="alarm-control__notice-message">{{ notice().message }}</p>
+              @if (notice().zoneName; as zoneName) {
+              <p class="alarm-control__notice-zone">Zona afectada: {{ zoneName }}</p>
+              } @if (ledInstruction(); as instruction) {
+              <p class="alarm-control__notice-led">{{ instruction }}</p>
+              }
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="dash-footer">
+        <span>Fase 2.3 · Dashboard</span>
+        <span class="dash-footer__dot" aria-hidden="true"></span>
+        <span>v0.3</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

@@ -2,8 +2,11 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+import { supabasePublicConfig } from './supabase-public.config';
+
 export const environment = {
   production: false,
+  ...supabasePublicConfig,
 };
 
 /*

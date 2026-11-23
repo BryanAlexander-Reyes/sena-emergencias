@@ -1,0 +1,26 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <a class="secondary-page__back" [routerLink]="backLink()">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>{{ backLabel() }}</span>
+      </a>
+
+      <app-feature-intro
+        [icon]="icon()"
+        [eyebrow]="eyebrow()"
+        [title]="title()"
+        [description]="description()"
+        [badge]="badge()"
+      />
+
+      <ng-content />
+
+      <footer class="secondary-page__footer">
+        <span>{{ footerLabel() }}</span>
+        <span class="secondary-page__dot" aria-hidden="true"></span>
+        <span>{{ footerVersion() }}</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

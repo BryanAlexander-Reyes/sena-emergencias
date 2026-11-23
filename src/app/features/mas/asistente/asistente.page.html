@@ -1,0 +1,91 @@
+<app-secondary-page
+  icon="chatbubbles-outline"
+  eyebrow="Asistente IA"
+  title="SENA AI Assistant"
+  description="Consultas sobre el monitoreo simulado"
+  badge="ASISTENTE DE DEMOSTRACIÓN — RESPUESTAS AUTOMÁTICAS LOCALES"
+  footerLabel="Fase 3.7 · Asistente"
+>
+  <section class="app-card assistant" aria-labelledby="assistant-chat-title">
+    <header class="assistant__head">
+      <span class="assistant__avatar" aria-hidden="true">
+        <ion-icon name="sparkles-outline"></ion-icon>
+      </span>
+
+      <div class="assistant__identity">
+        <p class="app-overline">Asistente virtual</p>
+        <h2 id="assistant-chat-title" class="assistant__title">SENA AI Assistant</h2>
+        <span class="app-status app-status--violet assistant__status">
+          <span class="app-status__dot" aria-hidden="true"></span>
+          Respuestas locales (sin IA externa)
+        </span>
+      </div>
+    </header>
+
+    <div #chatLog class="assistant__chat" role="log" aria-label="Conversación con el asistente" aria-live="polite">
+      @for (message of messages(); track message.id) { @if (message.sender === 'assistant') {
+      <div class="assistant__row">
+        <span class="assistant__bubble-avatar" aria-hidden="true">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </span>
+        <div class="assistant__bubble assistant__bubble--bot">
+          <p>{{ message.content }}</p>
+          <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
+        </div>
+      </div>
+      } @else {
+      <div class="assistant__row assistant__row--user">
+        <div class="assistant__bubble assistant__bubble--user">
+          <p>{{ message.content }}</p>
+          <span class="assistant__time">{{ formatTime(message.createdAt) }}</span>
+        </div>
+      </div>
+      } }
+    </div>
+
+    <section class="assistant__suggestions" aria-labelledby="assistant-suggestions-title">
+      <h2 id="assistant-suggestions-title" class="app-overline">Preguntas rápidas</h2>
+      <ul class="assistant__suggestion-list">
+        @for (question of quickQuestions; track question) {
+        <li>
+          <button type="button" class="assistant__suggestion" (click)="askQuick(question)">
+            <ion-icon name="help-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ question }}</span>
+          </button>
+        </li>
+        }
+      </ul>
+    </section>
+
+    <div class="assistant__composer">
+      <input
+        class="assistant__input"
+        type="text"
+        [value]="draft()"
+        (input)="onDraftChange($any($event.target).value)"
+        (keydown)="onKeydown($event)"
+        [attr.maxlength]="maxLength"
+        placeholder="Escribe tu consulta..."
+        aria-label="Consulta para el asistente"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        class="assistant__send"
+        aria-label="Enviar consulta"
+        [disabled]="!canSend()"
+        (click)="send()"
+      >
+        <ion-icon name="send-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
+
+    <p class="assistant__future">
+      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+      <span
+        >Consultas locales sobre ocupación, zonas, alertas, sensores y estadísticas. La conversación se mantiene en
+        memoria durante la sesión.</span
+      >
+    </p>
+  </section>
+</app-secondary-page>

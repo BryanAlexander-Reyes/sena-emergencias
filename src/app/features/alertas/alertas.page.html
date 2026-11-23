@@ -1,0 +1,232 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <app-feature-intro
+        icon="notifications-outline"
+        eyebrow="Alertas"
+        title="Centro de alertas"
+        description="Eventos y notificaciones del sistema"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="alert-stats" aria-label="Indicadores de alertas" aria-live="polite">
+        <article class="app-card alert-stats__card alert-stats__card--active">
+          <span class="alert-stats__icon">
+            <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <span class="alert-stats__value">{{ activeAlerts() }}</span>
+          <span class="alert-stats__label">Alertas activas</span>
+        </article>
+
+        <article class="app-card alert-stats__card alert-stats__card--reviewed">
+          <span class="alert-stats__icon">
+            <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <span class="alert-stats__value">{{ reviewedAlerts() }}</span>
+          <span class="alert-stats__label">Alertas revisadas</span>
+        </article>
+
+        <article class="app-card alert-stats__card alert-stats__card--total">
+          <span class="alert-stats__icon">
+            <ion-icon name="albums-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <span class="alert-stats__value">{{ totalAlerts() }}</span>
+          <span class="alert-stats__label">Total de alertas</span>
+        </article>
+      </section>
+
+      <section class="app-card alert-alarm" aria-labelledby="alert-alarm-title">
+        <div class="alert-alarm__head">
+          <span class="alert-alarm__icon">
+            <ion-icon name="alarm-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="alert-alarm__titles">
+            <p class="app-overline">Señalización simulada</p>
+            <h2 id="alert-alarm-title" class="app-card-title">Estado de la alarma</h2>
+          </div>
+          <span class="app-badge">Solo lectura</span>
+        </div>
+        <p class="alert-alarm__state" role="status">{{ alarmLabel() }} · simulado, sin hardware conectado</p>
+        <p class="alert-alarm__message" [attr.data-scenario]="alarmNoticeText().scenario">
+          {{ alarmNoticeText().message }}
+        </p>
+        @if (alarmNoticeText().zoneName; as zoneName) {
+        <p class="alert-alarm__zone">Zona afectada: {{ zoneName }}</p>
+        } @if (ledInstruction(); as instruction) {
+        <p class="alert-alarm__led">{{ instruction }}</p>
+        }
+      </section>
+
+      <section class="app-card alert-filters" aria-label="Filtros de alertas">
+        <div class="alert-filters__group" role="group" aria-label="Filtrar por severidad">
+          <p class="app-overline">Severidad</p>
+          <div class="alert-filters__options">
+            @for (option of severityFilters; track option.value) {
+            <button
+              type="button"
+              class="alert-filter"
+              [class.alert-filter--on]="severityFilter() === option.value"
+              [attr.aria-pressed]="severityFilter() === option.value"
+              [attr.data-severity]="option.value"
+              (click)="setSeverityFilter(option.value)"
+            >
+              {{ option.label }}
+            </button>
+            }
+          </div>
+        </div>
+
+        <hr class="app-divider" />
+
+        <div class="alert-filters__group" role="group" aria-label="Filtrar por estado de la alerta">
+          <p class="app-overline">Estado</p>
+          <div class="alert-filters__options">
+            @for (option of statusFilters; track option.value) {
+            <button
+              type="button"
+              class="alert-filter"
+              [class.alert-filter--on]="statusFilter() === option.value"
+              [attr.aria-pressed]="statusFilter() === option.value"
+              [attr.data-status]="option.value"
+              (click)="setStatusFilter(option.value)"
+            >
+              {{ option.label }}
+            </button>
+            }
+          </div>
+        </div>
+      </section>
+
+      <div class="alert-list-head">
+        <h2 class="app-card-title">Registro de alertas</h2>
+        <span class="app-badge">{{ filteredAlerts().length }} de {{ totalAlerts() }}</span>
+      </div>
+
+      @if (!canReviewAlerts()) {
+      <p class="alert-permission-note">Tu perfil puede consultar las alertas, pero no marcarlas como revisadas.</p>
+      } @if (filteredAlerts().length > 0) {
+      <section class="alert-list" aria-label="Lista de alertas">
+        @for (alert of filteredAlerts(); track alert.id) {
+        <app-alert-card [alert]="alert" [canReview]="canReviewAlerts()" (reviewRequested)="reviewAlert($event)" />
+        }
+      </section>
+      } @else {
+      <section class="app-card alert-empty" role="status">
+        <span class="alert-empty__icon">
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <h3 class="alert-empty__title">No hay alertas con estos filtros</h3>
+        <p class="alert-empty__text">Cambia la severidad o el estado para volver a ver el registro.</p>
+        <button type="button" class="alert-empty__reset" (click)="clearFilters()">
+          <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+          Limpiar filtros
+        </button>
+      </section>
+      }
+
+      <hr class="app-divider" />
+
+      <section class="alert-notifications" aria-labelledby="manual-notifications-title">
+        <div class="app-section-head">
+          <div>
+            <p class="app-overline">Alarma manual</p>
+            <h2 id="manual-notifications-title" class="app-card-title">Notificaciones de alarma manual</h2>
+          </div>
+          <span
+            class="app-badge"
+            [class.app-badge--danger]="manualNotificationUnreadCount() > 0"
+            aria-live="polite"
+            [attr.aria-label]="
+              manualNotificationUnreadCount() + ' notificaciones sin leer de ' + manualNotificationTotalCount() + ' en total'
+            "
+          >
+            {{ manualNotificationUnreadCount() }} sin leer · {{ manualNotificationTotalCount() }} en total
+          </span>
+        </div>
+
+        @if (manualNotificationUnreadCount() > 0) {
+        <div class="app-section-head">
+          <span class="app-overline">Pendientes de revisión</span>
+          <button type="button" class="alert-empty__reset" (click)="markAllManualNotificationsAsRead()">
+            <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+            Marcar todas como leídas
+          </button>
+        </div>
+        } @if (manualNotifications().length > 0) {
+        <section class="alert-list" aria-label="Lista de notificaciones de alarma manual">
+          @for (notification of manualNotifications(); track notification.eventId) {
+          <article
+            class="app-card"
+            [attr.data-read-status]="notification.readStatus"
+            [attr.data-severity]="notification.severity"
+          >
+            <div class="alert-list-head">
+              <div>
+                <h3 class="app-card-title">{{ notification.title }}</h3>
+                <p class="alert-alarm__zone">
+                  <time [attr.datetime]="notification.activatedAt" [attr.title]="notification.activatedAt">
+                    {{ notification.activatedAt | date: 'dd/MM/yyyy, h:mm a' }}
+                  </time>
+                </p>
+              </div>
+              <span class="app-badge app-badge--danger" [attr.aria-label]="'Severidad: ' + notification.severity">
+                Severidad: {{ notification.severity }}
+              </span>
+            </div>
+
+            <p class="alert-alarm__message">{{ notification.message }}</p>
+
+            <div class="alert-list-head">
+              <span
+                class="app-badge"
+                [class.app-badge--danger]="notification.readStatus === 'unread'"
+                [class.app-badge--success]="notification.readStatus === 'read'"
+                [attr.aria-label]="
+                  notification.readStatus === 'read' ? 'Estado de lectura: Leída' : 'Estado de lectura: Sin leer'
+                "
+              >
+                {{ notification.readStatus === 'read' ? 'Leída' : 'Sin leer' }}
+              </span>
+              @if (notification.readStatus === 'unread') {
+              <button
+                type="button"
+                class="alert-empty__reset"
+                [attr.aria-label]="'Marcar notificación ' + notification.eventId + ' como leída'"
+                (click)="markManualNotificationAsRead(notification.eventId)"
+              >
+                <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+                Marcar como leída
+              </button>
+              }
+            </div>
+          </article>
+          }
+        </section>
+        } @else {
+        <section class="app-card alert-empty" role="status">
+          <span class="alert-empty__icon">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <h3 class="alert-empty__title">No hay notificaciones de alarma manual.</h3>
+        </section>
+        }
+      </section>
+
+      <p class="alert-note">
+        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        <span>
+          Las alertas son simuladas (registros de demostración y alertas automáticas por ocupación) y no provienen de
+          sensores conectados. Fechas/valores de registros históricos pueden no reflejar lecturas actuales. Marcar como
+          revisada no cambia el estado ni elimina el riesgo simulado. Este sistema no realiza notificaciones reales ni
+          sustituye protocolos institucionales de emergencia.
+        </span>
+      </p>
+
+      <footer class="alert-footer">
+        <span>Fase 2.6 · Alertas</span>
+        <span class="alert-footer__dot" aria-hidden="true"></span>
+        <span>v0.6</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

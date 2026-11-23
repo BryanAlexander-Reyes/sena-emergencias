@@ -1,0 +1,173 @@
+@use '../../theme/breakpoints' as bp;
+
+ion-tab-bar {
+  --background: var(--sena-surface-raised);
+  --border: 1px solid var(--app-border);
+  --color: var(--color-text-soft);
+  --color-selected: var(--sena-brand-900);
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -8px 24px rgba(32, 40, 36, 0.08);
+  transition: box-shadow var(--app-motion-slow) ease;
+}
+
+ion-tab-button {
+  position: relative;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  font-weight: 600;
+}
+
+ion-tab-button.tab-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 22px;
+  height: 3px;
+  border-radius: 0 0 var(--app-radius-pill) var(--app-radius-pill);
+  background: var(--sena-brand-500);
+  transform: translateX(-50%);
+}
+
+ion-tab-button:focus-visible,
+ion-tab-button.ion-focused {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+ion-tab-button ion-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* El riel de escritorio usa los mismos destinos que la barra inferior.
+ * Solo una de las dos navegaciones es visible en cada breakpoint. */
+.app-rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: var(--layout-rail-w);
+  padding: calc(var(--app-space-6) + env(safe-area-inset-top, 0px)) var(--app-space-4)
+    calc(var(--app-space-5) + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  background: var(--sena-surface-raised);
+  border-right: 1px solid var(--app-border);
+  box-shadow: 8px 0 24px rgba(32, 40, 36, 0.05);
+}
+
+.app-rail__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px var(--app-space-3);
+  border-bottom: 1px solid var(--app-border-subtle);
+}
+
+.app-rail__mark {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sena-brand-900);
+  color: var(--sena-brand-500);
+  font-size: 1.2rem;
+}
+
+.app-rail__name {
+  color: var(--color-text-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+}
+
+.app-rail__name strong {
+  display: block;
+  color: var(--sena-brand-900);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.app-rail__caption,
+.app-rail__group-title {
+  margin: var(--app-space-3) 8px var(--app-space-2);
+  color: var(--color-text-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-rail__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--app-radius-md);
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease,
+    transform var(--app-motion-base) ease,
+    box-shadow var(--app-motion-base) ease;
+}
+
+.app-rail__link ion-icon {
+  font-size: 1.2rem;
+}
+
+@media (hover: hover) {
+  .app-rail__link:hover {
+    background: var(--app-cyan-soft);
+    color: var(--sena-brand-900);
+    transform: translateX(2px);
+  }
+}
+
+.app-rail__link.is-active {
+  background: var(--app-cyan-soft);
+  box-shadow: inset 3px 0 0 var(--sena-brand-500);
+  color: var(--sena-brand-900);
+}
+
+.app-rail__link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.app-rail__group {
+  margin-top: var(--app-space-4);
+  padding-top: var(--app-space-3);
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.app-rail__footer {
+  margin: auto 8px 0;
+  padding-top: var(--app-space-3);
+  border-top: 1px solid var(--app-border-subtle);
+  color: var(--color-text-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
+@include bp.lg-up {
+  ion-tab-bar {
+    display: none;
+  }
+
+  .app-rail {
+    display: flex;
+  }
+}

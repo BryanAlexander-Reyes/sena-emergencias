@@ -1,0 +1,121 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <app-feature-intro
+        icon="apps-outline"
+        eyebrow="SENA CROWD INTELLIGENCE"
+        title="Más opciones"
+        description="Herramientas y configuración del sistema"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="app-card mas-info" aria-labelledby="mas-info-title">
+        <span class="mas-info__icon">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="mas-info__body">
+          <h2 id="mas-info-title" class="mas-info__title">Sistema de demostración</h2>
+          <p class="mas-info__text">Los datos mostrados son simulados. No hay conexión con dispositivos IoT.</p>
+        </div>
+      </section>
+
+      @if (accessDenied()) {
+      <section class="app-card mas-denied" role="alert">
+        <span class="mas-denied__icon">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div>
+          <h2 class="mas-denied__title">Acceso no disponible</h2>
+          <p class="mas-denied__text">
+            El panel de administración requiere el perfil Administrador de demostración. Selecciona ese perfil desde
+            Acceso de demostración para volver a verlo.
+          </p>
+        </div>
+      </section>
+      }
+
+      <section class="app-card mas-profile" aria-labelledby="mas-profile-title">
+        <div class="app-section-head">
+          <p id="mas-profile-title" class="app-overline">Perfil de demostración</p>
+          <span class="app-badge app-badge--demo">Modo demostración</span>
+        </div>
+
+        <div class="mas-profile__identity">
+          <span class="mas-profile__icon">
+            <ion-icon [name]="session.profile().icon" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="mas-profile__body">
+            <span class="mas-profile__label">Perfil activo</span>
+            <strong class="mas-profile__value">{{ session.profile().label }}</strong>
+            <span class="mas-profile__hint">{{ session.profile().description }}</span>
+          </div>
+        </div>
+
+        <div class="mas-profile__actions">
+          <ion-button class="app-button app-button--ghost mas-profile__action" routerLink="/acceso">
+            Cambiar perfil
+          </ion-button>
+          @if (session.isActive()) {
+          <ion-button
+            class="app-button app-button--ghost mas-profile__action"
+            type="button"
+            [disabled]="isSigningOut()"
+            (click)="closeSession()"
+          >
+            Salir del perfil
+          </ion-button>
+          }
+        </div>
+      </section>
+
+      <section class="mas-menu" aria-labelledby="mas-menu-title">
+        <div class="app-section-head">
+          <p id="mas-menu-title" class="app-overline">Herramientas</p>
+          <span class="app-badge">{{ menu().length }} opciones</span>
+        </div>
+
+        <nav class="mas-menu__list" aria-label="Opciones del menú Más">
+          @for (item of menu(); track item.id) {
+          <app-nav-card
+            [icon]="item.icon"
+            [title]="item.title"
+            [description]="item.description"
+            [accent]="item.accent"
+            [link]="item.link"
+          />
+          }
+        </nav>
+      </section>
+
+      @if (!isNativeApp()) {
+      <section class="app-card mas-apk" aria-labelledby="mas-apk-title">
+        <span class="mas-apk__icon">
+          <ion-icon name="download-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="mas-apk__body">
+          <h2 id="mas-apk-title" class="mas-apk__title">Aplicación Android</h2>
+          <p class="mas-apk__text">Lleva el monitoreo y las alertas de emergencia en tu teléfono.</p>
+          @if (apkDownloadUrl()) {
+          <ion-button class="app-button mas-apk__action" [href]="apkDownloadUrl()" target="_blank" rel="noopener">
+            <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+            Descargar aplicación Android
+          </ion-button>
+          } @else {
+          <ion-button class="app-button mas-apk__action" type="button" [disabled]="true">
+            <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+            Próximamente disponible
+          </ion-button>
+          <p class="mas-apk__hint">La aplicación oficial todavía no está publicada.</p>
+          }
+        </div>
+      </section>
+      }
+
+      <footer class="mas-footer">
+        <span>Fase 2.7 · Menú Más</span>
+        <span class="mas-footer__dot" aria-hidden="true"></span>
+        <span>v0.7</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

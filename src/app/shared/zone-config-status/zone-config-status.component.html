@@ -1,0 +1,35 @@
+@if (visible()) {
+  <section
+    class="app-card zone-status"
+    [class.zone-status--error]="error()"
+    [attr.role]="error() ? 'alert' : 'status'"
+    aria-live="polite"
+    aria-labelledby="zone-status-title"
+  >
+    <div class="zone-status__body">
+      <span class="zone-status__icon" aria-hidden="true">
+        <ion-icon [name]="loading() ? 'reload-outline' : empty() ? 'business-outline' : 'warning-outline'"></ion-icon>
+      </span>
+
+      <div class="zone-status__copy">
+        <p class="app-overline">Configuración de zonas</p>
+        @if (loading()) {
+          <h2 id="zone-status-title" class="app-card-title">Cargando zonas…</h2>
+          <p class="zone-status__text">Consultando la fuente de configuración.</p>
+        } @else if (empty()) {
+          <h2 id="zone-status-title" class="app-card-title">Sin zonas disponibles</h2>
+          <p class="zone-status__text">La fuente no devolvió zonas activas y públicas.</p>
+        } @else {
+          <h2 id="zone-status-title" class="app-card-title">Error al cargar zonas</h2>
+          <p class="zone-status__text">{{ safeMessage() }}</p>
+        }
+      </div>
+
+      @if (canRetry()) {
+        <ion-button class="app-button app-button--outline zone-status__retry" size="small" (click)="retry.emit()">
+          Reintentar
+        </ion-button>
+      }
+    </div>
+  </section>
+}

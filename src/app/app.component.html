@@ -1,3 +1,31 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-router-outlet
+    [attr.inert]="contentBlocked() ? '' : null"
+    [attr.aria-hidden]="contentBlocked() ? 'true' : null"
+  ></ion-router-outlet>
+
+  @if (initialAlarmCheckStatus() !== 'ready') {
+    <div
+      class="initial-alarm-check"
+      role="status"
+      aria-live="polite"
+      aria-busy="{{ initialAlarmCheckStatus() === 'loading' }}"
+    >
+      <div class="initial-alarm-check__panel">
+        @if (initialAlarmCheckStatus() === 'loading') {
+          <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+          <h1 class="initial-alarm-check__title">Verificando estado de emergencia</h1>
+          <p class="initial-alarm-check__message">Consultando si existe una alarma manual activa. Espera un momento.</p>
+        } @else {
+          <h1 class="initial-alarm-check__title">No se pudo comprobar el estado de emergencia</h1>
+          <p class="initial-alarm-check__message">
+            No fue posible consultar las alarmas manuales activas. Verifica tu conexión e intenta nuevamente.
+          </p>
+          <ion-button (click)="retryInitialAlarmCheck()">Reintentar</ion-button>
+        }
+      </div>
+    </div>
+  }
+
+  <app-manual-emergency-modal></app-manual-emergency-modal>
 </ion-app>

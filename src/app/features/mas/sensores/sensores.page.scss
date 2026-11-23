@@ -1,0 +1,396 @@
+@use '../../../../theme/breakpoints' as bp;
+
+/* ==========================================================================
+   UIX.5 · Sensores IoT: aviso, resumen y tarjetas de simulación
+   ========================================================================== */
+
+.sensor-env {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+  overflow: hidden;
+  margin-bottom: var(--app-space-4);
+  padding: var(--app-space-4);
+  border-color: rgba(21, 61, 50, 0.16);
+  background: linear-gradient(180deg, rgba(57, 168, 107, 0.1) 0%, rgba(255, 255, 255, 0) 62%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--sena-brand-500);
+  }
+}
+
+.sensor-env__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(21, 61, 50, 0.18);
+  border-radius: var(--app-radius-md);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.2rem;
+}
+
+.sensor-env__title {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sensor-env__text {
+  margin: 3px 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.sensor-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--app-space-2);
+  margin-bottom: var(--app-space-3);
+}
+
+.sensor-summary__card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: var(--app-space-3);
+}
+
+.sensor-summary__value {
+  color: var(--app-text-strong);
+  font-size: clamp(1.25rem, 3.6vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.sensor-summary__label {
+  color: var(--app-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.sensor-summary__card--active {
+  border-color: rgba(30, 122, 76, 0.34);
+}
+
+.sensor-summary__card--active .sensor-summary__value {
+  color: var(--color-success);
+}
+
+.sensor-summary__card--paused {
+  border-color: rgba(233, 180, 76, 0.5);
+}
+
+.sensor-summary__card--paused .sensor-summary__value {
+  color: var(--color-warning);
+}
+
+.sensor-summary__card--fault {
+  border-color: rgba(179, 38, 30, 0.34);
+}
+
+.sensor-summary__card--fault .sensor-summary__value {
+  color: var(--color-danger);
+}
+
+.sensor-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--app-space-3);
+}
+
+.sensor-actions ion-button {
+  --padding-start: var(--app-space-4);
+  --padding-end: var(--app-space-4);
+  min-height: 44px;
+  margin: 0;
+}
+
+.sensor-permission-note {
+  margin: 0 0 var(--app-space-3);
+  padding: var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.sensor-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--app-space-3);
+  margin-bottom: var(--app-space-4);
+}
+
+.sensor-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  min-width: 0;
+  padding: var(--app-space-4);
+}
+
+.sensor-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+}
+
+.sensor-card__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(21, 61, 50, 0.16);
+  border-radius: var(--app-radius-md);
+  background: var(--app-blue-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.15rem;
+}
+
+.sensor-card__identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sensor-card__name {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.sensor-card__zone {
+  margin: 3px 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.sensor-card__toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: var(--app-focus-ring);
+    outline-offset: var(--app-focus-offset);
+  }
+}
+
+.sensor-card__desc {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.sensor-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-2);
+}
+
+.sensor-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-bg-secondary);
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.sensor-chip[data-state='active'] {
+  border-color: rgba(30, 122, 76, 0.34);
+  background: var(--app-green-soft);
+  color: var(--color-success);
+}
+
+.sensor-chip[data-state='paused'] {
+  border-color: rgba(233, 180, 76, 0.55);
+  background: var(--app-yellow-soft);
+  color: var(--color-warning);
+}
+
+.sensor-chip[data-state='fault'] {
+  border-color: rgba(179, 38, 30, 0.34);
+  background: var(--app-red-soft);
+  color: var(--color-danger);
+}
+
+.sensor-chip--hw {
+  color: var(--app-text-soft);
+}
+
+.sensor-card__reading {
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
+  color: var(--app-text-strong);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.sensor-card__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  margin-top: var(--app-space-1);
+  padding-top: var(--app-space-3);
+  border-top: 1px solid var(--app-border);
+}
+
+.sensor-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-2);
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sensor-field ion-select,
+.sensor-field ion-input {
+  --background: var(--sena-surface-raised);
+  --border-color: rgba(21, 61, 50, 0.18);
+  --border-radius: var(--app-radius-md);
+  --color: var(--app-text);
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 44px;
+}
+
+.sensor-field ion-button {
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 44px;
+  margin: 0;
+}
+
+.sensor-field__row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+}
+
+.sensor-field__unit {
+  flex: 0 0 auto;
+  color: var(--app-text-soft);
+  font-size: 0.84rem;
+}
+
+.sensor-card__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.sensor-card__hint ion-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--sena-brand-500);
+}
+
+.sensor-card__read-only {
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-secondary);
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.sensor-card__device-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sensor-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.sensor-note ion-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--sena-brand-500);
+  font-size: 1rem;
+}
+
+@include bp.sm-up {
+  .sensor-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@include bp.xl-up {
+  .sensor-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.xs-only {
+  .sensor-env,
+  .sensor-card {
+    padding: var(--app-space-3);
+  }
+
+  .sensor-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sensor-card__toggle {
+    transition: none;
+  }
+}

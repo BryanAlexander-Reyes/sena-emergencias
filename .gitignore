@@ -497,3 +497,20 @@ Thumbs.db
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+# Secretos de entorno (Fase 5.2.2): nunca versionar.
+.env
+.env.*
+!.env.example
+# Configuración pública Supabase generada desde .env (Fase 5.3.3.B): no versionar.
+/src/environments/supabase-public.config.generated.ts
+# URL pública del receptor MQTT.2 generada desde TELEMETRY_BASE_URL: no versionar.
+/src/environments/telemetry.config.generated.ts
+# URL de la APK oficial generada desde APK_DOWNLOAD_URL: no versionar.
+/src/environments/apk-download.config.generated.ts
+# Certificado TLS autofirmado del receptor LAN (desarrollo): nunca versionar.
+/receiver/tls/
+# Temporales de Supabase CLI: nunca versionar.
+/supabase/.temp/
+docs
+esp32
+*.md

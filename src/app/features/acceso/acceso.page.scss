@@ -1,0 +1,468 @@
+@use '../../../theme/breakpoints' as bp;
+
+.acceso-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  min-height: 44px;
+  margin-bottom: var(--app-space-5);
+  padding: 0 var(--app-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-pill);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(57, 168, 107, 0.35);
+    background: var(--app-cyan-soft);
+    color: var(--sena-brand-900);
+  }
+
+  &:focus-visible {
+    outline: var(--app-focus-ring);
+    outline-offset: var(--app-focus-offset);
+  }
+}
+
+.acceso-notice {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+  overflow: hidden;
+  margin-bottom: var(--app-space-6);
+  padding: var(--app-space-4);
+  border-color: rgba(233, 180, 76, 0.42);
+  background:
+    linear-gradient(180deg, rgba(233, 180, 76, 0.14) 0%, rgba(255, 255, 255, 0) 62%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--sena-accent);
+  }
+}
+
+.acceso-notice__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(233, 180, 76, 0.5);
+  border-radius: var(--app-radius-md);
+  background: var(--app-yellow-soft);
+  color: var(--color-warning);
+  font-size: 1.2rem;
+}
+
+.acceso-notice__body {
+  min-width: 0;
+}
+
+.acceso-notice__title {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.acceso-notice__text {
+  margin: 3px 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.acceso-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--app-space-3);
+}
+
+.acceso-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-3);
+  width: 100%;
+  min-height: 104px;
+  overflow: hidden;
+  padding: var(--app-space-4);
+  color: var(--app-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    box-shadow var(--app-motion-base) ease,
+    transform var(--app-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--profile-accent, var(--sena-brand-500));
+    opacity: 0;
+    transition: opacity var(--app-motion-base) ease;
+  }
+
+  &:first-child {
+    --profile-accent: var(--sena-brand-900);
+  }
+
+  &:nth-child(2) {
+    --profile-accent: var(--color-success);
+  }
+
+  &:nth-child(3) {
+    --profile-accent: var(--sena-accent);
+  }
+
+  &:focus-visible {
+    outline: var(--app-focus-ring);
+    outline-offset: var(--app-focus-offset);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.acceso-option--selected {
+  border-color: rgba(57, 168, 107, 0.6);
+  background:
+    linear-gradient(150deg, rgba(57, 168, 107, 0.12) 0%, rgba(255, 255, 255, 0) 65%), var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+
+  &::before {
+    opacity: 1;
+  }
+}
+
+.acceso-option__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(21, 61, 50, 0.18);
+  border-radius: var(--app-radius-md);
+  background: var(--app-blue-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.3rem;
+}
+
+.acceso-option:nth-child(2) .acceso-option__icon {
+  border-color: rgba(30, 122, 76, 0.24);
+  background: var(--app-green-soft);
+  color: var(--color-success);
+}
+
+.acceso-option:nth-child(3) .acceso-option__icon {
+  border-color: rgba(233, 180, 76, 0.45);
+  background: var(--app-yellow-soft);
+  color: var(--color-warning);
+}
+
+.acceso-option__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.acceso-option__title {
+  color: var(--app-text-strong);
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.acceso-option__description {
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.acceso-option__check {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-success);
+  font-size: 1.25rem;
+  opacity: 0;
+  transition: opacity var(--app-motion-base) ease;
+}
+
+.acceso-option--selected .acceso-option__check {
+  opacity: 1;
+}
+
+.acceso-confirmation {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-3);
+  overflow: hidden;
+  margin-top: var(--app-space-5);
+  padding: var(--app-space-4);
+  border-color: rgba(30, 122, 76, 0.34);
+  background: linear-gradient(180deg, rgba(30, 122, 76, 0.12) 0%, rgba(255, 255, 255, 0) 65%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--sena-brand-500);
+  }
+}
+
+.acceso-confirmation__icon {
+  flex: 0 0 auto;
+  color: var(--color-success);
+  font-size: 1.7rem;
+}
+
+.acceso-confirmation__label {
+  margin: 2px 0 0;
+  color: var(--app-text-strong);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.acceso-current {
+  margin-top: var(--app-space-4);
+  padding: var(--app-space-4);
+  border-color: rgba(21, 61, 50, 0.16);
+  background: var(--app-bg-secondary);
+}
+
+.acceso-current__value {
+  margin: 3px 0 0;
+  color: var(--sena-brand-900);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.acceso-continue {
+  display: block;
+  width: 100%;
+  margin-top: var(--app-space-4);
+}
+
+/* Formulario de credenciales verificadas: misma lógica, jerarquía visual renovada. */
+
+.acceso-login {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+  overflow: hidden;
+  margin-top: var(--app-space-4);
+  padding: var(--app-space-5);
+  border-color: rgba(21, 61, 50, 0.18);
+  background: linear-gradient(160deg, rgba(57, 168, 107, 0.1) 0%, rgba(255, 255, 255, 0) 58%), var(--app-surface);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sena-brand-900), var(--sena-brand-500));
+  }
+}
+
+.acceso-login__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-3);
+}
+
+.acceso-login__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(21, 61, 50, 0.18);
+  border-radius: var(--app-radius-md);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-size: 1.2rem;
+}
+
+.acceso-login__headings {
+  min-width: 0;
+}
+
+.acceso-login__title {
+  margin: 2px 0 0;
+  color: var(--app-text-strong);
+  font-size: clamp(1rem, 2.6vw, 1.15rem);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.acceso-login__demo {
+  margin-left: auto;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(30, 122, 76, 0.34);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-green-soft);
+  color: var(--color-success);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.acceso-login__hint {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.acceso-login__form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--app-space-4);
+}
+
+.acceso-login__form ion-input {
+  --background: var(--sena-surface-raised);
+  --border-color: rgba(21, 61, 50, 0.18);
+  --border-radius: var(--app-radius-md);
+  --color: var(--app-text);
+  --label-color: var(--app-text-muted);
+  --placeholder-color: var(--app-text-muted);
+  --padding-start: var(--app-space-3);
+  --padding-end: var(--app-space-3);
+  min-height: 56px;
+}
+
+.acceso-login__error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px solid rgba(179, 38, 30, 0.34);
+  border-left-width: 3px;
+  border-radius: var(--app-radius-md);
+  background: var(--app-red-soft);
+  color: var(--color-danger);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.acceso-login__submit,
+.acceso-login__back {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.acceso-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-6);
+  padding-top: var(--app-space-4);
+  border-top: 1px solid var(--app-border);
+  color: var(--app-text-soft);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.acceso-footer__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--sena-brand-500);
+}
+
+@include bp.sm-up {
+  .acceso-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .acceso-login__form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.xl-up {
+  .acceso-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@include bp.xs-only {
+  .acceso-notice,
+  .acceso-option,
+  .acceso-confirmation,
+  .acceso-current {
+    padding: var(--app-space-3);
+  }
+
+  .acceso-login {
+    padding: var(--app-space-4);
+  }
+
+  .acceso-option {
+    min-height: 96px;
+  }
+
+  .acceso-option__icon,
+  .acceso-notice__icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .acceso-login__demo {
+    width: 100%;
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acceso-back,
+  .acceso-option,
+  .acceso-option::before,
+  .acceso-option__check {
+    transition: none;
+  }
+
+  .acceso-option:active {
+    transform: none;
+  }
+}

@@ -1,0 +1,88 @@
+<app-secondary-page
+  icon="settings-outline"
+  eyebrow="Sistema"
+  title="Configuración"
+  description="Preferencias del sistema"
+  footerLabel="Fase 2.7 · Configuración"
+>
+  <section class="app-card config-app" aria-labelledby="config-app-title">
+    <span class="config-app__logo" aria-hidden="true">
+      <ion-icon name="apps-outline"></ion-icon>
+    </span>
+    <div class="config-app__body">
+      <p class="app-overline">Aplicación</p>
+      <h2 id="config-app-title" class="config-app__name">SENA CROWD INTELLIGENCE</h2>
+      <p class="config-app__version">Versión de demostración 0.7</p>
+    </div>
+  </section>
+
+  <section class="app-card config-list" aria-labelledby="config-status-title">
+    <h2 id="config-status-title" class="app-overline">Estado del sistema</h2>
+
+    <div class="config-row">
+      <span class="config-row__icon config-row__icon--success" aria-hidden="true">
+        <ion-icon name="moon-outline"></ion-icon>
+      </span>
+      <div class="config-row__body">
+        <span class="config-row__label">Tema</span>
+        <span class="config-row__value">Oscuro activo</span>
+      </div>
+      <span class="app-status config-row__state">
+        <span class="app-status__dot" aria-hidden="true"></span>
+        Activo
+      </span>
+    </div>
+
+    <hr class="app-divider" />
+
+    <div class="config-row">
+      <span class="config-row__icon config-row__icon--warning" aria-hidden="true">
+        <ion-icon name="cloud-offline-outline"></ion-icon>
+      </span>
+      <div class="config-row__body">
+        <span class="config-row__label">Conexión IoT</span>
+        <span class="config-row__value">Sin conexión IoT</span>
+      </div>
+      <span class="app-status app-status--warning config-row__state">
+        <span class="app-status__dot" aria-hidden="true"></span>
+        Inactiva
+      </span>
+    </div>
+  </section>
+
+  <section class="app-card config-project" aria-labelledby="config-project-title">
+    <div class="app-section-head">
+      <h2 id="config-project-title" class="app-card-title">Información del proyecto</h2>
+      <span class="app-badge">Prototipo</span>
+    </div>
+
+    <p class="config-project__text">
+      Prototipo académico del SENA para apoyar la orientación informativa durante emergencias mediante el monitoreo
+      simulado de aglomeraciones.
+    </p>
+
+    <dl class="config-project__data">
+      <div class="config-project__item">
+        <dt>Institución</dt>
+        <dd>SENA</dd>
+      </div>
+      <div class="config-project__item">
+        <dt>Datos</dt>
+        <dd>Simulados</dd>
+      </div>
+      <div class="config-project__item">
+        <dt>Fase</dt>
+        <dd>2.7 · Menú Más</dd>
+      </div>
+      <div class="config-project__item">
+        <dt>Estado</dt>
+        <dd>Demostración</dd>
+      </div>
+    </dl>
+  </section>
+
+  <p class="config-note">
+    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    <span>Esta demostración no incluye autenticación, servidores ni persistencia de preferencias.</span>
+  </p>
+</app-secondary-page>

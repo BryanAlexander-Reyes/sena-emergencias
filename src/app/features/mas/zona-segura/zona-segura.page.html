@@ -1,0 +1,70 @@
+<app-secondary-page
+  icon="shield-checkmark-outline"
+  eyebrow="Seguridad"
+  title="Zona segura"
+  description="Punto de encuentro"
+  footerLabel="Fase 2.7 · Zona segura"
+>
+  <section class="app-card safe-card" aria-labelledby="safe-card-title">
+    <header class="safe-card__head">
+      <span class="safe-card__icon">
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+      </span>
+
+      <div class="safe-card__identity">
+        <span class="safe-card__code">{{ safeZone().code }}</span>
+        <h2 id="safe-card-title" class="safe-card__title">{{ safeZone().name }}</h2>
+      </div>
+
+      <span
+        class="app-status safe-card__status"
+        [class.app-status--warning]="status() === 'warning'"
+        [class.app-status--danger]="status() === 'critical'"
+      >
+        <span class="app-status__dot" aria-hidden="true"></span>
+        {{ statusLabel() }}
+      </span>
+    </header>
+
+    <div class="safe-card__occupancy" aria-live="polite">
+      <p class="safe-card__numbers">
+        <span class="safe-card__value">{{ safeZone().people }}</span>
+        <span class="safe-card__total">/ {{ safeZone().capacity }}</span>
+      </p>
+      <span class="safe-card__percent">{{ occupancy() }}%</span>
+    </div>
+    <p class="safe-card__caption">personas en el punto de encuentro</p>
+
+    <div
+      class="safe-card__progress"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="occupancy()"
+      aria-label="Ocupación de la zona segura"
+    >
+      <span class="safe-card__progress-fill" [style.width.%]="progressWidth()"></span>
+    </div>
+
+    <footer class="safe-card__foot">
+      <span class="safe-card__metric">
+        <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+        Capacidad {{ safeZone().capacity }} personas
+      </span>
+      <span class="app-badge app-badge--demo">Datos simulados</span>
+    </footer>
+  </section>
+
+  <section class="app-card safe-note" aria-labelledby="safe-note-title">
+    <span class="safe-note__icon">
+      <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <div class="safe-note__body">
+      <h2 id="safe-note-title" class="safe-note__title">Punto de encuentro</h2>
+      <p class="safe-note__text">
+        Zona de referencia para la reunión del personal durante una evacuación. La ocupación se calcula con los datos
+        simulados compartidos del sistema.
+      </p>
+    </div>
+  </section>
+</app-secondary-page>

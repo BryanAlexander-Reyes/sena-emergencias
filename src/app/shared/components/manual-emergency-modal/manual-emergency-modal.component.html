@@ -1,0 +1,120 @@
+@if (activeAlarm(); as alarm) {
+  <div class="manual-emergency-overlay">
+    <section
+      #dialogPanel
+      class="manual-emergency-dialog manual-emergency-dialog--{{ severityTone() }}"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="titleId"
+      [attr.aria-describedby]="descriptionId"
+      tabindex="-1"
+    >
+      <header class="manual-emergency-dialog__header">
+        <p class="manual-emergency-dialog__eyebrow">
+          <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+          <span>Emergencia activa</span>
+        </p>
+
+        <p class="manual-emergency-dialog__severity" aria-label="Severidad de la emergencia">
+          <span class="manual-emergency-dialog__severity-label">Severidad</span>
+          <strong class="manual-emergency-dialog__severity-value">{{ severityLabel() }}</strong>
+        </p>
+      </header>
+
+      <div class="manual-emergency-dialog__body">
+        @if (activeAlarms().length > 1) {
+          <nav aria-label="Emergencias activas">
+            @for (item of activeAlarms(); track item.id) {
+              <button type="button" [disabled]="finalizing()" [attr.aria-pressed]="item.id === alarm.id"
+                (click)="selectAlarm(item.id)">
+                {{ item.evento ?? 'emergencia' }} · {{ item.fecha_activacion }}
+              </button>
+            }
+          </nav>
+        }
+        <div class="manual-emergency-dialog__icon" aria-hidden="true">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+        </div>
+
+        <p class="manual-emergency-dialog__status">Alerta manual confirmada por el sistema</p>
+        <h2 class="manual-emergency-dialog__title" [id]="titleId">{{ alarm.titulo }}</h2>
+        <p class="manual-emergency-dialog__message" [id]="descriptionId">{{ alarm.mensaje }}</p>
+      </div>
+
+      <footer class="manual-emergency-dialog__footer">
+        <p class="manual-emergency-dialog__meta">
+          <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+          <span class="manual-emergency-dialog__meta-label">Activada:</span>
+          <time [attr.datetime]="alarm.fecha_activacion">{{ activatedAtLabel() }}</time>
+        </p>
+        <p class="manual-emergency-dialog__notice">{{ emergencyMessage() }}</p>
+
+        @if (canFinalize() && alarm.id) {
+          <div class="manual-emergency-dialog__actions">
+            @if (!confirmationOpen()) {
+              <button
+                #finalizeButton
+                type="button"
+                class="manual-emergency-dialog__action manual-emergency-dialog__action--primary"
+                [disabled]="finalizing() || !!pendingSyncMessage()"
+                (click)="requestFinalize()"
+              >
+                {{ pendingSyncMessage() ? 'Finalización confirmada' : 'Finalizar emergencia' }}
+              </button>
+            } @else {
+              <div
+                class="manual-emergency-dialog__confirm"
+                role="group"
+                aria-label="Confirmar finalización de emergencia"
+              >
+                <p class="manual-emergency-dialog__confirm-title">Confirmar finalización</p>
+                <p class="manual-emergency-dialog__confirm-text">
+                  Finalizar la emergencia afectará a todos los dispositivos sincronizados. Esta acción solo debe
+                  realizarse cuando la situación esté controlada.
+                </p>
+                <div class="manual-emergency-dialog__confirm-actions">
+                  <button
+                    #cancelFinalizeButton
+                    type="button"
+                    class="manual-emergency-dialog__action manual-emergency-dialog__action--secondary"
+                    [disabled]="finalizing()"
+                    (click)="cancelFinalizeRequest()"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="manual-emergency-dialog__action manual-emergency-dialog__action--danger"
+                    [disabled]="finalizing()"
+                    [attr.aria-busy]="finalizing() ? 'true' : null"
+                    (click)="confirmFinalize()"
+                  >
+                    {{ finalizing() ? 'Finalizando...' : 'Confirmar finalización' }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="manual-emergency-dialog__feedback" aria-live="polite" aria-atomic="true" [id]="statusMessageId">
+          @if (pendingSyncMessage(); as pendingMessage) {
+            <p class="manual-emergency-dialog__feedback-message manual-emergency-dialog__feedback-message--info">
+              <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+              <span>{{ pendingMessage }}</span>
+            </p>
+          }
+          @if (finalizeError(); as errorMessage) {
+            <p
+              class="manual-emergency-dialog__feedback-message manual-emergency-dialog__feedback-message--error"
+              role="status"
+            >
+              <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+              <span>{{ errorMessage }}</span>
+            </p>
+          }
+        </div>
+      </footer>
+    </section>
+  </div>
+}

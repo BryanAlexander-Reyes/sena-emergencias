@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- El desafío FCM es de un solo uso: no debe restaurarse en otro dispositivo. -->
+    <exclude domain="sharedpref" path="sena_fcm_challenge_enc.xml" />
+    <exclude domain="sharedpref" path="sena_fcm_challenge_private.xml" />
+</full-backup-content>
