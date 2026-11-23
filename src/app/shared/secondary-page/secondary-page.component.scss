@@ -1,0 +1,75 @@
+@use '../../../theme/breakpoints' as bp;
+
+.secondary-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  min-height: 44px;
+  margin-bottom: var(--app-space-3);
+  padding: var(--app-space-2) var(--app-space-4);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color var(--app-motion-base) ease,
+    background-color var(--app-motion-base) ease,
+    color var(--app-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.secondary-page__back:active {
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+}
+
+.secondary-page__back:focus-visible {
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
+}
+
+.secondary-page__back ion-icon {
+  font-size: 1rem;
+}
+
+.secondary-page__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-6);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.secondary-page__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--app-border);
+}
+
+@media (hover: hover) {
+  .secondary-page__back:hover {
+    border-color: rgba(57, 168, 107, 0.4);
+    background: var(--app-cyan-soft);
+    color: var(--sena-brand-900);
+  }
+}
+
+@include bp.xs-only {
+  .secondary-page__back {
+    padding: var(--app-space-2) var(--app-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secondary-page__back {
+    transition: none;
+  }
+}

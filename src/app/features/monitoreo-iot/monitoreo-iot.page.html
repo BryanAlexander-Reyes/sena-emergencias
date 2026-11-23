@@ -1,0 +1,143 @@
+<app-secondary-page
+  icon="radio-outline"
+  eyebrow="Telemetría MQTT"
+  title="Monitoreo IoT"
+  description="Lecturas y eventos reales de los ESP32"
+  badge="FASE MQTT.2 — SOLO LECTURA"
+  footerLabel="Fase MQTT.2 · Monitoreo IoT"
+>
+  <section class="app-card iot-status" aria-label="Estado del receptor de telemetría">
+    <div class="iot-status__head">
+      <div class="iot-status__identity">
+        <p class="app-overline">Receptor / API</p>
+        <h2 class="iot-status__title">{{ estadoTexto() }}</h2>
+      </div>
+      <ion-button
+        class="app-button app-button--ghost iot-status__button"
+        type="button"
+        fill="outline"
+        size="small"
+        (click)="recargar()"
+      >
+        <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+        Reconectar
+      </ion-button>
+    </div>
+
+    <p class="iot-status__meta">
+      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+      Última actualización del stream: {{ ultimaActualizacion() }}
+    </p>
+
+    @if (sinDatos()) {
+    <p class="iot-status__notice">Esperando el primer snapshot del receptor MQTT.</p>
+    } @if (isStale()) {
+    <p class="iot-status__notice iot-status__notice--warning" role="status">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+      Los datos recibidos son obsoletos. No se mostrará un valor simulado en su lugar.
+    </p>
+    } @if (error()) {
+    <p class="iot-status__error" role="alert">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+      {{ error() }}
+    </p>
+    }
+  </section>
+
+  @if (isDemo()) {
+  <section class="app-card iot-demo" role="alert">
+    <span class="iot-demo__icon">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+    </span>
+    <div>
+      <h2 class="iot-demo__title">DATOS DE PRUEBA — NO LECTURAS FÍSICAS</h2>
+      <p class="iot-demo__text">
+        El receptor está en modo fixtures. Ningún valor de esta pantalla procede de los ESP32 ni del broker EMQX.
+      </p>
+    </div>
+  </section>
+  } @for (placa of placas(); track placa.id) {
+  <section class="iot-board" [attr.data-placa]="placa.id" aria-label="Datos de {{ placa.titulo }}">
+    <article class="app-card iot-board__head">
+      <div>
+        <p class="app-overline">{{ placa.riesgo }}</p>
+        <h2 class="iot-board__title">{{ placa.titulo }}</h2>
+      </div>
+      <span class="iot-chip" [attr.data-ok]="placa.conexionOk">
+        <ion-icon
+          [name]="placa.conexionOk ? 'checkmark-circle-outline' : 'close-circle-outline'"
+          aria-hidden="true"
+        ></ion-icon>
+        {{ placa.estadoConexion }}
+      </span>
+    </article>
+
+    <article class="app-card iot-board__meta">
+      <div>
+        <span class="iot-board__label">Última actualización MQTT</span>
+        <span class="iot-board__value">{{ placa.ultimaActualizacion }}</span>
+      </div>
+      <div>
+        <span class="iot-board__label">Fecha de la medición</span>
+        <span class="iot-board__value">{{ placa.ultimaMedicion }}</span>
+      </div>
+    </article>
+
+    @if (placa.avisos.length > 0) {
+    <article class="app-card iot-board__avisos" role="status">
+      @for (aviso of placa.avisos; track aviso) {
+      <p>{{ aviso }}</p>
+      }
+    </article>
+    }
+
+    <article class="app-card iot-board__sensors">
+      <div class="app-section-head">
+        <p class="app-overline">Sensores publicados</p>
+        <span class="app-badge">{{ placa.datos.length }} campos</span>
+      </div>
+
+      @if (placa.datos.length > 0) {
+      <dl class="iot-datos">
+        @for (dato of placa.datos; track dato.etiqueta) {
+        <div class="iot-datos__row" [attr.data-disponible]="dato.disponible">
+          <dt>{{ dato.etiqueta }}</dt>
+          <dd>
+            <span class="iot-datos__value">{{ dato.valor }}</span>
+            @if (dato.unidad) {
+            <span class="iot-datos__unit">{{ dato.unidad }}</span>
+            } @if (dato.nota) {
+            <span class="iot-datos__note">{{ dato.nota }}</span>
+            }
+          </dd>
+        </div>
+        }
+      </dl>
+      } @else {
+      <p class="iot-board__empty">Todavía no se han recibido métricas de esta placa.</p>
+      }
+    </article>
+
+    <article class="app-card iot-board__events">
+      <div class="app-section-head">
+        <p class="app-overline">Último evento MQTT</p>
+        <span class="app-badge">{{ placa.eventos.length }}</span>
+      </div>
+
+      @if (placa.eventos.length > 0) { @for (evento of placa.eventos; track evento.id) {
+      <div class="iot-evento">
+        <div class="iot-evento__head">
+          <strong>{{ evento.nombre }}</strong>
+          <span>{{ evento.estadoTexto }}</span>
+        </div>
+        <p>{{ evento.evidencia }}</p>
+        <p>{{ evento.fecha }}</p>
+        <small>{{ evento.nota }}</small>
+      </div>
+      } } @else {
+      <p class="iot-board__empty">No se han recibido eventos de esta placa.</p>
+      }
+    </article>
+  </section>
+  }
+</app-secondary-page>

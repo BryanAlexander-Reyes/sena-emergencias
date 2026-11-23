@@ -1,2 +1,220 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/* ==========================================================================
+   SENA CROWD INTELLIGENCE — Design tokens
+   UIX.2: identidad verde/clara. Los tokens --app-* se conservan como alias
+   para no modificar las páginas existentes en esta microfase.
+   ========================================================================== */
+
+:root {
+  /* --- Paleta aprobada --------------------------------------------------- */
+  --sena-brand-900: #153d32;
+  --sena-brand-500: #39a86b;
+  --sena-brand-050: #eaf4ee;
+  --sena-surface: #f5f6f1;
+  --sena-surface-raised: #ffffff;
+  --sena-ink: #202824;
+  --sena-accent: #e9b44c;
+
+  /* --- Tokens semánticos (validados para fondo claro) -------------------- */
+  --color-bg: var(--sena-surface);
+  --color-surface: var(--sena-surface-raised);
+  --color-surface-muted: #edefea;
+  --color-text: var(--sena-ink);
+  --color-text-strong: var(--sena-ink);
+  --color-text-muted: #3c6e63;
+  --color-text-soft: #5a635c;
+  --color-border: rgba(32, 40, 36, 0.14);
+  --color-border-subtle: rgba(32, 40, 36, 0.08);
+  --color-focus: var(--sena-brand-500);
+
+  /*alerta y peligro: se conserva el significado, se ajusta el contraste */
+  --color-success: #1e7a4c;
+  --color-success-bg: rgba(30, 122, 76, 0.1);
+  --color-warning: #8a5a00;
+  --color-warning-fill: var(--sena-accent);
+  --color-warning-bg: rgba(233, 180, 76, 0.2);
+  --color-danger: #b3261e;
+  --color-danger-bg: rgba(179, 38, 30, 0.1);
+  --color-info: #3c6e63;
+  --color-violet: #6b4e9b;
+  --color-on-brand: #ffffff;
+  --color-on-accent: #062117;
+
+  /* --- Compatibilidad con la API --app-* existente ---------------------- */
+  --app-bg: var(--color-bg);
+  --app-bg-secondary: var(--color-surface-muted);
+  --app-surface: var(--color-surface);
+  --app-blue: var(--sena-brand-900);
+  --app-cyan: var(--sena-brand-500);
+  --app-green: var(--color-success);
+  --app-yellow: var(--color-warning);
+  --app-yellow-fill: var(--sena-accent);
+  --app-red: var(--color-danger);
+  --app-violet: var(--color-violet);
+  --app-text: var(--color-text);
+  --app-text-muted: var(--color-text-muted);
+  --app-text-soft: var(--color-text-soft);
+  --app-text-strong: var(--color-text-strong);
+  --app-border: var(--color-border);
+  --app-border-subtle: var(--color-border-subtle);
+
+  /* --- Tinted helpers ---------------------------------------------------- */
+  --app-blue-soft: rgba(21, 61, 50, 0.08);
+  --app-cyan-soft: rgba(57, 168, 107, 0.12);
+  --app-green-soft: var(--color-success-bg);
+  --app-yellow-soft: var(--color-warning-bg);
+  --app-red-soft: var(--color-danger-bg);
+  --app-violet-soft: rgba(107, 78, 155, 0.1);
+  --app-border-soft: var(--color-border-subtle);
+
+  /* --- Espaciado --------------------------------------------------------- */
+  --app-space-1: 0.25rem;
+  --app-space-2: 0.5rem;
+  --app-space-3: 0.75rem;
+  --app-space-4: 1rem;
+  --app-space-5: 1.25rem;
+  --app-space-6: 1.5rem;
+  --app-space-8: 2rem;
+  --app-space-10: 2.5rem;
+
+  /* --- Radios ------------------------------------------------------------ */
+  --app-radius-sm: 0.5rem;
+  --app-radius-md: 0.875rem;
+  --app-radius-lg: 1.25rem;
+  --app-radius-xl: 1.75rem;
+  --app-radius-pill: 999px;
+
+  /* --- Sombras (adaptadas a fondo claro) --------------------------------- */
+  --app-shadow-sm: 0 1px 2px rgba(32, 40, 36, 0.06), 0 4px 12px rgba(32, 40, 36, 0.05);
+  --app-shadow-md: 0 12px 32px rgba(32, 40, 36, 0.1);
+  --app-shadow-glow: 0 0 24px rgba(57, 168, 107, 0.16);
+
+  /* --- Tipografía -------------------------------------------------------- */
+  --app-font-size-sm: 0.875rem;
+  --app-font-size-xs: 0.8125rem;
+
+  /* --- Movimiento (UIX.6) ------------------------------------------------ */
+  --app-motion-fast: 140ms;
+  --app-motion-base: 160ms;
+  --app-motion-slow: 200ms;
+
+  /* --- Foco -------------------------------------------------------------- */
+  --app-focus-ring: 2px solid var(--color-focus);
+  --app-focus-offset: 2px;
+
+  --ion-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* --- Base Ionic clara (evita destello antes de que Ionic añada .ios/.md) */
+  --ion-background-color: var(--sena-surface);
+  --ion-background-color-rgb: 245, 246, 241;
+  --ion-text-color: var(--sena-ink);
+  --ion-text-color-rgb: 32, 40, 36;
+  --ion-color-primary: var(--sena-brand-900);
+  --ion-color-primary-rgb: 21, 61, 50;
+  --ion-color-primary-contrast: var(--color-on-brand);
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+}
+
+/* Ionic aplica sus variables de tema a :root.ios / :root.md, por lo que se
+ * mantiene la misma especificidad para ganar la cascada sin dark.always.css. */
+:root.ios,
+:root.md {
+  --ion-background-color: var(--sena-surface);
+  --ion-background-color-rgb: 245, 246, 241;
+  --ion-text-color: var(--sena-ink);
+  --ion-text-color-rgb: 32, 40, 36;
+
+  --ion-card-background: var(--sena-surface-raised);
+  --ion-item-background: var(--sena-surface-raised);
+  --ion-toolbar-background: var(--sena-surface-raised);
+  --ion-toolbar-color: var(--sena-ink);
+  --ion-toolbar-border-color: var(--color-border);
+  --ion-border-color: var(--color-border);
+  --ion-overlay-background-color: var(--sena-surface-raised);
+
+  --ion-tab-bar-background: var(--sena-surface-raised);
+  --ion-tab-bar-background-focused: var(--app-cyan-soft);
+  --ion-tab-bar-border-color: var(--color-border);
+  --ion-tab-bar-color: var(--color-text-soft);
+  --ion-tab-bar-color-selected: var(--sena-brand-900);
+
+  /* Escala de superficies claras */
+  --ion-background-color-step-50: #f7f8f4;
+  --ion-background-color-step-100: #f5f6f1;
+  --ion-background-color-step-150: #f1f3ed;
+  --ion-background-color-step-200: #edefea;
+  --ion-background-color-step-250: #e9ebe4;
+  --ion-background-color-step-300: #e2e6dd;
+  --ion-background-color-step-350: #d8ded2;
+  --ion-background-color-step-400: #ccd4c5;
+  --ion-background-color-step-450: #b9c5b2;
+  --ion-background-color-step-500: #a2b29a;
+  --ion-background-color-step-600: #7e9477;
+  --ion-background-color-step-700: #5d7458;
+  --ion-background-color-step-800: #415540;
+  --ion-background-color-step-900: #2b3a2c;
+  --ion-background-color-step-950: #1b2620;
+
+  /* Paletas Ionic: contrastes verificados sobre fondo claro */
+  --ion-color-primary: #153d32;
+  --ion-color-primary-rgb: 21, 61, 50;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #103026;
+  --ion-color-primary-tint: #275446;
+
+  --ion-color-secondary: #39a86b;
+  --ion-color-secondary-rgb: 57, 168, 107;
+  --ion-color-secondary-contrast: #062117;
+  --ion-color-secondary-contrast-rgb: 6, 33, 23;
+  --ion-color-secondary-shade: #32945e;
+  --ion-color-secondary-tint: #4db27a;
+
+  --ion-color-tertiary: #3c6e63;
+  --ion-color-tertiary-rgb: 60, 110, 99;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #356159;
+  --ion-color-tertiary-tint: #507c72;
+
+  --ion-color-success: #1e7a4c;
+  --ion-color-success-rgb: 30, 122, 76;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #1a6b42;
+  --ion-color-success-tint: #35875b;
+
+  --ion-color-warning: #e9b44c;
+  --ion-color-warning-rgb: 233, 180, 76;
+  --ion-color-warning-contrast: #202824;
+  --ion-color-warning-contrast-rgb: 32, 40, 36;
+  --ion-color-warning-shade: #cd9e42;
+  --ion-color-warning-tint: #ebc05e;
+
+  --ion-color-danger: #b3261e;
+  --ion-color-danger-rgb: 179, 38, 30;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #9e211a;
+  --ion-color-danger-tint: #bb3b34;
+
+  --ion-color-light: #ffffff;
+  --ion-color-light-rgb: 255, 255, 255;
+  --ion-color-light-contrast: #202824;
+  --ion-color-light-contrast-rgb: 32, 40, 36;
+  --ion-color-light-shade: #e0e0e0;
+  --ion-color-light-tint: #ffffff;
+
+  --ion-color-medium: #5a635c;
+  --ion-color-medium-rgb: 90, 99, 92;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #4f5751;
+  --ion-color-medium-tint: #6b746c;
+
+  --ion-color-dark: #153d32;
+  --ion-color-dark-rgb: 21, 61, 50;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #103026;
+  --ion-color-dark-tint: #275446;
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Seguridad de red de la APK: el receptor LAN usa HTTPS con un certificado
+  autofirmado de desarrollo. Solo para las IP del receptor se confía también
+  en las CA instaladas por el usuario (receptor.cer). El resto del tráfico
+  (Supabase, etc.) sigue usando únicamente los certificados del sistema.
+  No se permite cleartext HTTP en ninguna parte.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">192.168.40.12</domain>
+        <domain includeSubdomains="false">192.168.137.1</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

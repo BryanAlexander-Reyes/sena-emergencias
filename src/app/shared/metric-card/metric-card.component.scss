@@ -1,0 +1,106 @@
+@use '../../../theme/breakpoints' as bp;
+
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-1);
+  overflow: hidden;
+  padding: clamp(var(--app-space-4), 2.6vw, var(--app-space-5));
+}
+
+:host::after {
+  content: '';
+  position: absolute;
+  top: -34px;
+  right: -34px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--metric-accent-soft);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.metric-card__icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--app-space-2);
+  border: 1px solid var(--metric-accent-border);
+  border-radius: var(--app-radius-md);
+  background: var(--metric-accent-soft);
+  color: var(--metric-accent);
+  font-size: 1.15rem;
+}
+
+.metric-card__value {
+  position: relative;
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: clamp(1.75rem, 5vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.metric-card__title {
+  position: relative;
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: var(--app-font-size-sm);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.metric-card__description {
+  position: relative;
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
+}
+
+:host(.metric-card--cyan) {
+  --metric-accent: var(--app-cyan);
+  --metric-accent-soft: var(--app-cyan-soft);
+  --metric-accent-border: rgba(57, 168, 107, 0.32);
+}
+
+:host(.metric-card--blue) {
+  --metric-accent: var(--app-blue);
+  --metric-accent-soft: var(--app-blue-soft);
+  --metric-accent-border: rgba(21, 61, 50, 0.28);
+}
+
+:host(.metric-card--yellow) {
+  --metric-accent: var(--app-yellow);
+  --metric-accent-soft: var(--app-yellow-soft);
+  --metric-accent-border: rgba(138, 90, 0, 0.28);
+}
+
+:host(.metric-card--green) {
+  --metric-accent: var(--app-green);
+  --metric-accent-soft: var(--app-green-soft);
+  --metric-accent-border: rgba(30, 122, 76, 0.32);
+}
+
+@include bp.xs-only {
+  :host {
+    padding: var(--app-space-3);
+  }
+
+  .metric-card__icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: var(--app-space-1);
+    font-size: 1.05rem;
+  }
+
+  .metric-card__value {
+    font-size: 1.7rem;
+  }
+}

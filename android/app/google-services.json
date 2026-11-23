@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1010854308577",
+    "project_id": "sena-crowd-intelligence",
+    "storage_bucket": "sena-crowd-intelligence.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010854308577:android:1a06e2ef3e42ac01fe25a0",
+        "android_client_info": {
+          "package_name": "com.sena.crowdintelligence"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNG9Tb37Cl7cRz1f0gNq1kUyFkZIBNJho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,231 @@
+@use '../../../theme/breakpoints' as bp;
+
+/* ==========================================================================
+   Zonas · simulación, resumen de ocupación y cuadrícula de tarjetas
+   ========================================================================== */
+
+.zonas-simulation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+  margin-bottom: var(--app-space-5);
+}
+
+.zonas-simulation__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-2) var(--app-space-3);
+}
+
+.zonas-simulation__heading {
+  min-width: 0;
+}
+
+.zonas-simulation__badge {
+  max-width: 100%;
+}
+
+.zonas-simulation__text {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-sm);
+  line-height: 1.6;
+}
+
+.zonas-simulation__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.zonas-simulation__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  min-height: 44px;
+  padding: 0 var(--app-space-4);
+  border: 1px solid var(--sena-brand-500);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-family: inherit;
+  font-size: var(--app-font-size-xs);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--app-motion-fast) ease,
+    border-color var(--app-motion-fast) ease,
+    color var(--app-motion-fast) ease,
+    opacity var(--app-motion-fast) ease;
+}
+
+.zonas-simulation__reset:not(:disabled):active {
+  border-color: var(--sena-brand-900);
+  background: var(--app-blue-soft);
+}
+
+.zonas-simulation__reset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zonas-simulation__reset:focus-visible {
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
+}
+
+.zonas-simulation__feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  margin: 0;
+  padding: var(--app-space-3);
+  border: 1px solid rgba(30, 122, 76, 0.3);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-green-soft);
+  color: var(--app-green);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* --- Resumen de ocupación ------------------------------------------------ */
+
+.zonas-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--app-space-4);
+  margin-bottom: var(--app-space-5);
+  background: linear-gradient(135deg, var(--sena-brand-050), var(--app-surface));
+}
+
+.zonas-summary__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.zonas-summary__value {
+  color: var(--sena-brand-900);
+  font-size: clamp(1.6rem, 5vw, 2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.zonas-summary__label {
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.zonas-summary__divider {
+  align-self: stretch;
+  width: 1px;
+  background: var(--app-border);
+}
+
+/* --- Tarjetas ------------------------------------------------------------ */
+
+.zonas-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--app-space-4);
+}
+
+.zonas-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  margin: var(--app-space-5) 0 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.6;
+}
+
+.zonas-disclaimer ion-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--sena-brand-900);
+  font-size: 1rem;
+}
+
+.zonas-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-6);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zonas-footer__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--app-border);
+}
+
+@media (hover: hover) {
+  .zonas-simulation__reset:not(:disabled):hover {
+    border-color: var(--sena-brand-900);
+    background: var(--app-blue-soft);
+    color: var(--sena-brand-900);
+  }
+}
+
+@include bp.sm-up {
+  .zonas-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.lg-up {
+  .zonas-list {
+    gap: var(--app-space-5);
+  }
+}
+
+@include bp.xl-up {
+  .zonas-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 359px) {
+  .zonas-summary {
+    gap: var(--app-space-2);
+  }
+
+  .zonas-summary__value {
+    font-size: 1.5rem;
+  }
+
+  .zonas-simulation__badge {
+    font-size: var(--app-font-size-xs);
+    letter-spacing: 0.06em;
+  }
+
+  .zonas-simulation__reset {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zonas-simulation__reset {
+    transition: none;
+  }
+}
