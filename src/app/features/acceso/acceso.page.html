@@ -1,0 +1,152 @@
+<ion-content [fullscreen]="true">
+  <main class="app-page">
+    <div class="app-container">
+      <a class="acceso-back" routerLink="/tabs/inicio">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>Volver al inicio</span>
+      </a>
+
+      <app-feature-intro
+        icon="key-outline"
+        eyebrow="SENA CROWD INTELLIGENCE"
+        title="Acceso de demostración"
+        description="Selecciona un perfil para explorar las funcionalidades del prototipo SENA CROWD INTELLIGENCE"
+        badge="MODO DEMOSTRACIÓN"
+      />
+
+      <section class="app-card acceso-notice" aria-labelledby="acceso-notice-title">
+        <span class="acceso-notice__icon">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="acceso-notice__body">
+          <h2 id="acceso-notice-title" class="acceso-notice__title">Aviso importante</h2>
+          <p class="acceso-notice__text">
+            Aprendiz es público. Administrador e Instructor requieren credenciales verificadas por Supabase Auth.
+          </p>
+        </div>
+      </section>
+
+      @if (view() === 'select') {
+      <section class="acceso-profiles" aria-labelledby="acceso-profiles-title">
+        <div class="app-section-head">
+          <p id="acceso-profiles-title" class="app-overline">Perfiles disponibles</p>
+          <span class="app-badge">{{ profiles.length }} opciones</span>
+        </div>
+
+        <div class="acceso-options" role="group" aria-label="Perfiles de demostración">
+          @for (profile of profiles; track profile.id) {
+          <button
+            type="button"
+            class="app-card acceso-option"
+            [class.acceso-option--selected]="session.selectedProfileId() === profile.id"
+            [attr.aria-pressed]="session.selectedProfileId() === profile.id"
+            (click)="selectProfile(profile.id)"
+          >
+            <span class="acceso-option__icon">
+              <ion-icon [name]="profile.icon" aria-hidden="true"></ion-icon>
+            </span>
+            <span class="acceso-option__body">
+              <span class="acceso-option__title">{{ profile.label }}</span>
+              <span class="acceso-option__description">{{ profile.description }}</span>
+            </span>
+            <ion-icon class="acceso-option__check" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          </button>
+          }
+        </div>
+      </section>
+
+      @if (confirmationLabel(); as label) {
+      <section class="app-card acceso-confirmation" role="status" aria-live="polite">
+        <ion-icon class="acceso-confirmation__icon" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+        <div>
+          <p class="app-overline">Perfil seleccionado</p>
+          <p class="acceso-confirmation__label">{{ label }}</p>
+        </div>
+      </section>
+      }
+
+      <section class="app-card acceso-current" aria-labelledby="acceso-current-title">
+        <p id="acceso-current-title" class="app-overline">Perfil activo en la sesión</p>
+        <p class="acceso-current__value">{{ session.profile().label }}</p>
+      </section>
+
+      @if (confirmationLabel()) {
+      <ion-button class="app-button acceso-continue" type="button" (click)="continueToInicio()">
+        Continuar al inicio
+      </ion-button>
+      } } @if (view() === 'login') {
+      <section class="app-card acceso-login" aria-labelledby="acceso-login-title">
+        <div class="acceso-login__head">
+          <span class="acceso-login__icon">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="acceso-login__headings">
+            <p class="app-overline">Inicio de sesión</p>
+            <h2 id="acceso-login-title" class="acceso-login__title">{{ loginTitle() }}</h2>
+          </div>
+          <span class="acceso-login__demo">Acceso verificado</span>
+        </div>
+
+        <p class="acceso-login__hint">Ingresa tus credenciales para continuar al inicio.</p>
+
+        <form class="acceso-login__form" (submit)="onSubmit($event)" [attr.aria-busy]="isSubmitting()" novalidate>
+          <ion-input
+            class="acceso-login__username"
+            type="text"
+            fill="outline"
+            label="Nombre de usuario"
+            label-placement="stacked"
+            aria-label="Nombre de usuario"
+            autocomplete="username"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            (ionInput)="onUsernameInput($event)"
+          ></ion-input>
+
+          <ion-input
+            class="acceso-login__password"
+            type="password"
+            fill="outline"
+            label="Contraseña"
+            label-placement="stacked"
+            aria-label="Contraseña"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            (ionInput)="onPasswordInput($event)"
+          ></ion-input>
+
+          @if (loginError()) {
+          <p class="acceso-login__error" role="alert">{{ loginError() }}</p>
+          }
+
+          <ion-button
+            class="app-button acceso-login__submit"
+            type="button"
+            [disabled]="isSubmitting()"
+            (click)="login()"
+          >
+            @if (isSubmitting()) { Iniciando sesión… } @else { Iniciar sesión }
+          </ion-button>
+          <ion-button
+            class="app-button app-button--ghost acceso-login__back"
+            type="button"
+            [disabled]="isSubmitting()"
+            (click)="back()"
+          >
+            Volver
+          </ion-button>
+        </form>
+      </section>
+      }
+
+      <footer class="acceso-footer">
+        <span>Fase 4.2 · Acceso de demostración</span>
+        <span class="acceso-footer__dot" aria-hidden="true"></span>
+        <span>Autenticación real para perfiles privilegiados</span>
+      </footer>
+    </div>
+  </main>
+</ion-content>

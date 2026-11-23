@@ -1,0 +1,113 @@
+<header class="zone-card__head">
+  <span class="zone-card__icon">
+    <ion-icon [name]="zone().icon" aria-hidden="true"></ion-icon>
+  </span>
+
+  <div class="zone-card__identity">
+    <span class="zone-card__code">{{ zone().code }}</span>
+    <h2 class="zone-card__name">{{ zone().name }}</h2>
+  </div>
+
+  <span class="zone-card__badge">{{ statusLabel() }}</span>
+</header>
+
+<dl class="zone-card__metrics">
+  <div class="zone-card__metric">
+    <dt>Personas</dt>
+    <dd>{{ zone().people }}</dd>
+  </div>
+  <div class="zone-card__metric">
+    <dt>Capacidad</dt>
+    <dd>{{ zone().capacity }}</dd>
+  </div>
+  <div class="zone-card__metric">
+    <dt>Ocupación</dt>
+    <dd>{{ occupancy() }}%</dd>
+  </div>
+</dl>
+
+<div
+  class="app-progress zone-card__progress"
+  role="progressbar"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  [attr.aria-valuenow]="occupancy()"
+  [attr.aria-valuetext]="occupancy() + '% · ' + statusLabel()"
+  [attr.aria-label]="'Ocupación de ' + zone().name"
+>
+  <span class="app-progress__fill zone-card__progress-fill" [style.width.%]="progressWidth()"></span>
+</div>
+
+<div class="zone-card__controls" tabindex="-1" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+  <div
+    class="zone-card__stepper"
+    role="group"
+    [attr.aria-label]="canUpdate() ? 'Simular ocupación de ' + zone().name : 'Ocupación de ' + zone().name"
+  >
+    @if (canUpdate()) {
+      <button
+        type="button"
+        class="zone-card__step zone-card__step--decrement"
+        [disabled]="!canDecrement()"
+        [attr.aria-label]="'Disminuir una persona en ' + zone().name"
+        (click)="decrement.emit()"
+      >
+        <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+      </button>
+    }
+
+    <span class="zone-card__people" role="status">
+      <span class="zone-card__people-value">{{ zone().people }}</span>
+      <span class="zone-card__people-unit">personas</span>
+    </span>
+
+    @if (canUpdate()) {
+      <button
+        type="button"
+        class="zone-card__step zone-card__step--increment"
+        [disabled]="!canIncrement()"
+        [attr.aria-label]="'Aumentar una persona en ' + zone().name"
+        (click)="increment.emit()"
+      >
+        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+      </button>
+    }
+  </div>
+
+  @if (canReset()) {
+    <button
+      type="button"
+      class="zone-card__reset"
+      [disabled]="resetDisabled()"
+      [attr.aria-label]="'Restablecer la ocupación de ' + zone().name"
+      (click)="resetRequested.emit()"
+    >
+      <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+      <span>Restablecer</span>
+    </button>
+  }
+
+  @if (!canUpdate() && !canReset()) {
+    <p class="zone-card__read-only">Solo consulta: simulación no disponible para tu perfil.</p>
+  }
+</div>
+
+<footer class="zone-card__footer">
+  <span class="zone-card__simulated">Datos simulados</span>
+  <button
+    type="button"
+    class="zone-card__hint zone-card__toggle"
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="noteId()"
+    (click)="toggleFromButton($event)"
+  >
+    {{ expanded() ? 'Ocultar resumen' : 'Ver resumen' }}
+  </button>
+</footer>
+
+@if (expanded()) {
+  <p [id]="noteId()" class="zone-card__note">
+    <strong>{{ zone().name }}</strong> · {{ statusLabel() }}. El detalle completo de esta zona estará disponible en una
+    próxima etapa.
+  </p>
+}

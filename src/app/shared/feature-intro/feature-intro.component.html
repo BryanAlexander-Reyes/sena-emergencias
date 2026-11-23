@@ -1,0 +1,13 @@
+<header class="feature-intro">
+  <div class="feature-intro__top">
+    <span class="app-icon-tile app-icon-tile--lg feature-intro__icon">
+      <ion-icon [name]="icon()" aria-hidden="true"></ion-icon>
+    </span>
+    @if (badge(); as label) {
+      <span class="app-badge app-badge--demo">{{ label }}</span>
+    }
+  </div>
+  <p class="app-overline">{{ eyebrow() }}</p>
+  <h1 class="app-title feature-intro__title">{{ title() }}</h1>
+  <p class="app-subtitle feature-intro__text">{{ description() }}</p>
+</header>

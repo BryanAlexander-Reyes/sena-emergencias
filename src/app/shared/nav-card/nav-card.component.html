@@ -1,0 +1,12 @@
+<a class="nav-card app-card" [routerLink]="link()">
+  <span class="nav-card__icon">
+    <ion-icon [name]="icon()" aria-hidden="true"></ion-icon>
+  </span>
+
+  <span class="nav-card__body">
+    <span class="nav-card__title">{{ title() }}</span>
+    <span class="nav-card__description">{{ description() }}</span>
+  </span>
+
+  <ion-icon class="nav-card__arrow" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+</a>

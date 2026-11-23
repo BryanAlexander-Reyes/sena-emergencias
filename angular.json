@@ -47,14 +47,26 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "10kb",
+                  "maximumError": "12kb"
                 }
               ],
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
+                },
+                {
+                  "replace": "src/environments/supabase-public.config.ts",
+                  "with": "src/environments/supabase-public.config.generated.ts"
+                },
+                {
+                  "replace": "src/environments/telemetry.config.ts",
+                  "with": "src/environments/telemetry.config.generated.ts"
+                },
+                {
+                  "replace": "src/environments/apk-download.config.ts",
+                  "with": "src/environments/apk-download.config.generated.ts"
                 }
               ],
               "outputHashing": "all"
@@ -63,7 +75,21 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/supabase-public.config.ts",
+                  "with": "src/environments/supabase-public.config.generated.ts"
+                },
+                {
+                  "replace": "src/environments/telemetry.config.ts",
+                  "with": "src/environments/telemetry.config.generated.ts"
+                },
+                {
+                  "replace": "src/environments/apk-download.config.ts",
+                  "with": "src/environments/apk-download.config.generated.ts"
+                }
+              ]
             },
             "ci": {
               "progress": false

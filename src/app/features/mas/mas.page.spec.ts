@@ -1,0 +1,398 @@
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+
+import { ADMIN_ACCESS_DENIED_PARAM, ADMIN_ACCESS_DENIED_VALUE } from '../../core/auth/admin-access.guard';
+import { AUTH_FACADE, type AuthFacade } from '../../core/auth/auth-facade.contract';
+import { DemoSessionService } from '../../core/auth/demo-session.service';
+import {
+  verifiedTestIdentities,
+  type VerifiedTestIdentities,
+} from '../../core/auth/testing/verified-session-test.util';
+
+import { MasPage } from './mas.page';
+
+const signOut = vi.fn<AuthFacade['signOut']>();
+const authFacade: AuthFacade = {
+  signIn: vi.fn<AuthFacade['signIn']>(),
+  signOut,
+};
+
+describe('MasPage', () => {
+  let component: MasPage;
+  let fixture: ComponentFixture<MasPage>;
+  let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
+
+  const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    signOut.mockReset();
+
+    await TestBed.configureTestingModule({
+      imports: [MasPage],
+      providers: [provideRouter([]), { provide: AUTH_FACADE, useValue: authFacade }],
+    }).compileComponents();
+
+    session = TestBed.inject(DemoSessionService);
+    fixture = TestBed.createComponent(MasPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should render the branded header and the demo indicators', () => {
+    const content = pageText();
+    const header = fixture.nativeElement.querySelector('app-feature-intro') as HTMLElement;
+
+    expect(content).toContain('SENA CROWD INTELLIGENCE');
+    expect(content).toContain('Más opciones');
+    expect(content).toContain('Herramientas y configuración del sistema');
+    expect(content).toContain('MODO DEMOSTRACIÓN');
+    expect(header.querySelector('ion-icon')?.getAttribute('name')).toBe('apps-outline');
+  });
+
+  it('should render the demo system information card', () => {
+    const content = pageText();
+
+    expect(content).toContain('Sistema de demostración');
+    expect(content).toContain('Los datos mostrados son simulados. No hay conexión con dispositivos IoT.');
+  });
+
+  it('should expose the menu destinations with their descriptions', () => {
+    const cards = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card')) as HTMLElement[];
+    const texts = cards.map((card) => (card.textContent ?? '').replace(/\s+/g, ' ').trim());
+
+    expect(cards).toHaveLength(6);
+    expect(texts[0]).toContain('Zona segura');
+    expect(texts[0]).toContain('Punto de encuentro y ocupación');
+    expect(texts[1]).toContain('Estadísticas');
+    expect(texts[1]).toContain('Gráficos y tendencias de ocupación');
+    expect(texts[2]).toContain('Sensores IoT');
+    expect(texts[2]).toContain('Dispositivos y lecturas simuladas');
+    expect(texts[3]).toContain('Monitoreo IoT');
+    expect(texts[3]).toContain('Telemetría MQTT de los ESP32');
+    expect(texts[4]).toContain('Asistente IA');
+    expect(texts[4]).toContain('Consultas sobre el monitoreo');
+    expect(texts[5]).toContain('Configuración');
+    expect(texts[5]).toContain('Preferencias e información');
+  });
+
+  it('should keep the accessible profile and navigation structure used by the visual layout', () => {
+    const profile = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
+    const menu = fixture.nativeElement.querySelector('.mas-menu') as HTMLElement;
+    const list = fixture.nativeElement.querySelector('.mas-menu__list') as HTMLElement;
+
+    expect(profile.getAttribute('aria-labelledby')).toBe('mas-profile-title');
+    expect(menu.getAttribute('aria-labelledby')).toBe('mas-menu-title');
+    expect(list.getAttribute('aria-label')).toBe('Opciones del menú Más');
+    expect(list.querySelectorAll('app-nav-card')).toHaveLength(6);
+  });
+
+  it('should link every card to its secondary route', () => {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card a')) as HTMLAnchorElement[];
+
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/tabs/mas/zona-segura',
+      '/tabs/mas/estadisticas',
+      '/tabs/mas/sensores',
+      '/tabs/mas/monitoreo-iot',
+      '/tabs/mas/asistente',
+      '/tabs/mas/configuracion',
+    ]);
+  });
+
+  it('should apply the configured accent and icon to every card', () => {
+    const cards = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card')) as HTMLElement[];
+    const accents = cards.map((card) =>
+      Array.from(card.classList).find((className) => className.startsWith('nav-card-host--')),
+    );
+    const icons = cards.map((card) => card.querySelector('.nav-card__icon ion-icon')?.getAttribute('name'));
+
+    expect(accents).toEqual([
+      'nav-card-host--green',
+      'nav-card-host--cyan',
+      'nav-card-host--blue',
+      'nav-card-host--cyan',
+      'nav-card-host--violet',
+      'nav-card-host--gray',
+    ]);
+    expect(icons).toEqual([
+      'shield-checkmark-outline',
+      'stats-chart-outline',
+      'hardware-chip-outline',
+      'radio-outline',
+      'chatbubbles-outline',
+      'settings-outline',
+    ]);
+  });
+
+  it('should show the learner profile and the demo mode indicator by default', () => {
+    const section = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
+    const changeLink = section.querySelector('.mas-profile__action') as HTMLAnchorElement;
+
+    expect(section.textContent).toContain('Perfil de demostración');
+    expect(section.textContent).toContain('Modo demostración');
+    expect(section.textContent).toContain('Perfil activo');
+    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Aprendiz de demostración');
+    expect(section.textContent).toContain('Cambiar perfil');
+    expect(changeLink.getAttribute('href')).toBe('/acceso');
+    expect(section.textContent).not.toContain('Salir del perfil');
+  });
+
+  it('should render the active profile and allow leaving it', () => {
+    session.publishVerifiedIdentity(verified.instructor);
+    fixture.detectChanges();
+
+    const section = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
+    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Instructor de demostración');
+    const profileIcon = section.querySelector('.mas-profile__icon ion-icon') as unknown as { name: string };
+    expect(profileIcon.name).toBe('school-outline');
+    expect(section.textContent).toContain('Salir del perfil');
+
+    const exitButton = Array.from(section.querySelectorAll('ion-button')).find((button) =>
+      (button.textContent ?? '').includes('Salir del perfil'),
+    ) as HTMLElement;
+    exitButton.click();
+    fixture.detectChanges();
+
+    expect(session.profileId()).toBe('aprendiz');
+    expect(section.querySelector('.mas-profile__value')?.textContent).toContain('Aprendiz de demostración');
+    expect(section.textContent).not.toContain('Salir del perfil');
+  });
+
+  it('should expose the admin card only to the administrator profile', () => {
+    const links = (): (string | null)[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('app-nav-card a')).map((link) =>
+        (link as HTMLAnchorElement).getAttribute('href'),
+      );
+
+    expect(component.menu()).toHaveLength(6);
+    expect(links()).not.toContain('/tabs/mas/administracion');
+
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    expect(component.menu()).toHaveLength(7);
+    expect(pageText()).toContain('Administración');
+    expect(pageText()).toContain('Usuarios y roles registrados');
+    expect(links().at(-1)).toBe('/tabs/mas/administracion');
+
+    session.selectProfile('aprendiz');
+    fixture.detectChanges();
+
+    expect(component.menu()).toHaveLength(6);
+    expect(links()).not.toContain('/tabs/mas/administracion');
+  });
+
+  it('should keep the demo access and profile actions available for every profile', () => {
+    const section = fixture.nativeElement.querySelector('.mas-profile') as HTMLElement;
+    const changeLink = section.querySelector('.mas-profile__action') as HTMLAnchorElement;
+
+    expect(changeLink.getAttribute('href')).toBe('/acceso');
+    expect(section.textContent).toContain('Cambiar perfil');
+
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    expect(section.textContent).toContain('Salir del perfil');
+  });
+
+  it('should render the footer', () => {
+    const content = pageText();
+
+    expect(content).toContain('Fase 2.7 · Menú Más');
+    expect(content).toContain('v0.7');
+  });
+
+  const exitButton = (): HTMLElement =>
+    Array.from(fixture.nativeElement.querySelectorAll('.mas-profile ion-button') as HTMLElement[]).find((button) =>
+      (button.textContent ?? '').includes('Salir del perfil'),
+    ) as HTMLElement;
+
+  it('cierra la sesión remota a través de AuthFacade al salir del perfil', async () => {
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    exitButton().click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(component.isSigningOut()).toBe(false);
+  });
+
+  it('vuelve a Aprendiz aunque falle el cierre remoto', async () => {
+    signOut.mockRejectedValueOnce(new Error('fallo remoto simulado'));
+    session.publishVerifiedIdentity(verified.instructor);
+    fixture.detectChanges();
+
+    exitButton().click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(session.profileId()).toBe('aprendiz');
+    expect(session.authenticatedAccount()).toBeNull();
+    expect(component.isSigningOut()).toBe(false);
+  });
+
+  it('ignora clics duplicados mientras se cierra la sesión', async () => {
+    let resolveSignOut: () => void = () => undefined;
+    signOut.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSignOut = resolve;
+        }),
+    );
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    const button = exitButton();
+    button.click();
+    button.click();
+    fixture.detectChanges();
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(component.isSigningOut()).toBe(true);
+
+    resolveSignOut();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.isSigningOut()).toBe(false);
+  });
+});
+
+describe('MasPage acceso denegado', () => {
+  let fixture: ComponentFixture<MasPage>;
+  let session: DemoSessionService;
+  let verified: VerifiedTestIdentities;
+
+  const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+  beforeEach(async () => {
+    verified = await verifiedTestIdentities();
+    signOut.mockReset();
+
+    await TestBed.configureTestingModule({
+      imports: [MasPage],
+      providers: [
+        provideRouter([]),
+        { provide: AUTH_FACADE, useValue: authFacade },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ [ADMIN_ACCESS_DENIED_PARAM]: ADMIN_ACCESS_DENIED_VALUE }),
+            },
+            queryParamMap: of(convertToParamMap({ [ADMIN_ACCESS_DENIED_PARAM]: ADMIN_ACCESS_DENIED_VALUE })),
+          },
+        },
+      ],
+    }).compileComponents();
+
+    session = TestBed.inject(DemoSessionService);
+    fixture = TestBed.createComponent(MasPage);
+    fixture.detectChanges();
+  });
+
+  it('should show an understandable message after a denied admin navigation', () => {
+    const banner = fixture.nativeElement.querySelector('.mas-denied') as HTMLElement;
+
+    expect(banner).toBeTruthy();
+    expect(banner.getAttribute('role')).toBe('alert');
+    expect(pageText()).toContain('Acceso no disponible');
+    expect(pageText()).toContain('perfil Administrador de demostración');
+  });
+
+  it('should hide the denial notice when the administrator profile is selected', () => {
+    expect(fixture.nativeElement.querySelector('.mas-denied')).toBeTruthy();
+
+    session.publishVerifiedIdentity(verified.administrador);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.mas-denied')).toBeNull();
+    expect(pageText()).toContain('Administración');
+  });
+
+  it('should keep the existing demo options visible after the denial', () => {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('app-nav-card a')).map((link) =>
+      (link as HTMLAnchorElement).getAttribute('href'),
+    );
+
+    expect(links).toHaveLength(6);
+    expect(links).toContain('/tabs/mas/monitoreo-iot');
+    expect(links).toContain('/tabs/mas/configuracion');
+    expect(links).not.toContain('/tabs/mas/administracion');
+  });
+});
+
+describe('MasPage descarga de la APK', () => {
+  let component: MasPage;
+  let fixture: ComponentFixture<MasPage>;
+
+  const pageText = (): string => (fixture.nativeElement.textContent ?? '').replace(/\s+/g, ' ').trim();
+  const apkSection = (): HTMLElement | null => fixture.nativeElement.querySelector('.mas-apk');
+  const apkButton = (): (HTMLElement & { href?: string; target?: string; rel?: string; disabled?: boolean }) | null =>
+    fixture.nativeElement.querySelector('.mas-apk ion-button');
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [MasPage],
+      providers: [provideRouter([]), { provide: AUTH_FACADE, useValue: authFacade }],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MasPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('muestra la descarga en el navegador y la oculta dentro de la APK nativa', () => {
+    expect(component.isNativeApp()).toBe(false);
+    expect(apkSection()).toBeTruthy();
+    expect(apkSection()?.querySelector('ion-icon')?.getAttribute('name')).toBe('download-outline');
+    expect(apkSection()?.getAttribute('aria-labelledby')).toBe('mas-apk-title');
+
+    component.isNativeApp.set(true);
+    fixture.detectChanges();
+
+    expect(apkSection()).toBeNull();
+    expect(pageText()).not.toContain('Descargar aplicación Android');
+    expect(pageText()).not.toContain('Próximamente disponible');
+  });
+
+  it('deshabilita la descarga cuando no hay APK oficial publicada', () => {
+    component.apkDownloadUrl.set('');
+    fixture.detectChanges();
+
+    expect(pageText()).toContain('Próximamente disponible');
+    expect(pageText()).not.toContain('Descargar aplicación Android');
+
+    const boton = apkButton();
+    expect(boton).toBeTruthy();
+    expect(boton?.disabled ?? boton?.hasAttribute('disabled')).toBe(true);
+    expect(boton?.href ?? boton?.getAttribute('href')).toBeFalsy();
+  });
+
+  it('enlaza la APK oficial por HTTPS en una pestaña nueva cuando está publicada', () => {
+    const url = 'https://descargas.ejemplo.com/sena-crowd-intelligence.apk';
+    component.apkDownloadUrl.set(url);
+    fixture.detectChanges();
+
+    expect(pageText()).toContain('Descargar aplicación Android');
+    expect(pageText()).not.toContain('Próximamente disponible');
+
+    const boton = apkButton();
+    expect(boton).toBeTruthy();
+    expect(boton?.disabled ?? boton?.hasAttribute('disabled')).toBe(false);
+    expect(boton?.href ?? boton?.getAttribute('href')).toBe(url);
+    expect(boton?.target ?? boton?.getAttribute('target')).toBe('_blank');
+    expect(boton?.rel ?? boton?.getAttribute('rel')).toBe('noopener');
+  });
+});

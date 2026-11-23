@@ -1,0 +1,15 @@
+[functions.procesar-notificaciones-emergencia]
+verify_jwt = false
+
+[functions.registrar-dispositivo-fcm]
+verify_jwt = false
+
+# La función valida el JWT del usuario por su cuenta (auth.getUser + perfil
+# activo con rol Administrador/Instructor), igual que el resto de funciones
+# de alarmas. El gateway no debe rechazar el preflight OPTIONS sin token.
+[functions.finalizar-alarma-manual]
+verify_jwt = false
+
+# Avisos públicos para Aprendiz; la función solo expone campos de emergencia.
+[functions.consultar-alarma-activa]
+verify_jwt = false

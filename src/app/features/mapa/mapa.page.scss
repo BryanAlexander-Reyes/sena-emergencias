@@ -1,0 +1,662 @@
+@use '../../../theme/breakpoints' as bp;
+
+/* ==========================================================================
+   Mapa · plano SVG existente, leyenda legible y columnas en escritorio
+   La geometría del SVG no se modifica: solo se ajustan color y tipografía.
+   ========================================================================== */
+
+.map-layout,
+.map-layout__primary,
+.map-layout__aside,
+.map-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+}
+
+.map-layout__primary,
+.map-layout__aside {
+  min-width: 0;
+}
+
+.map-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-3);
+}
+
+.map-card__heading {
+  min-width: 0;
+}
+
+.map-zoom {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 var(--app-space-3);
+  border: 1px solid var(--sena-brand-500);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-cyan-soft);
+  color: var(--sena-brand-900);
+  font-family: inherit;
+  font-size: var(--app-font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color var(--app-motion-fast) ease,
+    background-color var(--app-motion-fast) ease,
+    color var(--app-motion-fast) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-zoom:focus-visible {
+  outline: var(--app-focus-ring);
+  outline-offset: var(--app-focus-offset);
+}
+
+.map-zoom ion-icon {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Plano
+   ========================================================================== */
+
+.map-plan {
+  margin-inline: calc(var(--app-space-5) * -1);
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-block: 1px solid var(--app-border);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(57, 168, 107, 0.09), transparent 60%),
+    var(--app-bg-secondary);
+  -webkit-overflow-scrolling: touch;
+}
+
+.map-plan--zoomed {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.map-plan__svg {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin-inline: auto;
+  touch-action: manipulation;
+}
+
+.map-plan--zoomed .map-plan__svg {
+  width: 170%;
+  max-width: none;
+}
+
+.map-plan__floor {
+  fill: var(--app-surface);
+  stroke: var(--app-border);
+  stroke-width: 1.5;
+}
+
+.map-plan__grid {
+  opacity: 0.9;
+}
+
+.map-plan__level {
+  fill: var(--app-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.map-plan__corridor {
+  fill: var(--app-bg-secondary);
+  stroke: var(--app-border-subtle);
+  stroke-width: 1;
+}
+
+.map-plan__route-tag {
+  fill: var(--app-green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+/* --- Zonas ------------------------------------------------------------- */
+
+.map-zone {
+  --zone-color: var(--app-green);
+  --zone-rgb: 30, 122, 76;
+
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-zone__shape {
+  fill: rgba(var(--zone-rgb), 0.1);
+  stroke: var(--zone-color);
+  stroke-width: 1.5;
+  transition:
+    fill var(--app-motion-base) ease,
+    stroke-width var(--app-motion-base) ease;
+}
+
+.map-zone:focus-visible .map-zone__shape {
+  stroke-width: 3;
+  stroke-dasharray: 7 4;
+  filter: drop-shadow(0 0 6px rgba(var(--zone-rgb), 0.35));
+}
+
+.map-zone--selected .map-zone__shape {
+  fill: rgba(var(--zone-rgb), 0.2);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 5px rgba(var(--zone-rgb), 0.32));
+}
+
+.map-zone--warning {
+  --zone-color: var(--app-yellow);
+  --zone-rgb: 233, 180, 76;
+}
+
+.map-zone--critical {
+  --zone-color: var(--app-red);
+  --zone-rgb: 179, 38, 30;
+}
+
+.map-zone__overline,
+.map-zone__name,
+.map-zone__value,
+.map-zone__status {
+  pointer-events: none;
+}
+
+.map-zone__overline {
+  fill: var(--app-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.map-zone__name {
+  fill: var(--app-text-strong);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.map-zone__value {
+  fill: var(--zone-color);
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.map-zone__status {
+  fill: var(--zone-color);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* --- Ruta y sensores --------------------------------------------------- */
+
+.map-route {
+  fill: none;
+  stroke: var(--sena-brand-500);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  opacity: 0.95;
+}
+
+.map-sensor__box {
+  fill: var(--app-surface);
+  stroke: var(--sena-brand-500);
+  stroke-width: 1.5;
+}
+
+.map-sensor__label {
+  fill: var(--sena-brand-900);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* --- Pie del plano ----------------------------------------------------- */
+
+.map-plan__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.map-plan__meta strong {
+  color: var(--sena-brand-900);
+  font-weight: 800;
+}
+
+.map-plan__meta-dot,
+.map-footer__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--app-border);
+}
+
+/* --- Aviso de ruta ----------------------------------------------------- */
+
+.map-route-note,
+.map-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  margin: 0;
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
+}
+
+.map-route-note {
+  padding: var(--app-space-3);
+  border: 1px dashed rgba(30, 122, 76, 0.35);
+  border-radius: var(--app-radius-md);
+  background: var(--app-green-soft);
+  color: var(--app-green);
+  font-weight: 700;
+}
+
+.map-route-note ion-icon,
+.map-disclaimer ion-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Zona seleccionada
+   ========================================================================== */
+
+.map-detail {
+  --detail-color: var(--app-green);
+  --detail-rgb: 30, 122, 76;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+  overflow: hidden;
+  padding-left: calc(var(--app-space-4) + 6px);
+}
+
+.map-detail::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--detail-color);
+}
+
+.map-detail--warning {
+  --detail-color: var(--app-yellow);
+  --detail-rgb: 233, 180, 76;
+}
+
+.map-detail--critical {
+  --detail-color: var(--app-red);
+  --detail-rgb: 179, 38, 30;
+}
+
+.map-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-2) var(--app-space-3);
+}
+
+.map-detail__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(var(--detail-rgb), 0.3);
+  border-radius: var(--app-radius-md);
+  background: rgba(var(--detail-rgb), 0.1);
+  color: var(--detail-color);
+  font-size: 1.2rem;
+}
+
+.map-detail__identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.map-detail__identity .app-overline {
+  margin-bottom: 2px;
+  font-size: var(--app-font-size-xs);
+}
+
+.map-detail__name {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.map-detail__badge {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid rgba(var(--detail-rgb), 0.3);
+  border-radius: var(--app-radius-pill);
+  background: rgba(var(--detail-rgb), 0.12);
+  color: var(--detail-color);
+  font-size: var(--app-font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-detail__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--app-space-2);
+  margin: 0;
+}
+
+.map-detail__metric {
+  min-width: 0;
+  padding: var(--app-space-2) var(--app-space-3);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-bg-secondary);
+}
+
+.map-detail__metric dt,
+.map-legend__text small {
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.map-detail__metric dd {
+  margin: 2px 0 0;
+  color: var(--app-text-strong);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.map-detail__metric:last-child dd {
+  color: var(--detail-color);
+}
+
+.map-detail__progress {
+  height: 8px;
+}
+
+.map-detail__progress-fill {
+  background: var(--detail-color);
+  box-shadow: 0 0 12px rgba(var(--detail-rgb), 0.12);
+  transition: width var(--app-motion-base) ease;
+}
+
+.map-detail__note {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Leyenda
+   ========================================================================== */
+
+.map-legend {
+  margin-bottom: var(--app-space-4);
+}
+
+.map-legend .app-divider {
+  margin: var(--app-space-4) 0;
+}
+
+.map-legend__states,
+.map-legend__sensors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-legend__states {
+  gap: var(--app-space-3);
+}
+
+.map-legend__states li,
+.map-legend__sensors li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  min-width: 0;
+}
+
+.map-legend__swatch {
+  --swatch-rgb: 57, 168, 107;
+
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(var(--swatch-rgb), 0.35);
+}
+
+.map-legend__swatch--normal {
+  --swatch-rgb: 30, 122, 76;
+
+  background: var(--app-green);
+}
+
+.map-legend__swatch--warning {
+  --swatch-rgb: 233, 180, 76;
+
+  background: var(--sena-accent);
+}
+
+.map-legend__swatch--critical {
+  --swatch-rgb: 179, 38, 30;
+
+  background: var(--app-red);
+}
+
+.map-legend__swatch--tech {
+  border: 2px solid var(--sena-brand-500);
+  background: transparent;
+}
+
+.map-legend__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.map-legend__text strong {
+  color: var(--app-text-strong);
+  font-size: var(--app-font-size-xs);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.map-legend__sensors {
+  gap: var(--app-space-2) var(--app-space-3);
+}
+
+.map-legend__sensors li {
+  align-items: center;
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.4;
+}
+
+.map-legend__sensor {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--sena-brand-500);
+  border-radius: 5px;
+  background: var(--app-surface);
+  color: var(--sena-brand-900);
+  font-size: var(--app-font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.map-legend__extras {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-3);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  line-height: 1.5;
+}
+
+.map-legend__extras ion-icon {
+  flex: 0 0 auto;
+  color: var(--app-green);
+  font-size: 1rem;
+}
+
+.map-legend__route-line {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 0;
+  border-top: 2px dashed var(--sena-brand-500);
+}
+
+/* ==========================================================================
+   Aviso y pie
+   ========================================================================== */
+
+.map-disclaimer {
+  margin-bottom: var(--app-space-5);
+  color: var(--app-text-muted);
+  line-height: 1.6;
+}
+
+.map-disclaimer ion-icon {
+  color: var(--sena-brand-500);
+}
+
+.map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  color: var(--app-text-muted);
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (hover: hover) {
+  .map-zoom:hover {
+    border-color: var(--sena-brand-900);
+    background: var(--app-blue-soft);
+    color: var(--sena-brand-900);
+  }
+
+  .map-zone:hover .map-zone__shape {
+    stroke-width: 2.5;
+  }
+}
+
+@include bp.lg-up {
+  .map-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+    align-items: start;
+    gap: var(--app-space-5);
+  }
+
+  .map-plan__svg {
+    max-width: none;
+  }
+}
+
+@include bp.xl-up {
+  .map-layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.8fr);
+  }
+}
+
+@media (max-width: 359px) {
+  .map-card__head {
+    align-items: flex-start;
+  }
+
+  .map-zoom {
+    padding: 0 var(--app-space-2);
+  }
+
+  .map-detail {
+    padding-right: var(--app-space-3);
+  }
+
+  .map-detail__icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+
+  .map-detail__metric {
+    padding: var(--app-space-2);
+  }
+
+  .map-detail__metric dd {
+    font-size: 1rem;
+  }
+
+  .map-legend__sensors {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-zoom,
+  .map-zone__shape,
+  .map-detail__progress-fill {
+    transition: none;
+  }
+
+  .map-zone:hover .map-zone__shape {
+    stroke-width: 1.5;
+  }
+}
